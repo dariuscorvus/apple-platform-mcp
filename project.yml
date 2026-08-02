@@ -1,0 +1,127 @@
+name: ApplePlatformMCP
+
+options:
+  bundleIdPrefix: com.dariuscorvus
+  deploymentTarget:
+    macOS: "13.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+  settingPresets: none
+
+packages:
+  MCP:
+    url: https://github.com/modelcontextprotocol/swift-sdk.git
+    exactVersion: 0.12.1
+
+settings:
+  base:
+    CLANG_ENABLE_MODULES: YES
+    MACOSX_DEPLOYMENT_TARGET: "13.0"
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    DEVELOPMENT_TEAM: ""
+  configs:
+    Debug:
+      ONLY_ACTIVE_ARCH: YES
+    Release:
+      ONLY_ACTIVE_ARCH: NO
+
+targets:
+  ApplePlatformMCPKit:
+    type: library.static
+    platform: macOS
+    sources:
+      - path: Sources/ApplePlatformMCP
+      - path: Sources/MailScriptingBridge/Mail.m
+      - path: Sources/MailScriptingBridge/ApplePlatformMCP-Bridging-Header.h
+        buildPhase: none
+    dependencies:
+      - package: MCP
+        product: MCP
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.dariuscorvus.apple-platform-mcp.kit
+        PRODUCT_NAME: ApplePlatformMCPKit
+        PRODUCT_MODULE_NAME: ApplePlatformMCPKit
+        MACH_O_TYPE: staticlib
+        DEFINES_MODULE: YES
+        SWIFT_OBJC_BRIDGING_HEADER: $(SRCROOT)/Sources/MailScriptingBridge/ApplePlatformMCP-Bridging-Header.h
+        HEADER_SEARCH_PATHS:
+          - $(SRCROOT)/Sources/MailScriptingBridge/include
+        OTHER_LDFLAGS:
+          - $(inherited)
+          - -framework
+          - CoreServices
+          - -framework
+          - Security
+          - -framework
+          - ScriptingBridge
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Apple Platform MCP Kit
+
+  apple-platform-mcp:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/ApplePlatformMCPServer
+    dependencies:
+      - target: ApplePlatformMCPKit
+      - package: MCP
+        product: MCP
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.dariuscorvus.apple-platform-mcp
+        PRODUCT_NAME: apple-platform-mcp
+        EXECUTABLE_NAME: apple-platform-mcp
+        MACH_O_TYPE: mh_execute
+        INFOPLIST_FILE: Config/ApplePlatformMCP-Info.plist
+        CODE_SIGN_ENTITLEMENTS: Config/ApplePlatformMCP.entitlements
+        OTHER_LDFLAGS:
+          - $(inherited)
+          - -framework
+          - CoreServices
+          - -framework
+          - Security
+          - -framework
+          - ScriptingBridge
+      configs:
+        Release:
+          ENABLE_HARDENED_RUNTIME: YES
+
+  ApplePlatformMCPTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: Tests/ApplePlatformMCPTests
+    dependencies:
+      - target: ApplePlatformMCPKit
+      - package: MCP
+        product: MCP
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.dariuscorvus.apple-platform-mcp.tests
+        PRODUCT_NAME: ApplePlatformMCPTests
+        PRODUCT_MODULE_NAME: ApplePlatformMCPTests
+        GENERATE_INFOPLIST_FILE: YES
+        OTHER_LDFLAGS:
+          - $(inherited)
+          - -framework
+          - CoreServices
+          - -framework
+          - Security
+          - -framework
+          - ScriptingBridge
+
+schemes:
+  ApplePlatformMCP:
+    build:
+      targets:
+        apple-platform-mcp: all
+        ApplePlatformMCPTests: [test]
+    run:
+      config: Debug
+      executable: apple-platform-mcp
+    test:
+      config: Debug
+      targets:
+        - ApplePlatformMCPTests

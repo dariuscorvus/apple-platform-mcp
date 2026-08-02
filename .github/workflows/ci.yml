@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  xcode:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: |
+          if ! command -v xcodegen >/dev/null 2>&1; then
+            brew install xcodegen
+          fi
+
+      - name: Generate project
+        run: xcodegen generate --spec project.yml
+
+      - name: Swift format
+        run: xcrun swift-format lint --recursive Sources Tests
+
+      - name: Regenerate Mail bridge
+        run: ./Scripts/generate-mail-bridge.sh
+
+      - name: Build
+        run: |
+          xcodebuild \
+            -project ApplePlatformMCP.xcodeproj \
+            -scheme ApplePlatformMCP \
+            -destination 'platform=macOS' \
+            -derivedDataPath "$RUNNER_TEMP/apple-platform-mcp-derived" \
+            -clonedSourcePackagesDirPath "$RUNNER_TEMP/apple-platform-mcp-packages" \
+            ONLY_ACTIVE_ARCH=YES CODE_SIGNING_ALLOWED=NO build
+
+      - name: Test
+        run: |
+          xcodebuild \
+            -project ApplePlatformMCP.xcodeproj \
+            -scheme ApplePlatformMCP \
+            -destination 'platform=macOS' \
+            -derivedDataPath "$RUNNER_TEMP/apple-platform-mcp-test-derived" \
+            -clonedSourcePackagesDirPath "$RUNNER_TEMP/apple-platform-mcp-test-packages" \
+            ONLY_ACTIVE_ARCH=YES CODE_SIGNING_ALLOWED=NO test

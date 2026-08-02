@@ -1,0 +1,16 @@
+.DS_Store
+
+# Xcode
+DerivedData/
+build/
+*.xcuserstate
+xcuserdata/
+
+# Swift Package Manager artifacts created by tooling
+.build/
+.swiftpm/config/registries.json
+.swiftpm/security/
+
+# Local diagnostics and secrets
+*.log
+.env

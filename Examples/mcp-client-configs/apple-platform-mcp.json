@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "apple-platform-mcp": {
+      "command": "/path/to/apple-platform-mcp.app/Contents/MacOS/apple-platform-mcp"
+    }
+  }
+}
