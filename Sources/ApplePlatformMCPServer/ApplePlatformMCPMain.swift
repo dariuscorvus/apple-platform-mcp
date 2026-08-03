@@ -5,8 +5,12 @@ import Foundation
 @main
 struct ApplePlatformMCPMain {
   static func main() async {
-    if CommandLine.arguments.dropFirst().first == "doctor" {
-      let report = ApplePlatformMCPDoctor.inspect()
+    let arguments = Array(CommandLine.arguments.dropFirst())
+    if arguments.first == "doctor" {
+      let report =
+        arguments.dropFirst().first == "--request-automation"
+        ? ApplePlatformMCPDoctor.requestAutomation()
+        : ApplePlatformMCPDoctor.inspect()
       let encoder = JSONEncoder()
       encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
       if let data = try? encoder.encode(report) {

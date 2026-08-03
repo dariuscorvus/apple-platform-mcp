@@ -43,6 +43,25 @@ xcodebuild \
 
 Run the same command with `test` instead of `build` for the unit and contract test target.
 
+For a local signed build, archive the app with a Developer ID identity and run the embedded executable from the archive:
+
+```sh
+xcodebuild \
+  -project ApplePlatformMCP.xcodeproj \
+  -scheme ApplePlatformMCP \
+  -configuration Release \
+  -destination 'generic/platform=macOS' \
+  -archivePath /tmp/apple-platform-mcp.xcarchive \
+  CODE_SIGN_STYLE=Manual \
+  CODE_SIGN_IDENTITY='Developer ID Application: <name> (<team>)' \
+  DEVELOPMENT_TEAM='<team>' \
+  archive
+
+/tmp/apple-platform-mcp.xcarchive/Products/Applications/apple-platform-mcp.app/Contents/MacOS/apple-platform-mcp doctor --request-automation
+```
+
+The signed app must be used for Automation testing. A bare `apple-platform-mcp` command is not installed by the Xcode project.
+
 ## Diagnose the host
 
 ```sh

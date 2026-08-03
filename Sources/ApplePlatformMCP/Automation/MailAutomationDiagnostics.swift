@@ -75,4 +75,36 @@ public struct MailAutomationDiagnostics: Codable, Equatable, Sendable {
       permission: permission
     )
   }
+
+  /// Explicitly requests Automation consent during setup. MCP requests never
+  /// call this method; they use `inspect()` and fail closed when consent is
+  /// missing.
+  public static func requestPermission() throws {
+    let diagnostics = inspect()
+    guard diagnostics.mailAppInstalled else {
+      throw MailError.mailNotRunning
+    }
+    guard diagnostics.mailAppRunning else {
+      throw MailError.mailNotRunning
+    }
+
+    switch diagnostics.permission {
+    case .allowed:
+      return
+    case .denied:
+      throw MailError.permissionDenied
+    case .needsConsent:
+      break
+    case .unavailable, .notChecked:
+      throw MailError.permissionDenied
+    }
+
+    guard let application = MailApplication(bundleIdentifier: "com.apple.mail") else {
+      throw MailError.mailNotRunning
+    }
+
+    // Reading the app name is a harmless Apple Event. With a signed host and
+    // NSAppleEventsUsageDescription, macOS uses this event to show consent.
+    _ = application.name
+  }
 }

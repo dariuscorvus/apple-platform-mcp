@@ -148,6 +148,19 @@ public enum ApplePlatformMCPDoctor {
     )
   }
 
+  public static func requestAutomation(
+    configurationURL: URL = MailServerConfiguration.defaultURL,
+    bundle: Bundle = .main
+  ) -> DoctorReport {
+    do {
+      try MailAutomationDiagnostics.requestPermission()
+    } catch {
+      // The follow-up report contains the normalized current state and the
+      // ordinary doctor exit code. No Apple Event error is exposed.
+    }
+    return inspect(configurationURL: configurationURL, bundle: bundle)
+  }
+
   private static func signingCheck(bundle: Bundle) -> DoctorCheck {
     let executableURL =
       bundle.executableURL
