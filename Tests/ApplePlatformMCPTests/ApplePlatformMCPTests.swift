@@ -206,8 +206,71 @@ struct MCPToolCatalogTests {
   }
 }
 
+@Suite("Server command")
+struct ApplePlatformMCPCommandTests {
+  @Test("defaults to the stdio server for backward compatibility")
+  func defaultsToStdio() throws {
+    #expect(try ApplePlatformMCPCommand.parse([]) == .serve(transport: .stdio))
+  }
+
+  @Test("requires an explicit transport for the serve command")
+  func rejectsBareServe() {
+    #expect(
+      throws: MailError.invalidInput(
+        "Only --transport stdio is currently supported. Streamable HTTP will be added separately."
+      )
+    ) {
+      try ApplePlatformMCPCommand.parse(["serve"])
+    }
+  }
+
+  @Test("accepts an explicit stdio transport")
+  func parsesExplicitStdio() throws {
+    #expect(
+      try ApplePlatformMCPCommand.parse(["serve", "--transport", "stdio"])
+        == .serve(transport: .stdio))
+  }
+
+  @Test("preserves the explicit Automation setup command")
+  func parsesAutomationSetup() throws {
+    #expect(
+      try ApplePlatformMCPCommand.parse(["doctor", "--request-automation"])
+        == .doctor(requestAutomation: true))
+  }
+
+  @Test("rejects transports that are not implemented")
+  func rejectsUnsupportedTransport() {
+    #expect(throws: MailError.self) {
+      try ApplePlatformMCPCommand.parse(["serve", "--transport", "streamable-http"])
+    }
+  }
+}
+
 @Suite("MCP contract")
 struct MCPContractTests {
+  @Test("constructs a configured server independently of its transport")
+  func constructsServerBeforeSelectingTransport() async throws {
+    let repository = FakeMailRepository(accounts: [])
+    let service = MailToolService(repository: repository)
+    let configuredServer = await ApplePlatformMCPServer(service: service).makeServer()
+    let (clientTransport, serverTransport) = await InMemoryTransport.createConnectedPair()
+    let serverTask = Task {
+      try await configuredServer.start(transport: serverTransport)
+      await configuredServer.waitUntilCompleted()
+    }
+    let client = Client(name: "factory-contract-test", version: "1.0.0")
+
+    let initialized = try await client.connect(transport: clientTransport)
+    #expect(initialized.serverInfo.name == "apple-platform-mcp")
+    #expect(
+      Set(try await client.listTools().tools.map(\.name))
+        == Set(MCPToolCatalog.tools.map(\.name)))
+
+    await client.disconnect()
+    await serverTransport.disconnect()
+    _ = try await serverTask.value
+  }
+
   @Test("serves discovery and diagnostics over the in-memory transport")
   func inMemoryLifecycle() async throws {
     let repository = FakeMailRepository(accounts: [])

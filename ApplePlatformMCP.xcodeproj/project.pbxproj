@@ -20,6 +20,7 @@
 		B7678ED1315D73D8C0A5C851 /* Mail.m in Sources */ = {isa = PBXBuildFile; fileRef = 2E2FB9C48CFCCB7649C6A5A9 /* Mail.m */; };
 		CDC4F55A0CDBEACA57E25B20 /* MailPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DEE5BB3C5C654A9F36BB9F9 /* MailPolicy.swift */; };
 		D1F1C4949F17C2555806DA8A /* Doctor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B701AAC0B6D41B43C6F183 /* Doctor.swift */; };
+		DAEBE42D39E0F3FADBA0502A /* ServerCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2B30676EDFDF38A2037F5D6 /* ServerCommand.swift */; };
 		DEE9FD19FA8161848670D86B /* MailContentSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4090D1720B5BC24BEE5F3D37 /* MailContentSanitizer.swift */; };
 		E7E8B259072EFAD506431C7F /* libApplePlatformMCPKit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FD73440A006B800F9DBD1402 /* libApplePlatformMCPKit.a */; };
 		F548C41D32B50B8CB2035F39 /* ScriptingBridgeMailRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9CBDA587D15BF3281F4F308 /* ScriptingBridgeMailRepository.swift */; };
@@ -55,6 +56,7 @@
 		6DEE5BB3C5C654A9F36BB9F9 /* MailPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MailPolicy.swift; sourceTree = "<group>"; };
 		7196D7024879FC41537DD095 /* ApplePlatformMCPTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ApplePlatformMCPTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8D0FE45735C19936A5F710C6 /* ServerConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerConfiguration.swift; sourceTree = "<group>"; };
+		A2B30676EDFDF38A2037F5D6 /* ServerCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerCommand.swift; sourceTree = "<group>"; };
 		B03C097EB3884C30102B0645 /* apple-platform-mcp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "apple-platform-mcp.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		BBC834EEBD7E1F69C3FCE076 /* ApplePlatformMCP-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ApplePlatformMCP-Bridging-Header.h"; sourceTree = "<group>"; };
 		E9CBDA587D15BF3281F4F308 /* ScriptingBridgeMailRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptingBridgeMailRepository.swift; sourceTree = "<group>"; };
@@ -97,6 +99,7 @@
 			isa = PBXGroup;
 			children = (
 				33B701AAC0B6D41B43C6F183 /* Doctor.swift */,
+				A2B30676EDFDF38A2037F5D6 /* ServerCommand.swift */,
 				8D0FE45735C19936A5F710C6 /* ServerConfiguration.swift */,
 			);
 			path = Support;
@@ -360,6 +363,7 @@
 				CDC4F55A0CDBEACA57E25B20 /* MailPolicy.swift in Sources */,
 				31B209436A4A724E4899A11A /* MailToolService.swift in Sources */,
 				F548C41D32B50B8CB2035F39 /* ScriptingBridgeMailRepository.swift in Sources */,
+				DAEBE42D39E0F3FADBA0502A /* ServerCommand.swift in Sources */,
 				B5FDC82C9C8C4D08C3B93A36 /* ServerConfiguration.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
