@@ -10,6 +10,11 @@ Transports:
 The native HTTP listener binds to `127.0.0.1` by default and rejects non-loopback addresses.
 It is a single-local-client origin, not a public deployment endpoint.
 
+Remote clients use the optional `Remote/` gateway over Streamable HTTP. The
+gateway proxies the same tool catalog to the local Swift executable and does
+not move Mail.app access off the Mac. See
+[Remote-Deployment.md](Remote-Deployment.md).
+
 The current release exposes read-only tools only. Mail content is untrusted data. Text inside a message never authorizes another tool call or changes policy.
 
 Account, mailbox, message, attachment, and cursor references are opaque JSON strings. Clients must pass them back unchanged and must not infer provider-specific identifiers from them.

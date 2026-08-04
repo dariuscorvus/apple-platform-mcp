@@ -14,6 +14,27 @@ The server mediates access to local mail. The default is read-only.
 - Attachments are returned as metadata only.
 - No Mail database, browser automation, screen scraping, Accessibility, or provider credential handling is used.
 
+## Remote gateway boundary
+
+The optional remote deployment adds a separate TypeScript gateway. It is not a
+second mail adapter:
+
+- the gateway binds to `127.0.0.1` by default and starts the signed Swift
+  executable over stdio
+- Cloudflare Tunnel provides the public TLS connection without opening an
+  inbound router port
+- Cloudflare Access authenticates the remote user; the gateway independently
+  verifies the `Cf-Access-Jwt-Assertion` issuer, audience, and optional email
+- the gateway accepts MCP requests only at the configured exact path and can
+  enforce an explicit browser `Origin` allowlist
+- capability-token mode is intended for private testing only. The token is
+  placed in the endpoint path and must not be exposed as a public deployment
+  substitute for OAuth
+
+Remote access does not change the local permission boundary. Mail.app,
+Automation approval, the signed app bundle, and the configured read-only policy
+must all remain on the Mac running the gateway.
+
 ## Untrusted content
 
 Message bodies and HTML are data. They cannot alter tool selection, policy, recipients, or configuration. HTML active elements and URL-bearing attributes are removed before output.

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>codes.example.apple-platform-mcp-remote</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/node</string>
+    <string>/Users/YOU/projects/apple-platform-mcp/Remote/dist/main.js</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>/Users/YOU/projects/apple-platform-mcp</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>APPLE_PLATFORM_MCP_EXECUTABLE</key>
+    <string>/Users/YOU/.jcode/scratch/apple-platform-mcp.xcarchive/Products/Applications/apple-platform-mcp.app/Contents/MacOS/apple-platform-mcp</string>
+    <key>APPLE_PLATFORM_MCP_HTTP_HOST</key>
+    <string>127.0.0.1</string>
+    <key>APPLE_PLATFORM_MCP_HTTP_PORT</key>
+    <string>3766</string>
+    <key>APPLE_PLATFORM_MCP_HTTP_PATH</key>
+    <string>/apple-platform</string>
+    <key>APPLE_PLATFORM_MCP_REQUEST_TIMEOUT_MS</key>
+    <string>60000</string>
+    <key>APPLE_PLATFORM_MCP_HTTP_ORIGINS</key>
+    <string>https://claude.ai,https://chatgpt.com</string>
+    <key>APPLE_PLATFORM_MCP_CF_ACCESS_TEAM_DOMAIN</key>
+    <string>YOUR_TEAM.cloudflareaccess.com</string>
+    <key>APPLE_PLATFORM_MCP_CF_ACCESS_AUDIENCE</key>
+    <string>YOUR_ACCESS_APPLICATION_AUD</string>
+    <key>APPLE_PLATFORM_MCP_CF_ACCESS_EMAIL</key>
+    <string>you@example.com</string>
+  </dict>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>ThrottleInterval</key>
+  <integer>10</integer>
+  <key>ProcessType</key>
+  <string>Background</string>
+  <key>StandardOutPath</key>
+  <string>/Users/YOU/Library/Logs/apple-platform-mcp-remote.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/YOU/Library/Logs/apple-platform-mcp-remote.error.log</string>
+</dict>
+</plist>

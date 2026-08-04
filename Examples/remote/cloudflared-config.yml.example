@@ -1,0 +1,17 @@
+tunnel: TUNNEL_UUID
+credentials-file: /Users/YOU/.cloudflared/TUNNEL_UUID.json
+
+originRequest:
+  connectTimeout: 10s
+  noTLSVerify: false
+
+ingress:
+  - hostname: mcp.example.com
+    service: http://127.0.0.1:3766
+    originRequest:
+      access:
+        required: true
+        teamName: YOUR_ACCESS_TEAM_NAME
+        audTag:
+          - YOUR_ACCESS_APPLICATION_AUD
+  - service: http_status:404

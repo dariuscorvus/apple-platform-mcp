@@ -458,6 +458,16 @@ public struct MailSearchQuery: Codable, Hashable, Sendable {
     self.limit = limit
     self.cursor = cursor
   }
+
+  /// A bounded date search cannot safely include a message without a received
+  /// date because its position relative to the requested bounds is unknown.
+  public func matchesReceivedDate(_ receivedAt: Date?) -> Bool {
+    guard after != nil || before != nil else { return true }
+    guard let receivedAt else { return false }
+    if let after, receivedAt <= after { return false }
+    if let before, receivedAt >= before { return false }
+    return true
+  }
 }
 
 public struct MailSearchPage: Codable, Hashable, Sendable {

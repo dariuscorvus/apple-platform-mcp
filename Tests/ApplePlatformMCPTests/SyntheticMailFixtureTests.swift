@@ -76,6 +76,51 @@ struct SyntheticMailFixtureTests {
     #expect(secondPage.messages.first?.subject == "Invoice 3")
   }
 
+  @Test("uses strict received-date bounds and excludes undated messages")
+  func filtersByReceivedDate() async throws {
+    let undated = MailMessageRecord(
+      summary: MailMessageSummary(
+        id: ReferenceCodec.message(
+          accountRawID: "fixture-account",
+          mailboxPath: ["Inbox"],
+          messageRawID: "undated"
+        ),
+        accountID: SyntheticMailFixture.account.id,
+        mailboxID: SyntheticMailFixture.mailbox.id,
+        subject: "Undated invoice",
+        sender: MailAddress(address: "billing@example.invalid"),
+        recipients: [MailAddress(address: "fixture@example.invalid")],
+        receivedAt: nil,
+        sentAt: nil,
+        isRead: false,
+        isFlagged: false,
+        hasAttachments: false,
+        size: nil
+      ),
+      messageIDHeader: nil,
+      inReplyTo: nil,
+      references: [],
+      body: nil,
+      attachments: []
+    )
+    let service = MailToolService(
+      repository: SyntheticMailFixture.repository(
+        records: SyntheticMailFixture.records + [undated]
+      )
+    )
+
+    let page = try await service.searchMessages(
+      MailSearchQuery(
+        after: Date(timeIntervalSince1970: 2),
+        before: Date(timeIntervalSince1970: 4),
+        limit: 10
+      )
+    )
+
+    #expect(page.messages.compactMap(\.subject) == ["Invoice 3"])
+    #expect(page.nextCursor == nil)
+  }
+
   @Test("returns bounded body and opaque attachment metadata")
   func readsMessageDetail() async throws {
     let service = MailToolService(repository: SyntheticMailFixture.repository())
@@ -200,8 +245,12 @@ private enum SyntheticMailFixture {
     )
   }
 
-  static func repository() -> SyntheticMailRepository {
-    SyntheticMailRepository(accounts: [account], mailboxes: [mailbox], records: records)
+  static func repository(records: [MailMessageRecord]? = nil) -> SyntheticMailRepository {
+    SyntheticMailRepository(
+      accounts: [account],
+      mailboxes: [mailbox],
+      records: records ?? Self.records
+    )
   }
 }
 
@@ -252,13 +301,7 @@ private actor SyntheticMailRepository: MailRepository {
       }
       if query.unreadOnly && summary.isRead { return false }
       if query.flaggedOnly && !summary.isFlagged { return false }
-      if let after = query.after, let receivedAt = summary.receivedAt, receivedAt <= after {
-        return false
-      }
-      if let before = query.before, let receivedAt = summary.receivedAt, receivedAt >= before {
-        return false
-      }
-      return true
+      return query.matchesReceivedDate(summary.receivedAt)
     }
 
     let boundedLimit = max(1, query.limit)

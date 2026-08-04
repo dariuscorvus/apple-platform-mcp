@@ -14,3 +14,8 @@ xcuserdata/
 # Local diagnostics and secrets
 *.log
 .env
+
+# Remote TypeScript gateway artifacts
+Remote/node_modules/
+Remote/dist/
+Remote/*.tsbuildinfo

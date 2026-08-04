@@ -1,0 +1,6 @@
+# Add this block to ~/.codex/config.toml for a remote deployment.
+# Keep the exact MCP path. The Cloudflare Access application itself covers the
+# whole hostname, but Codex OAuth must use this path as its resource.
+[mcp_servers.apple-platform-mcp]
+enabled = true
+url = "https://mcp.example.com/mail"

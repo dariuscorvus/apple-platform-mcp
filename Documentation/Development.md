@@ -116,6 +116,31 @@ MCP server and is intended for one local client.
 Do not expose this unauthenticated HTTP origin directly to a LAN or the internet; remote access
 requires a separate HTTPS and identity-aware authentication layer.
 
+## Build the remote gateway
+
+The optional `Remote/` package keeps the Swift MCP server local and adds a
+Streamable HTTP gateway for remote MCP clients. The gateway starts the signed
+Swift executable as a stdio child process, so Mail.app and its Automation
+permission remain on the Mac that owns the mail.
+
+```sh
+cd Remote
+bun install --frozen-lockfile
+bun run typecheck
+bun test
+bun run build
+```
+
+The remote test suite includes a synthetic stdio MCP fixture that delays a tool
+response, verifies the configured backend request timeout, and confirms that
+the gateway reconnects after the child exits. It never starts Mail.app and
+never uses personal mailbox data. Configure the production bound with
+`APPLE_PLATFORM_MCP_REQUEST_TIMEOUT_MS` when the default 60-second limit is not
+appropriate.
+
+See [Remote-Deployment.md](Remote-Deployment.md) for Cloudflare Tunnel,
+Cloudflare Access, Claude, ChatGPT, and launchd setup.
+
 ## Diagnose the host
 
 ```sh

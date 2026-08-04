@@ -348,13 +348,7 @@ public actor ScriptingBridgeMailRepository: MailRepository {
     if query.flaggedOnly && !message.flaggedStatus {
       return false
     }
-    if let after = query.after, let received = message.dateReceived, received <= after {
-      return false
-    }
-    if let before = query.before, let received = message.dateReceived, received >= before {
-      return false
-    }
-    return true
+    return query.matchesReceivedDate(message.dateReceived)
   }
 
   private func contains(_ candidate: String?, value: String) -> Bool {
