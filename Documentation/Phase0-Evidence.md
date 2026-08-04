@@ -1,6 +1,6 @@
 # Phase 0 Evidence
 
-Status: pending. The repository and read-only stdio spike are runnable. A production Go decision still requires a dedicated Mail.app fixture, TCC validation, timing measurements, and notarization.
+Status: reassessment required. The repository and read-only transports are runnable, but live timing evidence triggered the ADR-0001 backend reassessment condition. A production Go decision still requires a dedicated Mail.app fixture, TCC validation, bounded timing measurements, and notarization.
 
 Date: 2026-08-02
 
@@ -60,10 +60,24 @@ The test target emits linker warnings because the Xcode 26 XCTest and Testing ru
 - [x] Verify the signed distribution identity and Hardened Runtime entitlements locally.
 - [ ] Notarize and staple a release artifact.
 
+## Live timing diagnostic
+
+On 2026-08-05, repeated unread-search timeouts were investigated against an installed signed build and a live Mail.app account. Only elapsed times and aggregate mailbox counts were retained; no sender, subject, recipient, body, search text, or message identifier was copied into this evidence.
+
+- An unscoped unread search with a result limit of 10 exceeded the 300-second MCP client deadline.
+- The same query explicitly scoped to Inbox returned 10 results in approximately 52 seconds.
+- Account listing took approximately 31 seconds.
+- Mailbox listing with counts took approximately 33 seconds.
+- An external AppleScript `whose read status is false` probe against a large All Mail mailbox exceeded 120 seconds, so server-side predicates alone are not accepted as a proven fix.
+
+Repository inspection confirmed that an unscoped search traverses all enabled accounts and collected mailboxes, evaluates messages individually, and stops only after enough matching results exist. Offset pagination repeats earlier traversal on subsequent pages. Overlapping Mail views can repeat work.
+
+This is diagnostic evidence, not the dedicated synthetic-fixture acceptance evidence required above. The benchmark and remediation work is tracked in [Mail-Use-Case-Roadmap.md](Mail-Use-Case-Roadmap.md) and GitHub issues [#6](https://github.com/dariuscorvus/apple-platform-mcp/issues/6) through [#10](https://github.com/dariuscorvus/apple-platform-mcp/issues/10).
+
 ## Go / No-Go
 
-Current result: **PENDING**.
+Current result: **REASSESSMENT REQUIRED**.
 
-The code supports a provisional Go only after the pending fixture, TCC, timing, and notarization checks pass. A No-Go or backend reassessment is required if Apple Events hang without a controllable budget, message references cannot be resolved within a Mail session, or bounded searches require unacceptable full-mailbox scans.
+The observed 300-second timeout and 52-second Inbox-scoped search trigger the documented backend reassessment condition. The read-only server and targeted tools remain valid development artifacts, but search is not promoted for production use until synthetic fixture benchmarks establish a controllable operation budget and an acceptable bounded strategy. ADR-0001 must then be promoted, amended, or superseded from that evidence.
 
 The next test must use synthetic mail data. Personal mailbox contents must not enter test logs or evidence files.

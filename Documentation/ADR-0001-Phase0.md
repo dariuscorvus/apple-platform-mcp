@@ -1,6 +1,6 @@
 # ADR-0001 — Phase 0 ScriptingBridge decision
 
-Status: pending fixture validation
+Status: reassessment required
 
 Date: 2026-08-02
 
@@ -24,7 +24,13 @@ The decision is not yet a production Go. Accounts, mailboxes, bounded search, me
 - A temporary Developer ID archive passes strict code-signature verification with Hardened Runtime and Apple Events entitlement.
 - The adapter fails closed when Mail.app is not running.
 - The adapter performs a non-prompting Automation permission check.
+- A live unscoped unread search with a limit of 10 exceeded a 300-second client deadline.
+- The same query scoped to Inbox completed in approximately 52 seconds.
+- Account and mailbox enumeration each took approximately 31–33 seconds in the same diagnostic environment.
+- An external AppleScript `whose` predicate against a large All Mail mailbox also exceeded 120 seconds, so predicate pushdown is not accepted as a proven solution without fixture benchmarks.
+
+Only timings and aggregate counts were retained from the live diagnostic. The result is sufficient to trigger reassessment, but it does not replace the required synthetic fixture.
 
 ## Exit conditions
 
-Promote the adapter only if a signed test build can reliably list accounts and mailboxes, search bounded fixtures, normalize a message, complete TCC onboarding, and stay within measured time budgets. Reassess the backend or isolate it in a worker if Apple Events hang or cannot be cancelled safely.
+Promote the adapter only if a signed test build can reliably list accounts and mailboxes, search bounded fixtures, normalize a message, complete TCC onboarding, and stay within measured time budgets. The observed timeouts trigger the reassessment clause: benchmark bounded traversal and property access against synthetic fixtures, then promote, amend, or supersede this ADR. The active work is defined in [Mail-Use-Case-Roadmap.md](Mail-Use-Case-Roadmap.md).
