@@ -29,6 +29,16 @@ xcrun swift-format lint --recursive Sources Tests
 
 ## Build and test
 
+For the fastest local feedback loop, build and run the contract tests with Swift Package Manager:
+
+```sh
+swift test
+```
+
+The package manifest models the generated Mail ScriptingBridge as a separate Objective-C target.
+The Xcode project remains the source of truth for app bundling, entitlements, signing, archiving,
+and distribution.
+
 Use a fresh derived-data and Swift package cache directory for reproducible local checks:
 
 ```sh
@@ -61,6 +71,23 @@ xcodebuild \
 ```
 
 The signed app must be used for Automation testing. A bare `apple-platform-mcp` command is not installed by the Xcode project.
+
+## Run the MCP server
+
+The default command remains backward-compatible with existing MCP client configurations:
+
+```sh
+apple-platform-mcp.app/Contents/MacOS/apple-platform-mcp
+```
+
+The equivalent explicit command is:
+
+```sh
+apple-platform-mcp.app/Contents/MacOS/apple-platform-mcp serve --transport stdio
+```
+
+Server construction is transport-independent, but Streamable HTTP is not exposed by the executable
+yet. Unsupported transports fail closed instead of silently falling back to `stdio`.
 
 ## Diagnose the host
 

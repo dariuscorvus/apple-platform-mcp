@@ -132,6 +132,12 @@ public struct ApplePlatformMCPServer: Sendable {
   }
 
   public func run(transport: any Transport) async throws {
+    let server = await makeServer()
+    try await server.start(transport: transport)
+    await server.waitUntilCompleted()
+  }
+
+  public func makeServer() async -> Server {
     let server = Server(
       name: "apple-platform-mcp",
       version: "0.1.0",
@@ -149,8 +155,7 @@ public struct ApplePlatformMCPServer: Sendable {
       await Self.handle(params, service: service, configuration: configuration)
     }
 
-    try await server.start(transport: transport)
-    await server.waitUntilCompleted()
+    return server
   }
 
   private static func handle(

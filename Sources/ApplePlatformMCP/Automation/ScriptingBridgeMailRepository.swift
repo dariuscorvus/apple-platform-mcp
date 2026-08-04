@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(MailScriptingBridge)
+  import MailScriptingBridge
+#endif
 
 /// The only type that is allowed to touch Mail.app's generated ScriptingBridge
 /// objects. The actor serializes every Apple Events call.

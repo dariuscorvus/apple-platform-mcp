@@ -1,5 +1,8 @@
 import CoreServices
 import Foundation
+#if canImport(MailScriptingBridge)
+  import MailScriptingBridge
+#endif
 
 public enum MailAutomationPermission: String, Codable, Equatable, Sendable {
   case notChecked = "not_checked"
