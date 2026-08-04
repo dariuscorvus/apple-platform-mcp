@@ -74,7 +74,7 @@ public actor ApplePlatformMCPHTTPServer {
           )
         }.flatMap {
           channel.pipeline.configureHTTPServerPipeline(
-            withPipeliningAssistance: true,
+            withPipeliningAssistance: false,
             withErrorHandling: true,
             withOutboundHeaderValidation: true,
             withDecoderLimitConfiguration: decoderLimits
@@ -207,6 +207,7 @@ private final class ApplePlatformMCPNIOHTTPHandler: ChannelInboundHandler, @unch
   private let maxRequestBodyBytes: Int
   private let requestReadTimeout: TimeAmount
   private var requestState: RequestState?
+  private var responseTask: Task<Void, Never>?
 
   init(
     router: ApplePlatformMCPHTTPRouter,
@@ -221,6 +222,12 @@ private final class ApplePlatformMCPNIOHTTPHandler: ChannelInboundHandler, @unch
   func channelRead(context: ChannelHandlerContext, data: NIOAny) {
     switch unwrapInboundIn(data) {
     case .head(let head):
+      guard responseTask == nil else {
+        responseTask?.cancel()
+        responseTask = nil
+        context.close(promise: nil)
+        return
+      }
       if let rejection = authorityRejection(
         for: head,
         boundPort: context.channel.localAddress?.port
@@ -289,25 +296,42 @@ private final class ApplePlatformMCPNIOHTTPHandler: ChannelInboundHandler, @unch
       requestState = nil
       let loopBoundContext = NIOLoopBound(context, eventLoop: context.eventLoop)
       let eventLoop = context.eventLoop
-      Task {
+      let task = Task<Void, Never> { [weak self] in
+        guard let self else { return }
         await self.handleRequest(
           state,
           context: loopBoundContext,
           eventLoop: eventLoop
         )
       }
+      responseTask = task
+      context.channel.closeFuture.whenComplete { _ in
+        task.cancel()
+      }
     }
   }
 
   func errorCaught(context: ChannelHandlerContext, error: any Error) {
+    responseTask?.cancel()
+    responseTask = nil
     requestState?.timeoutTask.cancel()
     requestState = nil
     context.close(promise: nil)
   }
 
   func handlerRemoved(context: ChannelHandlerContext) {
+    responseTask?.cancel()
+    responseTask = nil
     requestState?.timeoutTask.cancel()
     requestState = nil
+  }
+
+  func channelInactive(context: ChannelHandlerContext) {
+    responseTask?.cancel()
+    responseTask = nil
+    requestState?.timeoutTask.cancel()
+    requestState = nil
+    context.fireChannelInactive()
   }
 
   private func authorityRejection(
@@ -433,6 +457,7 @@ private final class ApplePlatformMCPNIOHTTPHandler: ChannelInboundHandler, @unch
     let headers = response.headers
     eventLoop.execute {
       let context = context.value
+      guard context.channel.isActive else { return }
       var head = HTTPResponseHead(
         version: version,
         status: HTTPResponseStatus(statusCode: statusCode)
@@ -444,6 +469,7 @@ private final class ApplePlatformMCPNIOHTTPHandler: ChannelInboundHandler, @unch
         name: "Content-Length",
         value: String(body?.count ?? 0)
       )
+      head.headers.replaceOrAdd(name: "Connection", value: "close")
 
       context.write(self.wrapOutboundOut(.head(head)), promise: nil)
       if let body {
@@ -455,6 +481,7 @@ private final class ApplePlatformMCPNIOHTTPHandler: ChannelInboundHandler, @unch
         )
       }
       context.writeAndFlush(self.wrapOutboundOut(.end(nil)), promise: nil)
+      context.close(promise: nil)
     }
   }
 }

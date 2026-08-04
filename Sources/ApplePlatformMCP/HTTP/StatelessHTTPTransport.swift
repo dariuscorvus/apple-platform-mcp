@@ -5,7 +5,7 @@ import MCP
 public actor ApplePlatformMCPStatelessHTTPTransport: Transport, HTTPContextProviding {
   public nonisolated let logger: Logger
 
-  private enum RequestKey: Hashable {
+  private enum RequestKey: Hashable, Sendable {
     case string(String)
     case number(Int)
 
@@ -17,6 +17,20 @@ public actor ApplePlatformMCPStatelessHTTPTransport: Transport, HTTPContextProvi
         self = .number(value)
       }
     }
+
+    var jsonValue: Any {
+      switch self {
+      case .string(let value):
+        return value
+      case .number(let value):
+        return value
+      }
+    }
+  }
+
+  private struct InFlightRequest {
+    let externalID: RequestKey
+    let continuation: CheckedContinuation<ResponseOutcome, Never>
   }
 
   private enum MessageKind {
@@ -35,6 +49,7 @@ public actor ApplePlatformMCPStatelessHTTPTransport: Transport, HTTPContextProvi
   private enum ResponseOutcome {
     case response(Data)
     case timedOut
+    case cancelled
     case disconnected
   }
 
@@ -45,10 +60,10 @@ public actor ApplePlatformMCPStatelessHTTPTransport: Transport, HTTPContextProvi
 
   private var started = false
   private var terminated = false
-  private var responseWaiters: [RequestKey: CheckedContinuation<ResponseOutcome, Never>] = [:]
+  private var internalIDByExternalID: [RequestKey: RequestKey] = [:]
+  private var inFlightByInternalID: [RequestKey: InFlightRequest] = [:]
   private var timeoutTasks: [RequestKey: Task<Void, Never>] = [:]
   private var httpRequestContexts: [RequestKey: HTTPRequest] = [:]
-  private var timedOutRequestIDs: Set<RequestKey> = []
 
   public init(
     responseTimeout: Duration = .seconds(30),
@@ -81,18 +96,22 @@ public actor ApplePlatformMCPStatelessHTTPTransport: Transport, HTTPContextProvi
 
   public func disconnect() async {
     guard !terminated else { return }
+    terminateTransport()
+  }
+
+  private func terminateTransport() {
     terminated = true
     for task in timeoutTasks.values {
       task.cancel()
     }
     timeoutTasks.removeAll()
-    let waiters = responseWaiters
-    responseWaiters.removeAll()
+    let inFlight = inFlightByInternalID.values
+    inFlightByInternalID.removeAll()
+    internalIDByExternalID.removeAll()
     httpRequestContexts.removeAll()
-    timedOutRequestIDs.removeAll()
     incomingContinuation.finish()
-    for continuation in waiters.values {
-      continuation.resume(returning: .disconnected)
+    for request in inFlight {
+      request.continuation.resume(returning: .disconnected)
     }
   }
 
@@ -100,18 +119,19 @@ public actor ApplePlatformMCPStatelessHTTPTransport: Transport, HTTPContextProvi
     guard !terminated else {
       throw MCPError.connectionClosed
     }
-    guard case .response(let id) = Self.classify(data) else {
+    guard case .response(let internalID) = Self.classify(data),
+      let request = inFlightByInternalID.removeValue(forKey: internalID)
+    else {
       return
     }
-    if timedOutRequestIDs.remove(id) != nil {
+    timeoutTasks.removeValue(forKey: internalID)?.cancel()
+    httpRequestContexts.removeValue(forKey: internalID)
+    internalIDByExternalID.removeValue(forKey: request.externalID)
+    guard let externalResponse = Self.replacingTopLevelID(in: data, with: request.externalID) else {
+      request.continuation.resume(returning: .disconnected)
       return
     }
-    guard let continuation = responseWaiters.removeValue(forKey: id) else {
-      return
-    }
-    timeoutTasks.removeValue(forKey: id)?.cancel()
-    httpRequestContexts.removeValue(forKey: id)
-    continuation.resume(returning: .response(data))
+    request.continuation.resume(returning: .response(externalResponse))
   }
 
   public func receive() -> AsyncThrowingStream<Data, Swift.Error> {
@@ -146,11 +166,26 @@ public actor ApplePlatformMCPStatelessHTTPTransport: Transport, HTTPContextProvi
     }
 
     switch kind {
-    case .notification, .response:
+    case .notification(let method):
+      if method == "notifications/cancelled" {
+        if let (internalID, translated) = translateClientCancellation(body) {
+          incomingContinuation.yield(translated)
+          abandonRequest(
+            internalID,
+            outcome: .cancelled,
+            reason: "MCP client cancelled request",
+            sendCancellation: false
+          )
+        }
+      } else {
+        incomingContinuation.yield(body)
+      }
+      return .accepted()
+    case .response:
       incomingContinuation.yield(body)
       return .accepted()
-    case .request(let id, _):
-      return await handleJSONRPCRequest(body, id: id, request: request)
+    case .request(let externalID, _):
+      return await handleJSONRPCRequest(body, externalID: externalID, request: request)
     }
   }
 
@@ -160,26 +195,47 @@ public actor ApplePlatformMCPStatelessHTTPTransport: Transport, HTTPContextProvi
 
   private func handleJSONRPCRequest(
     _ body: Data,
-    id: RequestKey,
+    externalID: RequestKey,
     request: HTTPRequest
   ) async -> HTTPResponse {
-    guard responseWaiters[id] == nil, !timedOutRequestIDs.contains(id) else {
+    guard internalIDByExternalID[externalID] == nil else {
       return .error(
         statusCode: 409,
         .invalidRequest("A request with this JSON-RPC ID is already in flight")
       )
     }
+    guard !Task.isCancelled else {
+      return .error(statusCode: 499, .internalError("Client closed request"))
+    }
 
-    httpRequestContexts[id] = request
-    let outcome = await withCheckedContinuation {
-      (continuation: CheckedContinuation<ResponseOutcome, Never>) in
-      responseWaiters[id] = continuation
-      timeoutTasks[id] = Task { [weak self, responseTimeout] in
-        try? await Task.sleep(for: responseTimeout)
-        guard !Task.isCancelled else { return }
-        await self?.expireRequest(id)
+    let internalID = RequestKey.string(UUID().uuidString)
+    guard let internalBody = Self.replacingTopLevelID(in: body, with: internalID) else {
+      return .error(statusCode: 400, .parseError("Invalid JSON-RPC message"))
+    }
+    internalIDByExternalID[externalID] = internalID
+    httpRequestContexts[internalID] = request
+
+    let outcome = await withTaskCancellationHandler {
+      await withCheckedContinuation {
+        (continuation: CheckedContinuation<ResponseOutcome, Never>) in
+        inFlightByInternalID[internalID] = InFlightRequest(
+          externalID: externalID,
+          continuation: continuation
+        )
+        timeoutTasks[internalID] = Task { [weak self, responseTimeout] in
+          do {
+            try await Task.sleep(for: responseTimeout)
+          } catch {
+            return
+          }
+          await self?.expireRequest(internalID)
+        }
+        incomingContinuation.yield(internalBody)
       }
-      incomingContinuation.yield(body)
+    } onCancel: {
+      Task { [weak self] in
+        await self?.cancelRequest(internalID)
+      }
     }
 
     switch outcome {
@@ -187,17 +243,80 @@ public actor ApplePlatformMCPStatelessHTTPTransport: Transport, HTTPContextProvi
       return .data(data, headers: [HTTPHeaderName.contentType: "application/json"])
     case .timedOut:
       return .error(statusCode: 504, .internalError("Request timed out"))
+    case .cancelled:
+      return .error(statusCode: 499, .internalError("Client closed request"))
     case .disconnected:
       return .error(statusCode: 503, .internalError("Service unavailable"))
     }
   }
 
-  private func expireRequest(_ id: RequestKey) {
-    guard let continuation = responseWaiters.removeValue(forKey: id) else { return }
-    timeoutTasks.removeValue(forKey: id)?.cancel()
-    httpRequestContexts.removeValue(forKey: id)
-    timedOutRequestIDs.insert(id)
-    continuation.resume(returning: .timedOut)
+  private func expireRequest(_ internalID: RequestKey) {
+    abandonRequest(
+      internalID,
+      outcome: .timedOut,
+      reason: "HTTP request timed out"
+    )
+  }
+
+  private func cancelRequest(_ internalID: RequestKey) {
+    abandonRequest(
+      internalID,
+      outcome: .cancelled,
+      reason: "HTTP client disconnected"
+    )
+  }
+
+  private func abandonRequest(
+    _ internalID: RequestKey,
+    outcome: ResponseOutcome,
+    reason: String,
+    sendCancellation: Bool = true
+  ) {
+    guard let request = inFlightByInternalID.removeValue(forKey: internalID) else { return }
+    timeoutTasks.removeValue(forKey: internalID)?.cancel()
+    httpRequestContexts.removeValue(forKey: internalID)
+    internalIDByExternalID.removeValue(forKey: request.externalID)
+    if sendCancellation,
+      let cancellation = Self.cancellationNotification(for: internalID, reason: reason)
+    {
+      incomingContinuation.yield(cancellation)
+    }
+    request.continuation.resume(returning: outcome)
+  }
+
+  private func translateClientCancellation(_ data: Data) -> (RequestKey, Data)? {
+    guard var json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+      var params = json["params"] as? [String: Any],
+      let externalID = Self.normalizedID(params["requestId"]),
+      let internalID = internalIDByExternalID[externalID]
+    else {
+      return nil
+    }
+    params["requestId"] = internalID.jsonValue
+    json["params"] = params
+    guard let translated = try? JSONSerialization.data(withJSONObject: json) else {
+      return nil
+    }
+    return (internalID, translated)
+  }
+
+  private static func cancellationNotification(for id: RequestKey, reason: String) -> Data? {
+    try? JSONSerialization.data(withJSONObject: [
+      "jsonrpc": "2.0",
+      "method": "notifications/cancelled",
+      "params": [
+        "requestId": id.jsonValue,
+        "reason": reason,
+      ],
+    ])
+  }
+
+  private static func replacingTopLevelID(in data: Data, with id: RequestKey) -> Data? {
+    guard var json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+      return nil
+    }
+    json["id"] = id.jsonValue
+    return try? JSONSerialization.data(withJSONObject: json)
   }
 
   private static func classify(_ data: Data) -> MessageKind? {

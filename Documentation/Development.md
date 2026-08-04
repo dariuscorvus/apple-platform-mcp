@@ -107,7 +107,12 @@ addresses are rejected. The listener requires the exact `127.0.0.1:<bound-port>`
 all routes and accepts an Origin only when it matches that authority. It rejects declared or observed
 oversized bodies immediately. Request reading is limited to 15 seconds, each connection to 45
 seconds, accepted connections to 32, concurrent MCP requests to four, and MCP response waiting to 30
-seconds. This stateless listener uses one long-lived MCP server and is intended for one local client.
+seconds. A response timeout or client disconnect forwards best-effort MCP cancellation to the SDK.
+Every HTTP request attempt receives a fresh internal SDK correlation ID, while responses restore the
+client's original numeric or string ID. Late responses therefore cannot satisfy a newer reuse, even
+when a handler ignores cancellation, and correlation state remains bounded to active requests. Each
+connection serves one request and closes after its response. This stateless listener uses one long-lived
+MCP server and is intended for one local client.
 Do not expose this unauthenticated HTTP origin directly to a LAN or the internet; remote access
 requires a separate HTTPS and identity-aware authentication layer.
 

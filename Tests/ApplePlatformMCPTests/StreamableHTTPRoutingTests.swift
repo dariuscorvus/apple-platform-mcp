@@ -29,6 +29,58 @@ private actor BlockingMCPHandler {
   }
 }
 
+private actor CancellationAwareHandler {
+  private var started = false
+  private var cancelled = false
+
+  func handle() async throws {
+    started = true
+    do {
+      try await Task.sleep(for: .seconds(5))
+    } catch is CancellationError {
+      cancelled = true
+      throw CancellationError()
+    }
+  }
+
+  func hasStarted() -> Bool {
+    started
+  }
+
+  func wasCancelled() -> Bool {
+    cancelled
+  }
+}
+
+private actor MessageCollector {
+  private var messages: [Data] = []
+
+  func append(_ message: Data) {
+    messages.append(message)
+  }
+
+  func count() -> Int {
+    messages.count
+  }
+
+  func snapshot() -> [Data] {
+    messages
+  }
+}
+
+private func eventually(
+  timeout: Duration = .seconds(1),
+  condition: @escaping @Sendable () async -> Bool
+) async -> Bool {
+  let clock = ContinuousClock()
+  let deadline = clock.now.advanced(by: timeout)
+  while clock.now < deadline {
+    if await condition() { return true }
+    try? await Task.sleep(for: .milliseconds(5))
+  }
+  return await condition()
+}
+
 private actor HTTPFakeMailRepository: MailRepository {
   func listAccounts(includeDisabled: Bool) async throws -> [MailAccountModel] { [] }
 
@@ -231,33 +283,205 @@ struct StreamableHTTPRoutingTests {
     #expect(response.statusCode == 400)
   }
 
-  @Test("quarantines a timed-out JSON-RPC ID from late-response reuse")
-  func quarantinesTimedOutID() async throws {
-    let transport = ApplePlatformMCPStatelessHTTPTransport(responseTimeout: .milliseconds(10))
+  @Test("isolates late responses with per-attempt internal IDs")
+  func isolatesLateResponseFromReusedExternalID() async throws {
+    let transport = ApplePlatformMCPStatelessHTTPTransport(responseTimeout: .milliseconds(100))
+    let collector = MessageCollector()
     try await transport.connect()
-    let body = Data(#"{"jsonrpc":"2.0","id":7,"method":"ping"}"#.utf8)
-    let request = HTTPRequest(
-      method: "POST",
-      headers: [
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "MCP-Protocol-Version": "2025-03-26",
-      ],
-      body: body,
-      path: "/mcp"
+    let receiveTask = Task {
+      for try await message in await transport.receive() {
+        await collector.append(message)
+      }
+    }
+    let request = mcpRequest(#"{"jsonrpc":"2.0","id":7,"method":"ping"}"#)
+
+    let first = await transport.handleRequest(request)
+    #expect(first.statusCode == 504)
+    #expect(await eventually { await collector.count() >= 2 })
+    let firstMessages = await collector.snapshot()
+    let firstRequest = try #require(
+      JSONSerialization.jsonObject(with: firstMessages[0]) as? [String: Any]
+    )
+    let internalA = try #require(firstRequest["id"] as? String)
+    let firstCancellation = try #require(
+      JSONSerialization.jsonObject(with: firstMessages[1]) as? [String: Any]
+    )
+    let firstCancellationParameters = try #require(
+      firstCancellation["params"] as? [String: Any]
+    )
+    #expect(firstCancellationParameters["requestId"] as? String == internalA)
+
+    let secondTask = Task { await transport.handleRequest(request) }
+    #expect(await eventually { await collector.count() >= 3 })
+    let secondMessages = await collector.snapshot()
+    let secondRequest = try #require(
+      JSONSerialization.jsonObject(with: secondMessages[2]) as? [String: Any]
+    )
+    let internalB = try #require(secondRequest["id"] as? String)
+    #expect(internalB != internalA)
+
+    try await transport.send(
+      Data(#"{"jsonrpc":"2.0","id":"\#(internalA)","result":{}}"#.utf8)
+    )
+    #expect(await transport.httpRequestContext(for: .string(internalB)) != nil)
+    try await transport.send(
+      Data(#"{"jsonrpc":"2.0","id":"\#(internalB)","result":{}}"#.utf8)
+    )
+    let second = await secondTask.value
+    let responseBody = try #require(second.bodyData)
+    let responseJSON = try #require(
+      JSONSerialization.jsonObject(with: responseBody) as? [String: Any]
     )
 
-    let timedOut = await transport.handleRequest(request)
-    #expect(timedOut.statusCode == 504)
-    let reused = await transport.handleRequest(request)
-    #expect(reused.statusCode == 409)
+    #expect(second.statusCode == 200)
+    #expect((responseJSON["id"] as? NSNumber)?.intValue == 7)
     await transport.disconnect()
+    receiveTask.cancel()
+  }
+
+  @Test("translates client cancellation to the active internal ID")
+  func translatesClientCancellation() async throws {
+    let transport = ApplePlatformMCPStatelessHTTPTransport(responseTimeout: .seconds(1))
+    let collector = MessageCollector()
+    try await transport.connect()
+    let receiveTask = Task {
+      for try await message in await transport.receive() {
+        await collector.append(message)
+      }
+    }
+    let responseTask = Task {
+      await transport.handleRequest(
+        mcpRequest(#"{"jsonrpc":"2.0","id":"external","method":"tools/call"}"#)
+      )
+    }
+    #expect(await eventually { await collector.count() >= 1 })
+    let requestJSON = try #require(
+      JSONSerialization.jsonObject(with: await collector.snapshot()[0]) as? [String: Any]
+    )
+    let internalID = try #require(requestJSON["id"] as? String)
+
+    let accepted = await transport.handleRequest(
+      mcpRequest(
+        #"{"jsonrpc":"2.0","method":"notifications/cancelled","params":{"requestId":"external","reason":"client request"}}"#
+      )
+    )
+    #expect(await eventually { await collector.count() >= 2 })
+    let messages = await collector.snapshot()
+    let cancellation = try #require(
+      JSONSerialization.jsonObject(with: messages[1]) as? [String: Any]
+    )
+    let parameters = try #require(cancellation["params"] as? [String: Any])
+
+    #expect(accepted.statusCode == 202)
+    #expect(parameters["requestId"] as? String == internalID)
+    let originalResponse = await responseTask.value
+    #expect(originalResponse.statusCode == 499)
+    await transport.disconnect()
+    receiveTask.cancel()
+  }
+
+  @Test("cancels SDK work with the internal ID when an HTTP request times out")
+  func cancelsTimedOutRequest() async throws {
+    let transport = ApplePlatformMCPStatelessHTTPTransport(responseTimeout: .milliseconds(10))
+    let collector = MessageCollector()
+    try await transport.connect()
+    let receiveTask = Task {
+      for try await message in await transport.receive() {
+        await collector.append(message)
+      }
+    }
+
+    let response = await transport.handleRequest(
+      mcpRequest(#"{"jsonrpc":"2.0","id":"slow","method":"tools/call"}"#)
+    )
+    #expect(await eventually { await collector.count() >= 2 })
+    let received = await collector.snapshot()
+    await transport.disconnect()
+    receiveTask.cancel()
+
+    #expect(response.statusCode == 504)
+    let request = try #require(
+      JSONSerialization.jsonObject(with: received[0]) as? [String: Any]
+    )
+    let internalID = try #require(request["id"] as? String)
+    #expect(internalID != "slow")
+    let cancellation = try #require(
+      JSONSerialization.jsonObject(with: received[1]) as? [String: Any]
+    )
+    #expect(cancellation["method"] as? String == "notifications/cancelled")
+    let parameters = try #require(cancellation["params"] as? [String: Any])
+    #expect(parameters["requestId"] as? String == internalID)
+    #expect(parameters["reason"] as? String == "HTTP request timed out")
+  }
+
+  @Test("cancels MCP work when the HTTP response task is cancelled")
+  func cancelsDisconnectedHTTPRequest() async throws {
+    let transport = ApplePlatformMCPStatelessHTTPTransport(responseTimeout: .seconds(1))
+    let collector = MessageCollector()
+    try await transport.connect()
+    let receiveTask = Task {
+      for try await message in await transport.receive() {
+        await collector.append(message)
+      }
+    }
+
+    let responseTask = Task {
+      await transport.handleRequest(
+        mcpRequest(#"{"jsonrpc":"2.0","id":"disconnected","method":"tools/call"}"#)
+      )
+    }
+    #expect(await eventually { await collector.count() >= 1 })
+    responseTask.cancel()
+    let response = await responseTask.value
+    #expect(await eventually { await collector.count() >= 2 })
+    let received = await collector.snapshot()
+    await transport.disconnect()
+    receiveTask.cancel()
+
+    #expect(response.statusCode == 499)
+    let request = try #require(
+      JSONSerialization.jsonObject(with: received[0]) as? [String: Any]
+    )
+    let internalID = try #require(request["id"] as? String)
+    let cancellation = try #require(
+      JSONSerialization.jsonObject(with: received[1]) as? [String: Any]
+    )
+    let parameters = try #require(cancellation["params"] as? [String: Any])
+    #expect(parameters["requestId"] as? String == internalID)
+    #expect(parameters["reason"] as? String == "HTTP client disconnected")
+  }
+
+  @Test("timeout cancellation reaches a registered SDK handler")
+  func cancelsRunningSDKHandler() async throws {
+    let handler = CancellationAwareHandler()
+    let server = Server(name: "cancellation-test", version: "1.0.0", capabilities: .init())
+    let transport = ApplePlatformMCPStatelessHTTPTransport(responseTimeout: .milliseconds(100))
+    try await server.start(transport: transport)
+    _ = await server.withMethodHandler(Ping.self) { _ in
+      try await handler.handle()
+      return Empty()
+    }
+
+    let response = await transport.handleRequest(
+      mcpRequest(#"{"jsonrpc":"2.0","id":8,"method":"ping"}"#)
+    )
+    let wasCancelled = await eventually { await handler.wasCancelled() }
+    await server.stop()
+
+    #expect(response.statusCode == 504)
+    #expect(wasCancelled)
   }
 
   @Test("keeps numeric and string JSON-RPC IDs distinct")
   func keepsTypedIDsDistinct() async throws {
     let transport = ApplePlatformMCPStatelessHTTPTransport(responseTimeout: .seconds(1))
+    let collector = MessageCollector()
     try await transport.connect()
+    let receiveTask = Task {
+      for try await message in await transport.receive() {
+        await collector.append(message)
+      }
+    }
 
     let numericBody = Data(#"{"jsonrpc":"2.0","id":1,"method":"ping"}"#.utf8)
     let stringBody = Data(#"{"jsonrpc":"2.0","id":"1","method":"ping"}"#.utf8)
@@ -278,13 +502,41 @@ struct StreamableHTTPRoutingTests {
       )
     }
 
-    try await Task.sleep(for: .milliseconds(10))
-    #expect(await transport.httpRequestContext(for: .number(1))?.body == numericBody)
-    #expect(await transport.httpRequestContext(for: .string("1"))?.body == stringBody)
+    #expect(await eventually { await collector.count() >= 2 })
+    let requests = await collector.snapshot()
+    let internalIDs = try requests.prefix(2).map { data in
+      let json = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+      return try #require(json["id"] as? String)
+    }
+    #expect(Set(internalIDs).count == 2)
+    var contexts: [Data] = []
+    for internalID in internalIDs {
+      if let body = await transport.httpRequestContext(for: .string(internalID))?.body {
+        contexts.append(body)
+      }
+    }
+    #expect(Set(contexts) == Set([numericBody, stringBody]))
 
+    for internalID in internalIDs {
+      try await transport.send(
+        Data(#"{"jsonrpc":"2.0","id":"\#(internalID)","result":{}}"#.utf8)
+      )
+    }
+    let numericResponse = await numericTask.value
+    let stringResponse = await stringTask.value
     await transport.disconnect()
-    _ = await numericTask.value
-    _ = await stringTask.value
+    receiveTask.cancel()
+
+    let numericBodyData = try #require(numericResponse.bodyData)
+    let stringBodyData = try #require(stringResponse.bodyData)
+    let numericJSON = try #require(
+      JSONSerialization.jsonObject(with: numericBodyData) as? [String: Any]
+    )
+    let stringJSON = try #require(
+      JSONSerialization.jsonObject(with: stringBodyData) as? [String: Any]
+    )
+    #expect((numericJSON["id"] as? NSNumber)?.intValue == 1)
+    #expect(stringJSON["id"] as? String == "1")
   }
 
   @Test("bounds concurrent MCP requests")
