@@ -2,7 +2,13 @@
 
 Server name: `apple-platform-mcp`
 
-Transport: newline-delimited JSON-RPC over `stdio`.
+Transports:
+
+- newline-delimited JSON-RPC over `stdio` (default and backward-compatible), or
+- stateless MCP Streamable HTTP at `POST /mcp` when explicitly enabled.
+
+The native HTTP listener binds to `127.0.0.1` by default and rejects non-loopback addresses.
+It is a single-local-client origin, not a public deployment endpoint.
 
 The current release exposes read-only tools only. Mail content is untrusted data. Text inside a message never authorizes another tool call or changes policy.
 

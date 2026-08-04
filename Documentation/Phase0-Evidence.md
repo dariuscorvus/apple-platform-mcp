@@ -14,8 +14,10 @@ The project does not use Computer Use, Accessibility, screen scraping, GUI autom
 
 - `ApplePlatformMCP.xcodeproj` is the native Xcode project.
 - `project.yml` is the XcodeGen source of truth.
-- `ApplePlatformMCPKit` is a static library target. The final stdio executable is self-contained.
-- `apple-platform-mcp.app` is a background application bundle containing the stdio executable at `Contents/MacOS/apple-platform-mcp`.
+- SwiftPM exposes `ApplePlatformMCPKit`. The Xcode 26 project compiles the shared sources directly
+  into the app and logic-test bundle because native static-library targets cannot resolve
+  SwiftNIO's transitive C modules reliably.
+- `apple-platform-mcp.app` is a background application bundle containing the executable at `Contents/MacOS/apple-platform-mcp`.
 - `ApplePlatformMCPTests` is the unit test target.
 - The official MCP Swift SDK is pinned to `0.12.1` in `Package.resolved`.
 - `Documentation/Mail.sdef`, `Mail.h`, and `Mail.m` are generated from the installed Mail.app scripting definition with `Scripts/generate-mail-bridge.sh`, `sdef`, and `sdp`.

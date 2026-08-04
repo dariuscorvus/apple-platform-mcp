@@ -1,5 +1,6 @@
 import CoreServices
 import Foundation
+
 #if canImport(MailScriptingBridge)
   import MailScriptingBridge
 #endif

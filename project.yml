@@ -12,6 +12,12 @@ packages:
   MCP:
     url: https://github.com/modelcontextprotocol/swift-sdk.git
     exactVersion: 0.12.1
+  NIO:
+    url: https://github.com/apple/swift-nio.git
+    exactVersion: 2.101.3
+  Logging:
+    url: https://github.com/apple/swift-log.git
+    exactVersion: 1.14.0
 
 settings:
   base:
@@ -27,55 +33,41 @@ settings:
       ONLY_ACTIVE_ARCH: NO
 
 targets:
-  ApplePlatformMCPKit:
-    type: library.static
+  # Xcode 26 cannot resolve SwiftNIO's transitive C modules when its package
+  # products are consumed by a native static-library target. Build the app and
+  # logic-test bundle directly; SwiftPM continues to expose ApplePlatformMCPKit.
+  apple-platform-mcp:
+    type: application
     platform: macOS
     sources:
       - path: Sources/ApplePlatformMCP
+      - path: Sources/ApplePlatformMCPServer
       - path: Sources/MailScriptingBridge/Mail.m
       - path: Sources/MailScriptingBridge/ApplePlatformMCP-Bridging-Header.h
         buildPhase: none
     dependencies:
       - package: MCP
         product: MCP
-    settings:
-      base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.dariuscorvus.apple-platform-mcp.kit
-        PRODUCT_NAME: ApplePlatformMCPKit
-        PRODUCT_MODULE_NAME: ApplePlatformMCPKit
-        MACH_O_TYPE: staticlib
-        DEFINES_MODULE: YES
-        SWIFT_OBJC_BRIDGING_HEADER: $(SRCROOT)/Sources/MailScriptingBridge/ApplePlatformMCP-Bridging-Header.h
-        HEADER_SEARCH_PATHS:
-          - $(SRCROOT)/Sources/MailScriptingBridge/include
-        OTHER_LDFLAGS:
-          - $(inherited)
-          - -framework
-          - CoreServices
-          - -framework
-          - Security
-          - -framework
-          - ScriptingBridge
-        GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_CFBundleDisplayName: Apple Platform MCP Kit
-
-  apple-platform-mcp:
-    type: application
-    platform: macOS
-    sources:
-      - path: Sources/ApplePlatformMCPServer
-    dependencies:
-      - target: ApplePlatformMCPKit
-      - package: MCP
-        product: MCP
+      - package: Logging
+        product: Logging
+      - package: NIO
+        product: NIOCore
+      - package: NIO
+        product: NIOHTTP1
+      - package: NIO
+        product: NIOPosix
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.dariuscorvus.apple-platform-mcp
         PRODUCT_NAME: apple-platform-mcp
+        PRODUCT_MODULE_NAME: ApplePlatformMCPExecutable
         EXECUTABLE_NAME: apple-platform-mcp
         MACH_O_TYPE: mh_execute
         INFOPLIST_FILE: Config/ApplePlatformMCP-Info.plist
         CODE_SIGN_ENTITLEMENTS: Config/ApplePlatformMCP.entitlements
+        SWIFT_OBJC_BRIDGING_HEADER: $(SRCROOT)/Sources/MailScriptingBridge/ApplePlatformMCP-Bridging-Header.h
+        HEADER_SEARCH_PATHS:
+          - $(SRCROOT)/Sources/MailScriptingBridge/include
         OTHER_LDFLAGS:
           - $(inherited)
           - -framework
@@ -92,17 +84,34 @@ targets:
     type: bundle.unit-test
     platform: macOS
     sources:
+      - path: Sources/ApplePlatformMCP
       - path: Tests/ApplePlatformMCPTests
+      - path: Sources/MailScriptingBridge/Mail.m
+      - path: Sources/MailScriptingBridge/ApplePlatformMCP-Bridging-Header.h
+        buildPhase: none
     dependencies:
-      - target: ApplePlatformMCPKit
       - package: MCP
         product: MCP
+      - package: Logging
+        product: Logging
+      - package: NIO
+        product: NIOCore
+      - package: NIO
+        product: NIOHTTP1
+      - package: NIO
+        product: NIOPosix
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.dariuscorvus.apple-platform-mcp.tests
         PRODUCT_NAME: ApplePlatformMCPTests
         PRODUCT_MODULE_NAME: ApplePlatformMCPTests
         GENERATE_INFOPLIST_FILE: YES
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS:
+          - $(inherited)
+          - XCODE_COMBINED_TEST_TARGET
+        SWIFT_OBJC_BRIDGING_HEADER: $(SRCROOT)/Sources/MailScriptingBridge/ApplePlatformMCP-Bridging-Header.h
+        HEADER_SEARCH_PATHS:
+          - $(SRCROOT)/Sources/MailScriptingBridge/include
         OTHER_LDFLAGS:
           - $(inherited)
           - -framework

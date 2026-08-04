@@ -1,7 +1,8 @@
 import Foundation
 
-public enum ApplePlatformMCPTransport: String, Equatable, Sendable {
+public enum ApplePlatformMCPTransport: Equatable, Sendable {
   case stdio
+  case streamableHTTP(host: String, port: Int)
 }
 
 public enum ApplePlatformMCPCommand: Equatable, Sendable {
@@ -25,18 +26,40 @@ public enum ApplePlatformMCPCommand: Equatable, Sendable {
       }
 
     case "serve":
-      switch Array(arguments.dropFirst()) {
-      case ["--transport", ApplePlatformMCPTransport.stdio.rawValue]:
+      let serveArguments = Array(arguments.dropFirst())
+      if serveArguments == ["--transport", "stdio"] {
         return .serve(transport: .stdio)
-      default:
-        throw MailError.invalidInput(
-          "Only --transport stdio is currently supported. Streamable HTTP will be added separately."
+      }
+      if serveArguments == ["--transport", "streamable-http"] {
+        return .serve(
+          transport: .streamableHTTP(host: "127.0.0.1", port: 8_765)
         )
       }
+      if serveArguments.count == 6,
+        serveArguments[0] == "--transport",
+        serveArguments[1] == "streamable-http",
+        serveArguments[2] == "--host",
+        serveArguments[4] == "--port"
+      {
+        guard serveArguments[3] == "127.0.0.1" else {
+          throw MailError.invalidInput(
+            "Streamable HTTP must bind to 127.0.0.1. Non-loopback listeners are disabled."
+          )
+        }
+        guard let port = Int(serveArguments[5]), (1...65_535).contains(port) else {
+          throw MailError.invalidInput("The HTTP port must be an integer from 1 through 65535.")
+        }
+        return .serve(
+          transport: .streamableHTTP(host: serveArguments[3], port: port)
+        )
+      }
+      throw MailError.invalidInput(
+        "Usage: apple-platform-mcp serve --transport stdio|streamable-http [--host 127.0.0.1 --port 8765]"
+      )
 
     default:
       throw MailError.invalidInput(
-        "Usage: apple-platform-mcp [serve --transport stdio|doctor [--request-automation]]"
+        "Usage: apple-platform-mcp [serve --transport stdio|streamable-http [--host 127.0.0.1 --port 8765]|doctor [--request-automation]]"
       )
     }
   }

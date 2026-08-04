@@ -12,7 +12,15 @@ let package = Package(
     .package(
       url: "https://github.com/modelcontextprotocol/swift-sdk.git",
       exact: "0.12.1"
-    )
+    ),
+    .package(
+      url: "https://github.com/apple/swift-nio.git",
+      exact: "2.101.3"
+    ),
+    .package(
+      url: "https://github.com/apple/swift-log.git",
+      exact: "1.14.0"
+    ),
   ],
   targets: [
     .target(
@@ -29,6 +37,10 @@ let package = Package(
       dependencies: [
         "MailScriptingBridge",
         .product(name: "MCP", package: "swift-sdk"),
+        .product(name: "Logging", package: "swift-log"),
+        .product(name: "NIOCore", package: "swift-nio"),
+        .product(name: "NIOHTTP1", package: "swift-nio"),
+        .product(name: "NIOPosix", package: "swift-nio"),
       ],
       path: "Sources/ApplePlatformMCP",
       linkerSettings: [

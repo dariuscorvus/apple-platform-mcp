@@ -86,8 +86,30 @@ The equivalent explicit command is:
 apple-platform-mcp.app/Contents/MacOS/apple-platform-mcp serve --transport stdio
 ```
 
-Server construction is transport-independent, but Streamable HTTP is not exposed by the executable
-yet. Unsupported transports fail closed instead of silently falling back to `stdio`.
+Streamable HTTP is an explicit, loopback-only mode:
+
+```sh
+apple-platform-mcp.app/Contents/MacOS/apple-platform-mcp serve --transport streamable-http
+```
+
+It listens on `127.0.0.1:8765` by default. A different loopback port can be selected explicitly:
+
+```sh
+apple-platform-mcp.app/Contents/MacOS/apple-platform-mcp serve \
+  --transport streamable-http \
+  --host 127.0.0.1 \
+  --port 9000
+```
+
+The MCP endpoint is `POST /mcp`. Process liveness is available at `GET /health/live`, and a
+sanitized Mail/TCC readiness result is available at `GET /health/ready`. Non-loopback bind
+addresses are rejected. The listener requires the exact `127.0.0.1:<bound-port>` Host authority on
+all routes and accepts an Origin only when it matches that authority. It rejects declared or observed
+oversized bodies immediately. Request reading is limited to 15 seconds, each connection to 45
+seconds, accepted connections to 32, concurrent MCP requests to four, and MCP response waiting to 30
+seconds. This stateless listener uses one long-lived MCP server and is intended for one local client.
+Do not expose this unauthenticated HTTP origin directly to a LAN or the internet; remote access
+requires a separate HTTPS and identity-aware authentication layer.
 
 ## Diagnose the host
 

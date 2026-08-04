@@ -7,62 +7,79 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		01B8B5DF60B1FE42EC03EE0A /* MailAutomationDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C1734D8C7DB6309BF0AF0D9 /* MailAutomationDiagnostics.swift */; };
+		102B3B1654A7E591E543C903 /* MailAutomationDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C1734D8C7DB6309BF0AF0D9 /* MailAutomationDiagnostics.swift */; };
+		1075B3498B271512BC92FC78 /* NIOHTTP1 in Frameworks */ = {isa = PBXBuildFile; productRef = 946291FA772A34EE86D20C2E /* NIOHTTP1 */; };
+		163D8C4E207164E1503E7BBF /* Logging in Frameworks */ = {isa = PBXBuildFile; productRef = 4BA1F22BD06F2F5F1A8ADD0F /* Logging */; };
+		1A9D61DA23FE824516C65BD7 /* MailAutomationDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C1734D8C7DB6309BF0AF0D9 /* MailAutomationDiagnostics.swift */; };
 		2062A9B56D7348E28D85107D /* MCP in Frameworks */ = {isa = PBXBuildFile; productRef = 37E2E2E53CF4D757C2BD92CA /* MCP */; };
 		26C48656690A6EAB4838E9F1 /* MCP in Frameworks */ = {isa = PBXBuildFile; productRef = 7EC475AD9348F154C8A9698A /* MCP */; };
-		31B209436A4A724E4899A11A /* MailToolService.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECA3DD70D9C8367A06A590B7 /* MailToolService.swift */; };
-		480ACEC7764673F1F8BDF3DF /* DomainModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1681C7F0AA9DFA0CEFF579E /* DomainModels.swift */; };
+		3396BAF3E171AD88A7986F40 /* NIOCore in Frameworks */ = {isa = PBXBuildFile; productRef = 34DAAF5A93DC94B85D4BEE98 /* NIOCore */; };
+		35E3F0B5B842B90F259D18F4 /* MailContentSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4090D1720B5BC24BEE5F3D37 /* MailContentSanitizer.swift */; };
+		3810FA9CBF0FD201743F2408 /* MailToolService.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECA3DD70D9C8367A06A590B7 /* MailToolService.swift */; };
+		3CF66204EDAEA2AAF3070E44 /* HTTPRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F77553143C9909E8F786F586 /* HTTPRouter.swift */; };
+		3E70EA2D9B74B22D604BCC11 /* MCPServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DC44195A8E3289AAED62727 /* MCPServer.swift */; };
+		3EA016EB9DA9C2AB5E9DE44E /* StatelessHTTPTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 255FEAE531A3EA33A07AF828 /* StatelessHTTPTransport.swift */; };
+		535F1DC59F9D512BF3D35874 /* ScriptingBridgeMailRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9CBDA587D15BF3281F4F308 /* ScriptingBridgeMailRepository.swift */; };
+		54532EE5168FA07896AA31C5 /* DomainModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1681C7F0AA9DFA0CEFF579E /* DomainModels.swift */; };
+		61BEEDC4886435D8EC71BB45 /* ServerConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0FE45735C19936A5F710C6 /* ServerConfiguration.swift */; };
+		667E01BFE07B8109C6E691E5 /* Mail.m in Sources */ = {isa = PBXBuildFile; fileRef = 2E2FB9C48CFCCB7649C6A5A9 /* Mail.m */; };
+		6D02D883F1AB38EDC4076999 /* NIOHTTP1 in Frameworks */ = {isa = PBXBuildFile; productRef = 161F2ED4541E75D6A93DD6C5 /* NIOHTTP1 */; };
+		726A3BE6E7D8BE8F680BD651 /* HTTPRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F77553143C9909E8F786F586 /* HTTPRouter.swift */; };
+		79FAC9B98D2CB62F7EC98637 /* ScriptingBridgeMailRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9CBDA587D15BF3281F4F308 /* ScriptingBridgeMailRepository.swift */; };
+		7D6F3B600AD6A6AC2E04EBB9 /* ServerConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0FE45735C19936A5F710C6 /* ServerConfiguration.swift */; };
+		7E67E6AD587CC95D09E3CDDC /* NIOPosix in Frameworks */ = {isa = PBXBuildFile; productRef = 67AE4330B46015724C8ABE44 /* NIOPosix */; };
+		88F109BFD76F1E5960E14326 /* StatelessHTTPTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 255FEAE531A3EA33A07AF828 /* StatelessHTTPTransport.swift */; };
+		89A7749BF21929FC58F2B5D3 /* StreamableHTTPRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41F0370CBFF4BC2DAEC91750 /* StreamableHTTPRuntime.swift */; };
+		8A444BA81A7E7BB4A65EB872 /* NIOPosix in Frameworks */ = {isa = PBXBuildFile; productRef = 9FBB84328EFD9C42F3C32622 /* NIOPosix */; };
+		8EE8711C8CE009FFD958B475 /* DomainModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1681C7F0AA9DFA0CEFF579E /* DomainModels.swift */; };
 		9183E1B31A6D4A31401C6A75 /* ApplePlatformMCPMain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F9F7152CE05BF17424C9AC6 /* ApplePlatformMCPMain.swift */; };
+		95B39546ECB35E497302E15E /* Logging in Frameworks */ = {isa = PBXBuildFile; productRef = 0A83B5A35A8118DC0881260C /* Logging */; };
 		9A2BE6EF269EFD830286D267 /* ApplePlatformMCPTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 638E1187D0E8F36C8770C761 /* ApplePlatformMCPTests.swift */; };
+		9EDAE001150F209DD6BD0F1B /* StreamableHTTPCommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D185D5E2A4D96FE690DB1307 /* StreamableHTTPCommandTests.swift */; };
+		A186F51FA2C7542F78AA925F /* MailContentSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4090D1720B5BC24BEE5F3D37 /* MailContentSanitizer.swift */; };
+		A5190F1A7FA3D5C645BAB847 /* MCPServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DC44195A8E3289AAED62727 /* MCPServer.swift */; };
 		ACECB4855CDF256399E2CD9C /* SyntheticMailFixtureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4165D4289A204B7D38912D0C /* SyntheticMailFixtureTests.swift */; };
-		B5FDC82C9C8C4D08C3B93A36 /* ServerConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0FE45735C19936A5F710C6 /* ServerConfiguration.swift */; };
-		B6DA8E1E8824AFB1632C745F /* MCPServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DC44195A8E3289AAED62727 /* MCPServer.swift */; };
-		B7678ED1315D73D8C0A5C851 /* Mail.m in Sources */ = {isa = PBXBuildFile; fileRef = 2E2FB9C48CFCCB7649C6A5A9 /* Mail.m */; };
-		CDC4F55A0CDBEACA57E25B20 /* MailPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DEE5BB3C5C654A9F36BB9F9 /* MailPolicy.swift */; };
-		D1F1C4949F17C2555806DA8A /* Doctor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B701AAC0B6D41B43C6F183 /* Doctor.swift */; };
-		DAEBE42D39E0F3FADBA0502A /* ServerCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2B30676EDFDF38A2037F5D6 /* ServerCommand.swift */; };
-		DEE9FD19FA8161848670D86B /* MailContentSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4090D1720B5BC24BEE5F3D37 /* MailContentSanitizer.swift */; };
-		E7E8B259072EFAD506431C7F /* libApplePlatformMCPKit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FD73440A006B800F9DBD1402 /* libApplePlatformMCPKit.a */; };
-		F548C41D32B50B8CB2035F39 /* ScriptingBridgeMailRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9CBDA587D15BF3281F4F308 /* ScriptingBridgeMailRepository.swift */; };
-		FAB7F83A48E485EDDC14E61C /* libApplePlatformMCPKit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FD73440A006B800F9DBD1402 /* libApplePlatformMCPKit.a */; };
+		B450715900DE40473E9EDE04 /* MailToolService.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECA3DD70D9C8367A06A590B7 /* MailToolService.swift */; };
+		C28564219C2C3495E44EFF9D /* ServerCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2B30676EDFDF38A2037F5D6 /* ServerCommand.swift */; };
+		C28E79B437C8016C4C18CE9B /* LoopbackHTTPListenerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C66852A6A52AB3437FE6E327 /* LoopbackHTTPListenerTests.swift */; };
+		C2D5C7A56BAA62ED142C0FF6 /* Mail.m in Sources */ = {isa = PBXBuildFile; fileRef = 2E2FB9C48CFCCB7649C6A5A9 /* Mail.m */; };
+		C5310A4C6D6C6F5B1B68F965 /* HTTPServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 517B820FED9B69B48281075A /* HTTPServer.swift */; };
+		CB6533AFDC07C721FB2744DC /* ServerCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2B30676EDFDF38A2037F5D6 /* ServerCommand.swift */; };
+		D24DA9454DB3B11AE98F7B03 /* MailPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DEE5BB3C5C654A9F36BB9F9 /* MailPolicy.swift */; };
+		DA37C86C1C9B13CD4C5F9078 /* Doctor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B701AAC0B6D41B43C6F183 /* Doctor.swift */; };
+		DBF4B994920DF0F1E7EBDF7D /* NIOCore in Frameworks */ = {isa = PBXBuildFile; productRef = CC07C719AB24B009A8668D5F /* NIOCore */; };
+		DC4B9349E2DABC2F44562BF4 /* Doctor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B701AAC0B6D41B43C6F183 /* Doctor.swift */; };
+		EAB992432502234F4ACFBB14 /* HTTPServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 517B820FED9B69B48281075A /* HTTPServer.swift */; };
+		EF32D766D20AD9702C405836 /* StreamableHTTPRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41F0370CBFF4BC2DAEC91750 /* StreamableHTTPRuntime.swift */; };
+		F0DEC078ADFEEEB95FBF1332 /* MailPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DEE5BB3C5C654A9F36BB9F9 /* MailPolicy.swift */; };
+		FA3A235FB783032B6B9715E2 /* StreamableHTTPRoutingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67581097C2BD591ECF52EFDC /* StreamableHTTPRoutingTests.swift */; };
 /* End PBXBuildFile section */
-
-/* Begin PBXContainerItemProxy section */
-		39EE01056538623A2669E63D /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 70C8CFEB401662A18A4637BD /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 3D3BD39BEF8EA90A1C425B05;
-			remoteInfo = ApplePlatformMCPKit;
-		};
-		3DD46612727B06795E8A5862 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 70C8CFEB401662A18A4637BD /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 3D3BD39BEF8EA90A1C425B05;
-			remoteInfo = ApplePlatformMCPKit;
-		};
-/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		0DC44195A8E3289AAED62727 /* MCPServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPServer.swift; sourceTree = "<group>"; };
+		255FEAE531A3EA33A07AF828 /* StatelessHTTPTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatelessHTTPTransport.swift; sourceTree = "<group>"; };
 		2C1734D8C7DB6309BF0AF0D9 /* MailAutomationDiagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MailAutomationDiagnostics.swift; sourceTree = "<group>"; };
 		2E2FB9C48CFCCB7649C6A5A9 /* Mail.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Mail.m; sourceTree = "<group>"; };
 		2F9F7152CE05BF17424C9AC6 /* ApplePlatformMCPMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplePlatformMCPMain.swift; sourceTree = "<group>"; };
 		33B701AAC0B6D41B43C6F183 /* Doctor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Doctor.swift; sourceTree = "<group>"; };
 		4090D1720B5BC24BEE5F3D37 /* MailContentSanitizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MailContentSanitizer.swift; sourceTree = "<group>"; };
 		4165D4289A204B7D38912D0C /* SyntheticMailFixtureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyntheticMailFixtureTests.swift; sourceTree = "<group>"; };
+		41F0370CBFF4BC2DAEC91750 /* StreamableHTTPRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamableHTTPRuntime.swift; sourceTree = "<group>"; };
+		517B820FED9B69B48281075A /* HTTPServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPServer.swift; sourceTree = "<group>"; };
 		638E1187D0E8F36C8770C761 /* ApplePlatformMCPTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplePlatformMCPTests.swift; sourceTree = "<group>"; };
+		67581097C2BD591ECF52EFDC /* StreamableHTTPRoutingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamableHTTPRoutingTests.swift; sourceTree = "<group>"; };
 		6DEE5BB3C5C654A9F36BB9F9 /* MailPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MailPolicy.swift; sourceTree = "<group>"; };
 		7196D7024879FC41537DD095 /* ApplePlatformMCPTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ApplePlatformMCPTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8D0FE45735C19936A5F710C6 /* ServerConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerConfiguration.swift; sourceTree = "<group>"; };
 		A2B30676EDFDF38A2037F5D6 /* ServerCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerCommand.swift; sourceTree = "<group>"; };
 		B03C097EB3884C30102B0645 /* apple-platform-mcp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "apple-platform-mcp.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		BBC834EEBD7E1F69C3FCE076 /* ApplePlatformMCP-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ApplePlatformMCP-Bridging-Header.h"; sourceTree = "<group>"; };
+		C66852A6A52AB3437FE6E327 /* LoopbackHTTPListenerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopbackHTTPListenerTests.swift; sourceTree = "<group>"; };
+		D185D5E2A4D96FE690DB1307 /* StreamableHTTPCommandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamableHTTPCommandTests.swift; sourceTree = "<group>"; };
 		E9CBDA587D15BF3281F4F308 /* ScriptingBridgeMailRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptingBridgeMailRepository.swift; sourceTree = "<group>"; };
 		ECA3DD70D9C8367A06A590B7 /* MailToolService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MailToolService.swift; sourceTree = "<group>"; };
 		F1681C7F0AA9DFA0CEFF579E /* DomainModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DomainModels.swift; sourceTree = "<group>"; };
-		FD73440A006B800F9DBD1402 /* libApplePlatformMCPKit.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libApplePlatformMCPKit.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		F77553143C9909E8F786F586 /* HTTPRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPRouter.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -70,8 +87,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E7E8B259072EFAD506431C7F /* libApplePlatformMCPKit.a in Frameworks */,
 				2062A9B56D7348E28D85107D /* MCP in Frameworks */,
+				95B39546ECB35E497302E15E /* Logging in Frameworks */,
+				DBF4B994920DF0F1E7EBDF7D /* NIOCore in Frameworks */,
+				6D02D883F1AB38EDC4076999 /* NIOHTTP1 in Frameworks */,
+				8A444BA81A7E7BB4A65EB872 /* NIOPosix in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -79,8 +99,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FAB7F83A48E485EDDC14E61C /* libApplePlatformMCPKit.a in Frameworks */,
 				26C48656690A6EAB4838E9F1 /* MCP in Frameworks */,
+				163D8C4E207164E1503E7BBF /* Logging in Frameworks */,
+				3396BAF3E171AD88A7986F40 /* NIOCore in Frameworks */,
+				1075B3498B271512BC92FC78 /* NIOHTTP1 in Frameworks */,
+				7E67E6AD587CC95D09E3CDDC /* NIOPosix in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -128,6 +151,7 @@
 				C7FCE16FCEEF378A08EBF80F /* Automation */,
 				3EF55A44C0FFB37217BE491D /* Content */,
 				6E0AB9D3C0FD2A24CCB6940F /* Domain */,
+				B798FCAADFCB70A5D6158F27 /* HTTP */,
 				24410344A1E3854B1CB7FD04 /* MCP */,
 				2D5948C99E32D17EDAE78B91 /* Policy */,
 				2AD05C58E9EA9E2CE5E13322 /* Support */,
@@ -182,6 +206,9 @@
 			isa = PBXGroup;
 			children = (
 				638E1187D0E8F36C8770C761 /* ApplePlatformMCPTests.swift */,
+				C66852A6A52AB3437FE6E327 /* LoopbackHTTPListenerTests.swift */,
+				D185D5E2A4D96FE690DB1307 /* StreamableHTTPCommandTests.swift */,
+				67581097C2BD591ECF52EFDC /* StreamableHTTPRoutingTests.swift */,
 				4165D4289A204B7D38912D0C /* SyntheticMailFixtureTests.swift */,
 			);
 			path = ApplePlatformMCPTests;
@@ -193,6 +220,17 @@
 				2F9F7152CE05BF17424C9AC6 /* ApplePlatformMCPMain.swift */,
 			);
 			path = ApplePlatformMCPServer;
+			sourceTree = "<group>";
+		};
+		B798FCAADFCB70A5D6158F27 /* HTTP */ = {
+			isa = PBXGroup;
+			children = (
+				F77553143C9909E8F786F586 /* HTTPRouter.swift */,
+				517B820FED9B69B48281075A /* HTTPServer.swift */,
+				255FEAE531A3EA33A07AF828 /* StatelessHTTPTransport.swift */,
+				41F0370CBFF4BC2DAEC91750 /* StreamableHTTPRuntime.swift */,
+			);
+			path = HTTP;
 			sourceTree = "<group>";
 		};
 		BF27A7F594198E8952BB6C5A /* MailScriptingBridge */ = {
@@ -218,7 +256,6 @@
 			children = (
 				B03C097EB3884C30102B0645 /* apple-platform-mcp.app */,
 				7196D7024879FC41537DD095 /* ApplePlatformMCPTests.xctest */,
-				FD73440A006B800F9DBD1402 /* libApplePlatformMCPKit.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -226,26 +263,6 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		3D3BD39BEF8EA90A1C425B05 /* ApplePlatformMCPKit */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 5BEAD342AA7594BA0926123D /* Build configuration list for PBXNativeTarget "ApplePlatformMCPKit" */;
-			buildPhases = (
-				5209B36C01F201E0B99E4363 /* Sources */,
-				53CE78CC4102987CC3F13FD7 /* Copy Swift Objective-C Interface Header */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				5883E9843DE89CDFE70F9FBE /* PBXTargetDependency */,
-			);
-			name = ApplePlatformMCPKit;
-			packageProductDependencies = (
-				990363E17D2604FA30930C5D /* MCP */,
-			);
-			productName = ApplePlatformMCPKit;
-			productReference = FD73440A006B800F9DBD1402 /* libApplePlatformMCPKit.a */;
-			productType = "com.apple.product-type.library.static";
-		};
 		61720B37A11993D671329F36 /* apple-platform-mcp */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = A15BCADDDF1F0DF834EC1B12 /* Build configuration list for PBXNativeTarget "apple-platform-mcp" */;
@@ -256,11 +273,14 @@
 			buildRules = (
 			);
 			dependencies = (
-				A81DDC747894B5999BCB7FF5 /* PBXTargetDependency */,
 			);
 			name = "apple-platform-mcp";
 			packageProductDependencies = (
 				7EC475AD9348F154C8A9698A /* MCP */,
+				4BA1F22BD06F2F5F1A8ADD0F /* Logging */,
+				34DAAF5A93DC94B85D4BEE98 /* NIOCore */,
+				946291FA772A34EE86D20C2E /* NIOHTTP1 */,
+				67AE4330B46015724C8ABE44 /* NIOPosix */,
 			);
 			productName = "apple-platform-mcp";
 			productReference = B03C097EB3884C30102B0645 /* apple-platform-mcp.app */;
@@ -276,11 +296,14 @@
 			buildRules = (
 			);
 			dependencies = (
-				BECFADAB0FC25E62C824154B /* PBXTargetDependency */,
 			);
 			name = ApplePlatformMCPTests;
 			packageProductDependencies = (
 				37E2E2E53CF4D757C2BD92CA /* MCP */,
+				0A83B5A35A8118DC0881260C /* Logging */,
+				CC07C719AB24B009A8668D5F /* NIOCore */,
+				161F2ED4541E75D6A93DD6C5 /* NIOHTTP1 */,
+				9FBB84328EFD9C42F3C32622 /* NIOPosix */,
 			);
 			productName = ApplePlatformMCPTests;
 			productReference = 7196D7024879FC41537DD095 /* ApplePlatformMCPTests.xctest */;
@@ -295,9 +318,6 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
-					3D3BD39BEF8EA90A1C425B05 = {
-						DevelopmentTeam = "";
-					};
 					61720B37A11993D671329F36 = {
 						DevelopmentTeam = "";
 					};
@@ -316,63 +336,45 @@
 			mainGroup = 858FAD9699423670FAE9706D;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				AA4D4F1CBDDAA8BB1A74B49A /* XCRemoteSwiftPackageReference "swift-log" */,
 				FBFB1008DE0790622CDEFB87 /* XCRemoteSwiftPackageReference "swift-sdk" */,
+				928434A9DE76B230A625B50F /* XCRemoteSwiftPackageReference "swift-nio" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E1375C5678A5B329D80C4CB8 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				3D3BD39BEF8EA90A1C425B05 /* ApplePlatformMCPKit */,
 				61720B37A11993D671329F36 /* apple-platform-mcp */,
 				9D791C5D41A5017CD8649180 /* ApplePlatformMCPTests */,
 			);
 		};
 /* End PBXProject section */
 
-/* Begin PBXShellScriptBuildPhase section */
-		53CE78CC4102987CC3F13FD7 /* Copy Swift Objective-C Interface Header */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"$(DERIVED_SOURCES_DIR)/$(SWIFT_OBJC_INTERFACE_HEADER_NAME)",
-			);
-			name = "Copy Swift Objective-C Interface Header";
-			outputPaths = (
-				"$(BUILT_PRODUCTS_DIR)/include/$(PRODUCT_MODULE_NAME)/$(SWIFT_OBJC_INTERFACE_HEADER_NAME)",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "ditto \"${SCRIPT_INPUT_FILE_0}\" \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-		};
-/* End PBXShellScriptBuildPhase section */
-
 /* Begin PBXSourcesBuildPhase section */
-		5209B36C01F201E0B99E4363 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				D1F1C4949F17C2555806DA8A /* Doctor.swift in Sources */,
-				480ACEC7764673F1F8BDF3DF /* DomainModels.swift in Sources */,
-				B6DA8E1E8824AFB1632C745F /* MCPServer.swift in Sources */,
-				B7678ED1315D73D8C0A5C851 /* Mail.m in Sources */,
-				01B8B5DF60B1FE42EC03EE0A /* MailAutomationDiagnostics.swift in Sources */,
-				DEE9FD19FA8161848670D86B /* MailContentSanitizer.swift in Sources */,
-				CDC4F55A0CDBEACA57E25B20 /* MailPolicy.swift in Sources */,
-				31B209436A4A724E4899A11A /* MailToolService.swift in Sources */,
-				F548C41D32B50B8CB2035F39 /* ScriptingBridgeMailRepository.swift in Sources */,
-				DAEBE42D39E0F3FADBA0502A /* ServerCommand.swift in Sources */,
-				B5FDC82C9C8C4D08C3B93A36 /* ServerConfiguration.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		6275D2F41EC1C034812E0D45 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				9A2BE6EF269EFD830286D267 /* ApplePlatformMCPTests.swift in Sources */,
+				DA37C86C1C9B13CD4C5F9078 /* Doctor.swift in Sources */,
+				54532EE5168FA07896AA31C5 /* DomainModels.swift in Sources */,
+				726A3BE6E7D8BE8F680BD651 /* HTTPRouter.swift in Sources */,
+				EAB992432502234F4ACFBB14 /* HTTPServer.swift in Sources */,
+				C28E79B437C8016C4C18CE9B /* LoopbackHTTPListenerTests.swift in Sources */,
+				3E70EA2D9B74B22D604BCC11 /* MCPServer.swift in Sources */,
+				C2D5C7A56BAA62ED142C0FF6 /* Mail.m in Sources */,
+				1A9D61DA23FE824516C65BD7 /* MailAutomationDiagnostics.swift in Sources */,
+				35E3F0B5B842B90F259D18F4 /* MailContentSanitizer.swift in Sources */,
+				D24DA9454DB3B11AE98F7B03 /* MailPolicy.swift in Sources */,
+				3810FA9CBF0FD201743F2408 /* MailToolService.swift in Sources */,
+				535F1DC59F9D512BF3D35874 /* ScriptingBridgeMailRepository.swift in Sources */,
+				CB6533AFDC07C721FB2744DC /* ServerCommand.swift in Sources */,
+				7D6F3B600AD6A6AC2E04EBB9 /* ServerConfiguration.swift in Sources */,
+				3EA016EB9DA9C2AB5E9DE44E /* StatelessHTTPTransport.swift in Sources */,
+				9EDAE001150F209DD6BD0F1B /* StreamableHTTPCommandTests.swift in Sources */,
+				FA3A235FB783032B6B9715E2 /* StreamableHTTPRoutingTests.swift in Sources */,
+				89A7749BF21929FC58F2B5D3 /* StreamableHTTPRuntime.swift in Sources */,
 				ACECB4855CDF256399E2CD9C /* SyntheticMailFixtureTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -382,59 +384,34 @@
 			buildActionMask = 2147483647;
 			files = (
 				9183E1B31A6D4A31401C6A75 /* ApplePlatformMCPMain.swift in Sources */,
+				DC4B9349E2DABC2F44562BF4 /* Doctor.swift in Sources */,
+				8EE8711C8CE009FFD958B475 /* DomainModels.swift in Sources */,
+				3CF66204EDAEA2AAF3070E44 /* HTTPRouter.swift in Sources */,
+				C5310A4C6D6C6F5B1B68F965 /* HTTPServer.swift in Sources */,
+				A5190F1A7FA3D5C645BAB847 /* MCPServer.swift in Sources */,
+				667E01BFE07B8109C6E691E5 /* Mail.m in Sources */,
+				102B3B1654A7E591E543C903 /* MailAutomationDiagnostics.swift in Sources */,
+				A186F51FA2C7542F78AA925F /* MailContentSanitizer.swift in Sources */,
+				F0DEC078ADFEEEB95FBF1332 /* MailPolicy.swift in Sources */,
+				B450715900DE40473E9EDE04 /* MailToolService.swift in Sources */,
+				79FAC9B98D2CB62F7EC98637 /* ScriptingBridgeMailRepository.swift in Sources */,
+				C28564219C2C3495E44EFF9D /* ServerCommand.swift in Sources */,
+				61BEEDC4886435D8EC71BB45 /* ServerConfiguration.swift in Sources */,
+				88F109BFD76F1E5960E14326 /* StatelessHTTPTransport.swift in Sources */,
+				EF32D766D20AD9702C405836 /* StreamableHTTPRuntime.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
-/* Begin PBXTargetDependency section */
-		5883E9843DE89CDFE70F9FBE /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			productRef = 990363E17D2604FA30930C5D /* MCP */;
-		};
-		A81DDC747894B5999BCB7FF5 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 3D3BD39BEF8EA90A1C425B05 /* ApplePlatformMCPKit */;
-			targetProxy = 3DD46612727B06795E8A5862 /* PBXContainerItemProxy */;
-		};
-		BECFADAB0FC25E62C824154B /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 3D3BD39BEF8EA90A1C425B05 /* ApplePlatformMCPKit */;
-			targetProxy = 39EE01056538623A2669E63D /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
-
 /* Begin XCBuildConfiguration section */
-		01945430B4247732FE489286 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				DEFINES_MODULE = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/Sources/MailScriptingBridge/include",
-				);
-				INFOPLIST_KEY_CFBundleDisplayName = "Apple Platform MCP Kit";
-				MACH_O_TYPE = staticlib;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					"-framework",
-					CoreServices,
-					"-framework",
-					Security,
-					"-framework",
-					ScriptingBridge,
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.dariuscorvus.apple-platform-mcp.kit";
-				PRODUCT_MODULE_NAME = ApplePlatformMCPKit;
-				PRODUCT_NAME = ApplePlatformMCPKit;
-				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/Sources/MailScriptingBridge/ApplePlatformMCP-Bridging-Header.h";
-			};
-			name = Debug;
-		};
 		0281E78665024D1D14A60528 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Sources/MailScriptingBridge/include",
+				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-framework",
@@ -443,11 +420,15 @@
 					Security,
 					"-framework",
 					ScriptingBridge,
-					"-ObjC",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.dariuscorvus.apple-platform-mcp.tests";
 				PRODUCT_MODULE_NAME = ApplePlatformMCPTests;
 				PRODUCT_NAME = ApplePlatformMCPTests;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = (
+					"$(inherited)",
+					XCODE_COMBINED_TEST_TARGET,
+				);
+				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/Sources/MailScriptingBridge/ApplePlatformMCP-Bridging-Header.h";
 			};
 			name = Release;
 		};
@@ -469,6 +450,9 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Config/ApplePlatformMCP.entitlements;
 				EXECUTABLE_NAME = "apple-platform-mcp";
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Sources/MailScriptingBridge/include",
+				);
 				INFOPLIST_FILE = "Config/ApplePlatformMCP-Info.plist";
 				MACH_O_TYPE = mh_execute;
 				OTHER_LDFLAGS = (
@@ -479,10 +463,11 @@
 					Security,
 					"-framework",
 					ScriptingBridge,
-					"-ObjC",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.dariuscorvus.apple-platform-mcp";
+				PRODUCT_MODULE_NAME = ApplePlatformMCPExecutable;
 				PRODUCT_NAME = "apple-platform-mcp";
+				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/Sources/MailScriptingBridge/ApplePlatformMCP-Bridging-Header.h";
 			};
 			name = Debug;
 		};
@@ -492,6 +477,9 @@
 				CODE_SIGN_ENTITLEMENTS = Config/ApplePlatformMCP.entitlements;
 				ENABLE_HARDENED_RUNTIME = YES;
 				EXECUTABLE_NAME = "apple-platform-mcp";
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Sources/MailScriptingBridge/include",
+				);
 				INFOPLIST_FILE = "Config/ApplePlatformMCP-Info.plist";
 				MACH_O_TYPE = mh_execute;
 				OTHER_LDFLAGS = (
@@ -502,35 +490,10 @@
 					Security,
 					"-framework",
 					ScriptingBridge,
-					"-ObjC",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.dariuscorvus.apple-platform-mcp";
+				PRODUCT_MODULE_NAME = ApplePlatformMCPExecutable;
 				PRODUCT_NAME = "apple-platform-mcp";
-			};
-			name = Release;
-		};
-		8B87DE64529D23BA89B9968C /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				DEFINES_MODULE = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/Sources/MailScriptingBridge/include",
-				);
-				INFOPLIST_KEY_CFBundleDisplayName = "Apple Platform MCP Kit";
-				MACH_O_TYPE = staticlib;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					"-framework",
-					CoreServices,
-					"-framework",
-					Security,
-					"-framework",
-					ScriptingBridge,
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.dariuscorvus.apple-platform-mcp.kit";
-				PRODUCT_MODULE_NAME = ApplePlatformMCPKit;
-				PRODUCT_NAME = ApplePlatformMCPKit;
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/Sources/MailScriptingBridge/ApplePlatformMCP-Bridging-Header.h";
 			};
 			name = Release;
@@ -539,6 +502,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Sources/MailScriptingBridge/include",
+				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-framework",
@@ -547,11 +513,15 @@
 					Security,
 					"-framework",
 					ScriptingBridge,
-					"-ObjC",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.dariuscorvus.apple-platform-mcp.tests";
 				PRODUCT_MODULE_NAME = ApplePlatformMCPTests;
 				PRODUCT_NAME = ApplePlatformMCPTests;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = (
+					"$(inherited)",
+					XCODE_COMBINED_TEST_TARGET,
+				);
+				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/Sources/MailScriptingBridge/ApplePlatformMCP-Bridging-Header.h";
 			};
 			name = Debug;
 		};
@@ -580,15 +550,6 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		5BEAD342AA7594BA0926123D /* Build configuration list for PBXNativeTarget "ApplePlatformMCPKit" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				01945430B4247732FE489286 /* Debug */,
-				8B87DE64529D23BA89B9968C /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
-		};
 		A15BCADDDF1F0DF834EC1B12 /* Build configuration list for PBXNativeTarget "apple-platform-mcp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -610,6 +571,22 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		928434A9DE76B230A625B50F /* XCRemoteSwiftPackageReference "swift-nio" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-nio.git";
+			requirement = {
+				kind = exactVersion;
+				version = 2.101.3;
+			};
+		};
+		AA4D4F1CBDDAA8BB1A74B49A /* XCRemoteSwiftPackageReference "swift-log" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-log.git";
+			requirement = {
+				kind = exactVersion;
+				version = 1.14.0;
+			};
+		};
 		FBFB1008DE0790622CDEFB87 /* XCRemoteSwiftPackageReference "swift-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/modelcontextprotocol/swift-sdk.git";
@@ -621,20 +598,55 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		0A83B5A35A8118DC0881260C /* Logging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA4D4F1CBDDAA8BB1A74B49A /* XCRemoteSwiftPackageReference "swift-log" */;
+			productName = Logging;
+		};
+		161F2ED4541E75D6A93DD6C5 /* NIOHTTP1 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 928434A9DE76B230A625B50F /* XCRemoteSwiftPackageReference "swift-nio" */;
+			productName = NIOHTTP1;
+		};
+		34DAAF5A93DC94B85D4BEE98 /* NIOCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 928434A9DE76B230A625B50F /* XCRemoteSwiftPackageReference "swift-nio" */;
+			productName = NIOCore;
+		};
 		37E2E2E53CF4D757C2BD92CA /* MCP */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = FBFB1008DE0790622CDEFB87 /* XCRemoteSwiftPackageReference "swift-sdk" */;
 			productName = MCP;
+		};
+		4BA1F22BD06F2F5F1A8ADD0F /* Logging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA4D4F1CBDDAA8BB1A74B49A /* XCRemoteSwiftPackageReference "swift-log" */;
+			productName = Logging;
+		};
+		67AE4330B46015724C8ABE44 /* NIOPosix */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 928434A9DE76B230A625B50F /* XCRemoteSwiftPackageReference "swift-nio" */;
+			productName = NIOPosix;
 		};
 		7EC475AD9348F154C8A9698A /* MCP */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = FBFB1008DE0790622CDEFB87 /* XCRemoteSwiftPackageReference "swift-sdk" */;
 			productName = MCP;
 		};
-		990363E17D2604FA30930C5D /* MCP */ = {
+		946291FA772A34EE86D20C2E /* NIOHTTP1 */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = FBFB1008DE0790622CDEFB87 /* XCRemoteSwiftPackageReference "swift-sdk" */;
-			productName = MCP;
+			package = 928434A9DE76B230A625B50F /* XCRemoteSwiftPackageReference "swift-nio" */;
+			productName = NIOHTTP1;
+		};
+		9FBB84328EFD9C42F3C32622 /* NIOPosix */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 928434A9DE76B230A625B50F /* XCRemoteSwiftPackageReference "swift-nio" */;
+			productName = NIOPosix;
+		};
+		CC07C719AB24B009A8668D5F /* NIOCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 928434A9DE76B230A625B50F /* XCRemoteSwiftPackageReference "swift-nio" */;
+			productName = NIOCore;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

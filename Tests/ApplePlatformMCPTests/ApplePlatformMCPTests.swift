@@ -1,7 +1,10 @@
-import ApplePlatformMCPKit
 import Foundation
 import MCP
 import Testing
+
+#if !XCODE_COMBINED_TEST_TARGET
+  import ApplePlatformMCPKit
+#endif
 
 @Suite("Reference codec")
 struct ReferenceCodecTests {
@@ -217,7 +220,7 @@ struct ApplePlatformMCPCommandTests {
   func rejectsBareServe() {
     #expect(
       throws: MailError.invalidInput(
-        "Only --transport stdio is currently supported. Streamable HTTP will be added separately."
+        "Usage: apple-platform-mcp serve --transport stdio|streamable-http [--host 127.0.0.1 --port 8765]"
       )
     ) {
       try ApplePlatformMCPCommand.parse(["serve"])
@@ -241,7 +244,7 @@ struct ApplePlatformMCPCommandTests {
   @Test("rejects transports that are not implemented")
   func rejectsUnsupportedTransport() {
     #expect(throws: MailError.self) {
-      try ApplePlatformMCPCommand.parse(["serve", "--transport", "streamable-http"])
+      try ApplePlatformMCPCommand.parse(["serve", "--transport", "sse"])
     }
   }
 }

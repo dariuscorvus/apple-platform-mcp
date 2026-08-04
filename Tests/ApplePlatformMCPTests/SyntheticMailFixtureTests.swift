@@ -1,7 +1,10 @@
-import ApplePlatformMCPKit
 import Foundation
 import MCP
 import Testing
+
+#if !XCODE_COMBINED_TEST_TARGET
+  import ApplePlatformMCPKit
+#endif
 
 @Suite("Synthetic Mail fixture")
 struct SyntheticMailFixtureTests {
