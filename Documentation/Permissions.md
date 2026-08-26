@@ -55,6 +55,12 @@ list deletion additionally requires `reminder_list_delete_enabled=true`. See
 
 Unsigned development builds can compile and run the stdio protocol, but they are not distribution-ready. TCC behavior must be verified with a signed build under a dedicated macOS test account.
 
+The signing identity is part of the macOS privacy identity. Do not install a
+Debug or ad-hoc build as the long-running host service: its cdhash-based
+designated requirement changes with every rebuild, so macOS can treat the
+updated app as a new Reminders client. Host upgrades must use Release builds
+signed by the same stable Developer ID identity.
+
 ## Distribution gate
 
 Before a release:

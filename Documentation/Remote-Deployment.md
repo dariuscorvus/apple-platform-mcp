@@ -82,7 +82,22 @@ APP="$HOME/.jcode/scratch/apple-platform-mcp.xcarchive/Products/Applications/app
 
 Install the exact signed app bundle from the archive at a stable path. The
 gateway launches that bundle through Launch Services; do not point it at an
-unsigned executable copy or shell wrapper.
+unsigned executable copy, ad-hoc build, or shell wrapper. The same stable
+Developer ID identity must sign every host upgrade, otherwise macOS can treat
+the new bundle as a different TCC client.
+
+After installing a new bundle and before starting the gateway, run the
+explicit Reminders setup command once for that installed identity, then
+restart the gateway:
+
+```sh
+APP="/Users/<user>/Applications/apple-platform-mcp.app/Contents/MacOS/apple-platform-mcp"
+"$APP" doctor --request-reminders
+launchctl kickstart -k gui/$(id -u)/codes.<user>.apple-platform-mcp-remote
+```
+
+The command may show the macOS consent prompt on first install. It is not a
+substitute for stable signing; it only performs first-run TCC onboarding.
 
 ## 2. Build the gateway
 

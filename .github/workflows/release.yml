@@ -1,8 +1,8 @@
 # Release: build, sign, notarize, staple, and publish a macOS DMG.
 #
-# Tag releases require all signing and notarization secrets. workflow_dispatch
-# is a dry run and uploads the DMG as a workflow artifact without publishing a
-# GitHub release.
+# Tagged releases require signing and notarization credentials. workflow_dispatch
+# remains a dry run and uploads a signed DMG as a workflow artifact without
+# publishing a GitHub release; notarization is optional for that dry run.
 
 name: Release
 
@@ -45,16 +45,15 @@ jobs:
           esac
 
       - name: Require release credentials
-        if: github.event_name == 'push'
         run: |
           test "$HAS_SIGNING_CREDENTIALS" = "true" || {
-            echo "Signing secrets are required for tagged releases." >&2
+            echo "Signing secrets are required for every release build; refusing an unsigned artifact." >&2
             exit 1
           }
-          test "$HAS_NOTARY_CREDENTIALS" = "true" || {
+          if [ "${{ github.event_name }}" = "push" ] && [ "$HAS_NOTARY_CREDENTIALS" != "true" ]; then
             echo "Notarization secrets are required for tagged releases." >&2
             exit 1
-          }
+          fi
 
       - name: Install XcodeGen
         run: |
@@ -69,7 +68,6 @@ jobs:
         run: swift test
 
       - name: Import signing certificate
-        if: env.HAS_SIGNING_CREDENTIALS == 'true'
         run: |
           echo "${{ secrets.APPLE_CERTIFICATE }}" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
           security create-keychain -p ci-keychain "$RUNNER_TEMP/ci.keychain-db"
@@ -89,39 +87,38 @@ jobs:
       - name: Archive signed app
         run: |
           archive_path="$RUNNER_TEMP/apple-platform-mcp.xcarchive"
-          if [ "$HAS_SIGNING_CREDENTIALS" = "true" ]; then
-            xcodebuild \
-              -project ApplePlatformMCP.xcodeproj \
-              -scheme ApplePlatformMCP \
-              -configuration Release \
-              -destination 'generic/platform=macOS' \
-              -archivePath "$archive_path" \
-              -clonedSourcePackagesDirPath "$RUNNER_TEMP/apple-platform-mcp-packages" \
-              CODE_SIGN_STYLE=Manual \
-              CODE_SIGN_IDENTITY="$SIGNING_IDENTITY" \
-              DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
-              APPLE_PLATFORM_MCP_BUILD_COMMIT="$GITHUB_SHA" \
-              archive
-          else
-            xcodebuild \
-              -project ApplePlatformMCP.xcodeproj \
-              -scheme ApplePlatformMCP \
-              -configuration Release \
-              -destination 'generic/platform=macOS' \
-              -archivePath "$archive_path" \
-              -clonedSourcePackagesDirPath "$RUNNER_TEMP/apple-platform-mcp-packages" \
-              CODE_SIGNING_ALLOWED=NO \
-              APPLE_PLATFORM_MCP_BUILD_COMMIT="$GITHUB_SHA" \
-              archive
-          fi
+          xcodebuild \
+            -project ApplePlatformMCP.xcodeproj \
+            -scheme ApplePlatformMCP \
+            -configuration Release \
+            -destination 'generic/platform=macOS' \
+            -archivePath "$archive_path" \
+            -clonedSourcePackagesDirPath "$RUNNER_TEMP/apple-platform-mcp-packages" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="$SIGNING_IDENTITY" \
+            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
+            APPLE_PLATFORM_MCP_BUILD_COMMIT="$GITHUB_SHA" \
+            archive
           echo "ARCHIVE_PATH=$archive_path" >> "$GITHUB_ENV"
 
       - name: Verify signed app
-        if: env.HAS_SIGNING_CREDENTIALS == 'true'
         run: |
           app_path="$ARCHIVE_PATH/Products/Applications/apple-platform-mcp.app"
           codesign --verify --deep --strict "$app_path"
-          codesign -dv --verbose=2 "$app_path" 2>&1 | grep -E 'Identifier=|TeamIdentifier=|Authority='
+          signature_details="$(codesign -dv --verbose=4 "$app_path" 2>&1 || true)"
+          printf '%s\n' "$signature_details" | grep -E '^(Identifier|TeamIdentifier|Authority)='
+          if printf '%s\n' "$signature_details" | grep -q '^Signature=adhoc$'; then
+            echo "Release artifact is ad-hoc signed; a stable signing identity is required for macOS TCC upgrades." >&2
+            exit 1
+          fi
+          if printf '%s\n' "$signature_details" | grep -q '# designated => cdhash'; then
+            echo "Release artifact uses a cdhash-only designated requirement; stable upgrades are not allowed." >&2
+            exit 1
+          fi
+          if ! printf '%s\n' "$signature_details" | grep -q '^TeamIdentifier='; then
+            echo "Release artifact has no TeamIdentifier; refusing an unstable TCC identity." >&2
+            exit 1
+          fi
 
       - name: Create DMG
         run: |
