@@ -1,0 +1,34 @@
+{
+  "version": 2,
+  "taskplannerVersion": "2.1.1",
+  "readmeAttribution": true,
+  "idPrefix": "TASK",
+  "nextId": 12,
+  "states": {
+    "backlog": {
+      "label": "Backlog",
+      "file": "BACKLOG.md"
+    },
+    "next": {
+      "label": "Next",
+      "file": "NEXT.md"
+    },
+    "in_progress": {
+      "label": "In Progress",
+      "file": "IN_PROGRESS.md"
+    },
+    "done": {
+      "label": "Done",
+      "file": "DONE.md"
+    },
+    "rejected": {
+      "label": "Rejected",
+      "file": "REJECTED.md"
+    }
+  },
+  "priorities": ["P0", "P1", "P2", "P3", "P4"],
+  "tags": [],
+  "insertion": "top",
+  "aiPlanRequired": true,
+  "sortByPriority": true
+}

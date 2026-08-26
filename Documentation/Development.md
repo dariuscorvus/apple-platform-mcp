@@ -32,7 +32,7 @@ xcrun swift-format lint --recursive Sources Tests
 For the fastest local feedback loop, build and run the contract tests with Swift Package Manager:
 
 ```sh
-swift test
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
 ```
 
 The package manifest models the generated Mail ScriptingBridge as a separate Objective-C target.
@@ -52,6 +52,9 @@ xcodebuild \
 ```
 
 Run the same command with `test` instead of `build` for the unit and contract test target.
+For a combined Xcode run of the in-memory MCP contract suites, add
+`-parallel-testing-enabled NO`: on the current Xcode runner those suites are
+reliable in one process but can otherwise overlap during transport teardown.
 
 For a local signed build, archive the app with a Developer ID identity and run the embedded executable from the archive:
 
@@ -147,7 +150,8 @@ Cloudflare Access, Claude, ChatGPT, and launchd setup.
 apple-platform-mcp.app/Contents/MacOS/apple-platform-mcp doctor
 ```
 
-The output contains only platform, signing, policy, configuration, and Mail/TCC status. It never lists accounts or reads message data.
+The output contains only platform, signing, policy, configuration, and
+Mail/Reminders TCC status. It never lists accounts, messages, or reminders.
 
 ## Configuration
 
@@ -159,13 +163,23 @@ The optional file is:
 
 The bootstrap uses JSON so the local server has no YAML parser dependency. The file contains policy references and limits only; Mail.app remains the owner of account credentials.
 
-An absent file means read-only defaults with `send_mode=denied` and
-`mutation_mode=denied`. Invalid configuration fails closed. The supported send
-and mutation modes are `denied`, `allowed`, and `confirmation_required`; the
-latter is intentionally blocked until a separate confirmation boundary exists.
-Mutation mode is independent from send mode. Enabling it exposes only the
-validated draft, move, archive, Trash, and read/flag update operations; it does
-not enable permanent deletion.
+An absent file means safe defaults with `send_mode=denied`,
+`mutation_mode=denied`, `reminder_mutation_mode=denied`, and
+`reminder_list_delete_enabled=false`. Invalid configuration fails closed. The
+supported send and mutation modes are `denied`, `allowed`, and
+`confirmation_required`; the latter is intentionally blocked until a separate
+confirmation boundary exists. Reminder mutation policy is independent from
+Mail policy. Enabling it exposes only the validated Reminder/list lifecycle;
+list deletion remains permanently destructive and requires its second explicit
+gate as well as an empty exact target list.
+
+For a temporary, isolated configuration use an explicit absolute path without
+changing the normal user file:
+
+```sh
+apple-platform-mcp.app/Contents/MacOS/apple-platform-mcp serve \
+  --transport stdio --config /absolute/path/config.json
+```
 
 Optional send limits are `max_send_body_bytes`, `max_subject_bytes`, and
 `max_recipients`. The account and identity values are always sourced from

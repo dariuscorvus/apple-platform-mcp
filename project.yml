@@ -74,6 +74,8 @@ targets:
           - -framework
           - CoreServices
           - -framework
+          - EventKit
+          - -framework
           - Security
           - -framework
           - ScriptingBridge
@@ -117,6 +119,8 @@ targets:
           - $(inherited)
           - -framework
           - CoreServices
+          - -framework
+          - EventKit
           - -framework
           - Security
           - -framework

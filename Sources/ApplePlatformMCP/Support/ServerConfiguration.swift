@@ -17,6 +17,8 @@ public struct MailServerConfiguration: Codable, Equatable, Sendable {
   public let maxRecipients: Int
   public let allowedAccountIDs: Set<AccountReference>?
   public let allowedMailboxIDs: Set<MailboxReference>?
+  public let reminderMutationMode: ReminderMutationMode
+  public let reminderListDeleteEnabled: Bool
 
   public static let `default` = MailServerConfiguration()
 
@@ -35,7 +37,9 @@ public struct MailServerConfiguration: Codable, Equatable, Sendable {
     maxSubjectBytes: Int = 10_000,
     maxRecipients: Int = 100,
     allowedAccountIDs: Set<AccountReference>? = nil,
-    allowedMailboxIDs: Set<MailboxReference>? = nil
+    allowedMailboxIDs: Set<MailboxReference>? = nil,
+    reminderMutationMode: ReminderMutationMode = .denied,
+    reminderListDeleteEnabled: Bool = false
   ) {
     self.mode = mode
     self.sendMode = sendMode
@@ -47,6 +51,8 @@ public struct MailServerConfiguration: Codable, Equatable, Sendable {
     self.maxRecipients = max(1, maxRecipients)
     self.allowedAccountIDs = allowedAccountIDs
     self.allowedMailboxIDs = allowedMailboxIDs
+    self.reminderMutationMode = reminderMutationMode
+    self.reminderListDeleteEnabled = reminderListDeleteEnabled
   }
 
   public var policy: MailPolicy {
@@ -61,6 +67,13 @@ public struct MailServerConfiguration: Codable, Equatable, Sendable {
       maxRecipients: maxRecipients,
       allowedAccountIDs: allowedAccountIDs,
       allowedMailboxIDs: allowedMailboxIDs
+    )
+  }
+
+  public var reminderPolicy: ReminderPolicy {
+    ReminderPolicy(
+      mutationMode: reminderMutationMode,
+      listDeleteEnabled: reminderListDeleteEnabled
     )
   }
 
@@ -97,6 +110,8 @@ public struct MailServerConfiguration: Codable, Equatable, Sendable {
     case maxRecipients = "max_recipients"
     case allowedAccountIDs = "allowed_account_ids"
     case allowedMailboxIDs = "allowed_mailbox_ids"
+    case reminderMutationMode = "reminder_mutation_mode"
+    case reminderListDeleteEnabled = "reminder_list_delete_enabled"
   }
 
   public init(from decoder: Decoder) throws {
@@ -122,7 +137,11 @@ public struct MailServerConfiguration: Codable, Equatable, Sendable {
       allowedAccountIDs: try container.decodeIfPresent(
         Set<AccountReference>.self, forKey: .allowedAccountIDs),
       allowedMailboxIDs: try container.decodeIfPresent(
-        Set<MailboxReference>.self, forKey: .allowedMailboxIDs)
+        Set<MailboxReference>.self, forKey: .allowedMailboxIDs),
+      reminderMutationMode: try container.decodeIfPresent(
+        ReminderMutationMode.self, forKey: .reminderMutationMode) ?? .denied,
+      reminderListDeleteEnabled: try container.decodeIfPresent(
+        Bool.self, forKey: .reminderListDeleteEnabled) ?? false
     )
   }
 }

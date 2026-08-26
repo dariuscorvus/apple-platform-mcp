@@ -24,5 +24,9 @@
 	<string>public.app-category.utilities</string>
 	<key>NSAppleEventsUsageDescription</key>
 	<string>Apple Platform MCP uses Apple Events to list and read messages in Mail when requested by the configured MCP client.</string>
+	<key>NSRemindersFullAccessUsageDescription</key>
+	<string>Apple Platform MCP uses Reminders Full Access to list and manage explicitly selected reminder lists and reminders when requested by the configured MCP client.</string>
+	<key>NSRemindersUsageDescription</key>
+	<string>Apple Platform MCP uses Reminders access to list and manage explicitly selected reminder lists and reminders when requested by the configured MCP client.</string>
 </dict>
 </plist>
