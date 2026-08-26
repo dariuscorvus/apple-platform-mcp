@@ -82,7 +82,7 @@ Exit condition: archive-wide search is either supported within a measured budget
 
 ## Cross-cutting requirements
 
-- Preserve read-only mode and the existing five-tool allowlist until a separate security decision changes it.
+- Preserve the read-only baseline; mailbox mutation tools require the separate `mutation_mode` gate and remain denied by default.
 - Do not add Accessibility, Computer Use, screen scraping, or private Mail database access.
 - Keep Mail.app as credential owner for the ScriptingBridge path.
 - Keep account and mailbox allowlists, opaque references, cursor binding, body limits, sanitization, and untrusted-content handling fail-closed.

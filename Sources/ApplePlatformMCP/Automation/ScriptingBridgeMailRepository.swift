@@ -291,10 +291,119 @@ public actor ScriptingBridgeMailRepository: MailRepository {
     #endif
   }
 
+  public func createDraft(_ request: MailDraftRequest) async throws -> MailDraftResult {
+    try ensureMailIsReachable()
+
+    #if canImport(MailScriptingBridge)
+      func recipientValues(_ values: [MailAddress]) -> [[String: String]] {
+        values.map { address in
+          var value = ["address": address.address]
+          if let displayName = address.displayName {
+            value["name"] = displayName
+          }
+          return value
+        }
+      }
+
+      guard
+        APSMailScriptingBridgeCreateDraftMessage(
+          application,
+          request.fromIdentity,
+          request.subject,
+          request.body,
+          recipientValues(request.to),
+          recipientValues(request.cc),
+          recipientValues(request.bcc)
+        )
+      else {
+        throw MailError.unsupportedByAccount
+      }
+      return MailDraftResult(
+        accepted: true,
+        accountID: request.accountID,
+        fromIdentity: request.fromIdentity,
+        subject: request.subject
+      )
+    #else
+      throw MailError.unsupportedByAccount
+    #endif
+  }
+
+  public func moveMessage(
+    id: MessageReference,
+    to mailboxID: MailboxReference
+  ) async throws -> MailMessageMutationResult {
+    let source = try resolveMessage(id)
+    let target = try resolveMailbox(reference: mailboxID)
+    guard source.accountRawID == target.accountRawID else {
+      throw MailError.policyDenied("Moving a message between Mail.app accounts is not allowed.")
+    }
+
+    source.message.mailbox = target.mailbox.raw
+    return MailMessageMutationResult(
+      accepted: true,
+      operation: .move,
+      messageID: id,
+      mailboxID: source.mailbox.model.id,
+      targetMailboxID: target.mailbox.model.id
+    )
+  }
+
+  public func trashMessage(_ id: MessageReference) async throws -> MailMessageMutationResult {
+    let source = try resolveMessage(id)
+    let trashMailboxes = collectMailboxes(
+      from: source.account,
+      accountRawID: source.accountRawID,
+      includeCounts: false
+    ).filter { $0.model.role == .trash }
+    guard let trashMailbox = trashMailboxes.first else {
+      throw MailError.mailboxNotFound
+    }
+    guard trashMailboxes.count == 1 else {
+      throw MailError.ambiguousReference
+    }
+
+    // Assigning the mailbox makes the operation an explicit, reversible move
+    // to Trash instead of relying on Mail.app's deleted-status preference.
+    source.message.mailbox = trashMailbox.raw
+    return MailMessageMutationResult(
+      accepted: true,
+      operation: .trash,
+      messageID: id,
+      mailboxID: source.mailbox.model.id,
+      targetMailboxID: trashMailbox.model.id
+    )
+  }
+
+  public func updateMessage(
+    _ request: MailMessageUpdateRequest
+  ) async throws -> MailMessageMutationResult {
+    let source = try resolveMessage(request.id)
+    if let isRead = request.isRead {
+      source.message.readStatus = isRead
+    }
+    if let isFlagged = request.isFlagged {
+      source.message.flaggedStatus = isFlagged
+    }
+    return MailMessageMutationResult(
+      accepted: true,
+      operation: .update,
+      messageID: request.id,
+      mailboxID: source.mailbox.model.id
+    )
+  }
+
   private struct MailboxSnapshot {
     let raw: MailMailbox
     let model: Mailbox
     let path: [String]
+  }
+
+  private struct ResolvedMessage {
+    let message: MailMessage
+    let account: MailAccount
+    let accountRawID: String
+    let mailbox: MailboxSnapshot
   }
 
   private struct SearchSource {
@@ -305,6 +414,78 @@ public actor ScriptingBridgeMailRepository: MailRepository {
   private struct SearchEntry {
     let message: MailMessage
     let snapshot: MailboxSnapshot
+  }
+
+  private func resolveMessage(_ id: MessageReference) throws -> ResolvedMessage {
+    try ensureMailIsReachable()
+
+    guard
+      let components = ReferenceCodec.decode(id),
+      let rawAccountID = components["account"],
+      let mailboxValue = components["mailbox"],
+      let rawMessageID = components["id"],
+      let account = allAccounts().first(where: { accountRawID($0) == rawAccountID })
+    else {
+      throw MailError.messageNotFound
+    }
+
+    let mailboxPath = mailboxValue.components(separatedBy: "\u{1F}")
+    let mailbox =
+      collectMailboxes(
+        from: account, accountRawID: rawAccountID, includeCounts: false
+      ).first(where: { $0.path == mailboxPath })
+      ?? canonicalInboxSnapshot(
+        for: account, accountRawID: rawAccountID, includeCounts: false
+      ).flatMap { $0.path == mailboxPath ? $0 : nil }
+    guard let mailbox else {
+      throw MailError.mailboxNotFound
+    }
+
+    guard
+      let message =
+        (mailbox.raw.messages().first { raw in
+          guard let message = raw as? MailMessage else { return false }
+          return messageRawID(message) == rawMessageID
+        }) as? MailMessage
+    else {
+      throw MailError.messageNotFound
+    }
+
+    return ResolvedMessage(
+      message: message,
+      account: account,
+      accountRawID: rawAccountID,
+      mailbox: mailbox
+    )
+  }
+
+  private func resolveMailbox(reference: MailboxReference) throws -> (
+    accountRawID: String,
+    mailbox: MailboxSnapshot
+  ) {
+    guard
+      let components = ReferenceCodec.decode(reference),
+      let rawAccountID = components["account"],
+      let mailboxValue = components["path"],
+      let account = allAccounts().first(where: { accountRawID($0) == rawAccountID })
+    else {
+      throw MailError.mailboxNotFound
+    }
+
+    let path = mailboxValue.components(separatedBy: "\u{1F}")
+    guard
+      let mailbox =
+        collectMailboxes(
+          from: account, accountRawID: rawAccountID, includeCounts: false
+        ).first(where: { $0.path == path })
+        ?? canonicalInboxSnapshot(
+          for: account, accountRawID: rawAccountID, includeCounts: false
+        ).flatMap({ $0.path == path ? $0 : nil })
+    else {
+      throw MailError.mailboxNotFound
+    }
+
+    return (rawAccountID, mailbox)
   }
 
   private func canonicalInboxSnapshot(
@@ -590,7 +771,7 @@ public actor ScriptingBridgeMailRepository: MailRepository {
     guard let last = path.last?.lowercased() else { return nil }
     if last.contains("draft") { return .drafts }
     if last.contains("sent") { return .sent }
-    if last.contains("archive") { return .archive }
+    if last.contains("archive") || last.contains("archiv") { return .archive }
     if last.contains("trash") || last.contains("deleted") { return .trash }
     if last.contains("junk") || last.contains("spam") { return .junk }
     return .custom

@@ -3264,3 +3264,41 @@ BOOL APSMailScriptingBridgeSendMessage(
 
   return [message send];
 }
+
+BOOL APSMailScriptingBridgeCreateDraftMessage(
+  MailApplication *application,
+  NSString *sender,
+  NSString *subject,
+  NSString *body,
+  NSArray<NSDictionary<NSString *, NSString *> *> *toRecipients,
+  NSArray<NSDictionary<NSString *, NSString *> *> *ccRecipients,
+  NSArray<NSDictionary<NSString *, NSString *> *> *bccRecipients
+)
+{
+  Class messageClass = [application classForScriptingClass:@"outgoing message"];
+  if (messageClass == Nil) return NO;
+  if (![sender isKindOfClass:[NSString class]] || sender.length == 0) return NO;
+  if (![subject isKindOfClass:[NSString class]] || ![body isKindOfClass:[NSString class]]) return NO;
+
+  NSDictionary *properties = @{
+    @"sender": sender,
+    @"subject": subject,
+    @"content": body,
+    @"visible": @NO,
+  };
+  MailOutgoingMessage *message = [[messageClass alloc] initWithProperties:properties];
+  if (message == nil) return NO;
+
+  [[application outgoingMessages] addObject:message];
+  if (!APSMailAppendRecipients(application, [message toRecipients], toRecipients, @"to recipient")) {
+    return NO;
+  }
+  if (!APSMailAppendRecipients(application, [message ccRecipients], ccRecipients, @"cc recipient")) {
+    return NO;
+  }
+  if (!APSMailAppendRecipients(application, [message bccRecipients], bccRecipients, @"bcc recipient")) {
+    return NO;
+  }
+
+  return YES;
+}

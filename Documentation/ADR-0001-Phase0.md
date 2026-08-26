@@ -10,7 +10,7 @@ The project needs a local, provider-neutral read-only path into Mail.app. The ap
 
 ## Decision
 
-Keep ScriptingBridge over Apple Events as the Phase 0 adapter and expose it only through the domain repository protocol. Keep the server read-only. Package the stdio executable inside a background macOS application bundle so TCC and signing have a stable identity.
+Keep ScriptingBridge over Apple Events as the Phase 0 adapter and expose it only through the domain repository protocol. Keep the default server behavior read-only; later capabilities must remain separately policy-gated. Package the stdio executable inside a background macOS application bundle so TCC and signing have a stable identity.
 
 The decision is not yet a production Go. Accounts, mailboxes, bounded search, message normalization, signed TCC onboarding, timing, and Proton Mail Bridge still require a dedicated synthetic fixture.
 

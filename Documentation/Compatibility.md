@@ -11,7 +11,7 @@ Verified locally:
 - unit tests
 - MCP stdio lifecycle
 - MCP SDK in-memory client/server contract
-- read-only tool catalog and schemas
+- read-only tool catalog and schemas plus the separately gated mutation catalog
 - sanitized body limits
 - configuration defaults and policy allowlists
 - closed-Mail failure path

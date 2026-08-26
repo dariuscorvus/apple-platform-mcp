@@ -413,6 +413,108 @@ struct MailSendingPolicyTests {
   }
 }
 
+@Suite("Mutation policy")
+struct MailMutationPolicyTests {
+  private static let account = MailAccountModel(
+    id: ReferenceCodec.account(rawID: "mutation-account"),
+    displayName: "Mutation Fixture",
+    emailAddresses: ["from@example.invalid"],
+    enabled: true
+  )
+  private static let inbox = Mailbox(
+    id: ReferenceCodec.mailbox(accountRawID: "mutation-account", path: ["Inbox"]),
+    accountID: account.id,
+    name: "Inbox",
+    path: ["Inbox"],
+    role: .inbox,
+    unreadCount: 1,
+    totalCount: 1
+  )
+  private static let archive = Mailbox(
+    id: ReferenceCodec.mailbox(accountRawID: "mutation-account", path: ["Archive"]),
+    accountID: account.id,
+    name: "Archive",
+    path: ["Archive"],
+    role: .archive,
+    unreadCount: 0,
+    totalCount: 0
+  )
+  private static let messageID = ReferenceCodec.message(
+    accountRawID: "mutation-account",
+    mailboxPath: ["Inbox"],
+    messageRawID: "message-1"
+  )
+
+  @Test("denies mutations by default before repository delegation")
+  func deniesMutationsByDefault() async {
+    let repository = FakeMailRepository(accounts: [Self.account])
+    let service = MailToolService(repository: repository)
+
+    await #expect(throws: MailError.self) {
+      try await service.trashMessage(Self.messageID)
+    }
+
+    #expect(await repository.recordedTrashMessageID() == nil)
+  }
+
+  @Test("keeps confirmation-required mutations fail-closed")
+  func requiresExplicitConfirmation() {
+    #expect(throws: MailError.self) {
+      try MailPolicy(mutationMode: .confirmationRequired).validateMutation()
+    }
+  }
+
+  @Test("allows a draft when mutation mode is explicitly enabled")
+  func allowsDraft() async throws {
+    let repository = FakeMailRepository(accounts: [Self.account])
+    let service = MailToolService(
+      repository: repository,
+      policy: MailPolicy(mutationMode: .allowed)
+    )
+    let request = MailDraftRequest(
+      accountID: Self.account.id,
+      fromIdentity: "from@example.invalid",
+      subject: "Draft subject",
+      body: "Draft body"
+    )
+
+    let result = try await service.createDraft(request)
+
+    #expect(result.accepted)
+    #expect(await repository.recordedDraftRequest() == request)
+  }
+
+  @Test("archives through the unique allowed archive mailbox")
+  func archivesMessage() async throws {
+    let repository = FakeMailRepository(
+      accounts: [Self.account],
+      mailboxes: [Self.inbox, Self.archive]
+    )
+    let service = MailToolService(
+      repository: repository,
+      policy: MailPolicy(mutationMode: .allowed)
+    )
+
+    let result = try await service.archiveMessage(Self.messageID)
+
+    #expect(result.operation == .archive)
+    #expect(await repository.recordedMoveMessageID() == Self.messageID)
+    #expect(await repository.recordedMoveMailboxID() == Self.archive.id)
+  }
+
+  @Test("rejects an update without an explicit status")
+  func rejectsEmptyUpdate() async {
+    let service = MailToolService(
+      repository: FakeMailRepository(accounts: [Self.account]),
+      policy: MailPolicy(mutationMode: .allowed)
+    )
+
+    await #expect(throws: MailError.self) {
+      try await service.updateMessage(MailMessageUpdateRequest(id: Self.messageID))
+    }
+  }
+}
+
 @Suite("Read-only policy")
 struct MailPolicyTests {
   @Test("caps client result limits")
@@ -465,14 +567,15 @@ struct ConfigurationTests {
     #expect(configuration.allowedAccountIDs == Set([account]))
   }
 
-  @Test("decodes a separately controlled send mode")
+  @Test("decodes separately controlled send and mutation modes")
   func decodesSendMode() throws {
     let configuration = try JSONDecoder().decode(
       MailServerConfiguration.self,
-      from: Data(#"{"send_mode":"allowed"}"#.utf8)
+      from: Data(#"{"send_mode":"allowed","mutation_mode":"allowed"}"#.utf8)
     )
 
     #expect(configuration.policy.sendMode == .allowed)
+    #expect(configuration.policy.mutationMode == .allowed)
   }
 }
 
@@ -487,8 +590,8 @@ struct PermissionContractTests {
 
 @Suite("Tool catalog")
 struct MCPToolCatalogTests {
-  @Test("exposes read tools and a policy-controlled send tool")
-  func readAndSendTools() {
+  @Test("exposes read tools and policy-controlled write tools")
+  func readAndMutationTools() {
     let names = Set(MCPToolCatalog.tools.map(\.name))
     #expect(
       names == [
@@ -498,11 +601,20 @@ struct MCPToolCatalogTests {
         "mail_search_messages",
         "mail_get_message",
         "mail_send_message",
+        "mail_create_draft",
+        "mail_move_message",
+        "mail_archive_message",
+        "mail_trash_message",
+        "mail_update_message",
       ])
     #expect(
       MCPToolCatalog.tools.first(where: { $0.name == "mail_send_message" })?.annotations
         .readOnlyHint
         == false)
+    #expect(
+      MCPToolCatalog.tools.first(where: { $0.name == "mail_trash_message" })?.annotations
+        .destructiveHint
+        == true)
   }
 }
 
@@ -594,6 +706,11 @@ struct MCPContractTests {
         "mail_search_messages",
         "mail_get_message",
         "mail_send_message",
+        "mail_create_draft",
+        "mail_move_message",
+        "mail_archive_message",
+        "mail_trash_message",
+        "mail_update_message",
       ])
 
     let searchTool = try #require(listed.tools.first(where: { $0.name == "mail_search_messages" }))
@@ -697,11 +814,18 @@ struct MailToolServiceTests {
 
 private actor FakeMailRepository: MailRepository {
   let accounts: [MailAccountModel]
+  let mailboxes: [Mailbox]
   private var lastQuery: MailSearchQuery?
   private var lastSendRequest: MailSendRequest?
+  private var lastDraftRequest: MailDraftRequest?
+  private var lastMoveMessageID: MessageReference?
+  private var lastMoveMailboxID: MailboxReference?
+  private var lastTrashMessageID: MessageReference?
+  private var lastUpdateRequest: MailMessageUpdateRequest?
 
-  init(accounts: [MailAccountModel]) {
+  init(accounts: [MailAccountModel], mailboxes: [Mailbox] = []) {
     self.accounts = accounts
+    self.mailboxes = mailboxes
   }
 
   func recordedSearchQuery() -> MailSearchQuery? {
@@ -712,12 +836,32 @@ private actor FakeMailRepository: MailRepository {
     lastSendRequest
   }
 
+  func recordedDraftRequest() -> MailDraftRequest? {
+    lastDraftRequest
+  }
+
+  func recordedMoveMessageID() -> MessageReference? {
+    lastMoveMessageID
+  }
+
+  func recordedMoveMailboxID() -> MailboxReference? {
+    lastMoveMailboxID
+  }
+
+  func recordedTrashMessageID() -> MessageReference? {
+    lastTrashMessageID
+  }
+
+  func recordedUpdateRequest() -> MailMessageUpdateRequest? {
+    lastUpdateRequest
+  }
+
   func listAccounts(includeDisabled: Bool) async throws -> [MailAccountModel] {
     accounts.filter { includeDisabled || $0.enabled }
   }
 
   func listMailboxes(accountID: AccountReference, includeCounts: Bool) async throws -> [Mailbox] {
-    []
+    mailboxes.filter { $0.accountID == accountID }
   }
 
   func searchMessages(_ query: MailSearchQuery) async throws -> MailSearchPage {
@@ -742,6 +886,42 @@ private actor FakeMailRepository: MailRepository {
       accountID: request.accountID,
       fromIdentity: request.fromIdentity
     )
+  }
+
+  func createDraft(_ request: MailDraftRequest) async throws -> MailDraftResult {
+    lastDraftRequest = request
+    return MailDraftResult(
+      accepted: true,
+      accountID: request.accountID,
+      fromIdentity: request.fromIdentity,
+      subject: request.subject
+    )
+  }
+
+  func moveMessage(
+    id: MessageReference,
+    to mailboxID: MailboxReference
+  ) async throws -> MailMessageMutationResult {
+    lastMoveMessageID = id
+    lastMoveMailboxID = mailboxID
+    return MailMessageMutationResult(
+      accepted: true,
+      operation: .move,
+      messageID: id,
+      targetMailboxID: mailboxID
+    )
+  }
+
+  func trashMessage(_ id: MessageReference) async throws -> MailMessageMutationResult {
+    lastTrashMessageID = id
+    return MailMessageMutationResult(accepted: true, operation: .trash, messageID: id)
+  }
+
+  func updateMessage(
+    _ request: MailMessageUpdateRequest
+  ) async throws -> MailMessageMutationResult {
+    lastUpdateRequest = request
+    return MailMessageMutationResult(accepted: true, operation: .update, messageID: request.id)
   }
 }
 

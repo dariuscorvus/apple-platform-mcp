@@ -294,6 +294,98 @@ public struct MailSendResult: Codable, Equatable, Sendable {
   }
 }
 
+public struct MailDraftRequest: Codable, Equatable, Sendable {
+  public let accountID: AccountReference
+  public let fromIdentity: String
+  public let to: [MailAddress]
+  public let cc: [MailAddress]
+  public let bcc: [MailAddress]
+  public let subject: String
+  public let body: String
+
+  public init(
+    accountID: AccountReference,
+    fromIdentity: String,
+    to: [MailAddress] = [],
+    cc: [MailAddress] = [],
+    bcc: [MailAddress] = [],
+    subject: String,
+    body: String
+  ) {
+    self.accountID = accountID
+    self.fromIdentity = fromIdentity
+    self.to = to
+    self.cc = cc
+    self.bcc = bcc
+    self.subject = subject
+    self.body = body
+  }
+}
+
+public struct MailDraftResult: Codable, Equatable, Sendable {
+  public let accepted: Bool
+  public let accountID: AccountReference
+  public let fromIdentity: String
+  public let subject: String
+
+  public init(
+    accepted: Bool,
+    accountID: AccountReference,
+    fromIdentity: String,
+    subject: String
+  ) {
+    self.accepted = accepted
+    self.accountID = accountID
+    self.fromIdentity = fromIdentity
+    self.subject = subject
+  }
+}
+
+public struct MailMessageUpdateRequest: Codable, Equatable, Sendable {
+  public let id: MessageReference
+  public let isRead: Bool?
+  public let isFlagged: Bool?
+
+  public init(
+    id: MessageReference,
+    isRead: Bool? = nil,
+    isFlagged: Bool? = nil
+  ) {
+    self.id = id
+    self.isRead = isRead
+    self.isFlagged = isFlagged
+  }
+}
+
+public enum MailMessageMutationOperation: String, Codable, Equatable, Sendable {
+  case move
+  case archive
+  case trash
+  case update
+}
+
+public struct MailMessageMutationResult: Codable, Equatable, Sendable {
+  public let accepted: Bool
+  public let operation: MailMessageMutationOperation
+  public let messageID: MessageReference
+  public let mailboxID: MailboxReference?
+  public let targetMailboxID: MailboxReference?
+
+  public init(
+    accepted: Bool,
+    operation: MailMessageMutationOperation,
+    messageID: MessageReference,
+    mailboxID: MailboxReference? = nil,
+    targetMailboxID: MailboxReference? = nil
+  ) {
+    self.accepted = accepted
+    self.operation = operation
+    self.messageID = messageID
+    self.mailboxID = mailboxID
+    self.targetMailboxID = targetMailboxID
+  }
+}
+
 public struct AccountCapabilities: Codable, Hashable, Sendable {
   public let canRead: Bool
   public let canSearch: Bool
@@ -650,6 +742,18 @@ public protocol MailRepository: Sendable {
   ) async throws -> MailMessageRecord
 
   func sendMessage(_ request: MailSendRequest) async throws -> MailSendResult
+
+  func createDraft(_ request: MailDraftRequest) async throws -> MailDraftResult
+
+  func moveMessage(
+    id: MessageReference,
+    to mailboxID: MailboxReference
+  ) async throws -> MailMessageMutationResult
+
+  func trashMessage(_ id: MessageReference) async throws -> MailMessageMutationResult
+
+  func updateMessage(_ request: MailMessageUpdateRequest) async throws
+    -> MailMessageMutationResult
 }
 
 /// Adapter boundary used by the application layer. The protocol keeps all

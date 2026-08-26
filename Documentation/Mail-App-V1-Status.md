@@ -10,9 +10,11 @@ Server verwendet ScriptingBridge/Apple Events; er verwaltet weder IMAP-/SMTP-
 Credentials noch eine parallele Mail-Datenbank.
 
 Nicht Bestandteil der V1 sind private Mail-Datenbankzugriffe, Accessibility,
-Computer Use, Screen Scraping und Mailbox-Mutationen. `mail_send_message` ist
-die einzige Schreibfähigkeit und bleibt separat policy-gesteuert. Ohne lokale
-Konfiguration gilt `send_mode=denied`.
+Computer Use, Screen Scraping, permanentes Löschen und das Leeren des Trash.
+Die aktuelle kontrollierte Mutationserweiterung publiziert Draft-, Move-,
+Archive-, Trash- und Status-Tools, bleibt aber ohne lokale Konfiguration durch
+`mutation_mode=denied` gesperrt. `mail_send_message` bleibt separat durch
+`send_mode=denied` gesperrt.
 
 Die zwei zwischenzeitlich fehlenden `origin/main`-Commits wurden integriert:
 
@@ -28,15 +30,19 @@ Die zwei zwischenzeitlich fehlenden `origin/main`-Commits wurden integriert:
 - Account-/Mailbox-Allowlist und serverseitige Result-, Body- und Send-Limits;
 - Metadaten-Reads ohne `message.source`, Body-Parsing oder Attachment-Inhalte;
 - getrennte Send-Modi `denied`, `allowed` und `confirmation_required`;
+- getrennte Mutation-Modi `denied`, `allowed` und fail-closed
+  `confirmation_required`;
 - Account-, From-Identity-, Empfänger-, Subject- und Body-Validierung vor dem
   Delegieren an Mail.app;
+- policy-gesteuerte `mail_create_draft`, `mail_move_message`,
+  `mail_archive_message`, reversible `mail_trash_message` und
+  `mail_update_message`-Tools;
 - `build_commit`, `build_configuration` und `version` in Diagnostics;
 - Launch-Services-Backend für das signierte App-Bundle und loopback-only
   Streamable HTTP;
 - Cloudflare-Access-Verifikation am Remote-MCP-Origin sowie explizite Browser-
   Origins;
-- keine zusätzlichen Delete-, Move-, Draft-, Archive-, Flag-, Attachment-
-  Export- oder sonstigen Mutations-Tools.
+- kein permanentes Delete, kein Leeren von Trash und kein Attachment-Export.
 
 Die Bounded-Traversal-Aussage bezieht sich auf die von der Anwendung
 angeforderten Collection-Elemente. Sie behauptet ausdrücklich nicht, dass
@@ -50,8 +56,8 @@ Alle folgenden Läufe waren erfolgreich:
 swift-format lint --recursive Sources Tests
 git diff --check
 git diff --cached --check
-swift test                         79 Tests in 21 Suites
-xcodebuild test                    erfolgreich, 1 Test-Worker
+swift test                         84 Tests in 22 Suites
+xcodebuild test                    83 Tests in 21 Suites, erfolgreich
 bun run typecheck                  erfolgreich
 bun test                            13 passed, 0 failed
 bun run build                       erfolgreich
@@ -68,14 +74,15 @@ Inbox, bounded traversal, Sanitization, Read-/Send-Policy, MCP-Discovery,
 Loopback-HTTP, Cancellation/Timeouts, synthetic Mail-Fixtures und die lokale
 Mail.app-Read-Integration ab.
 
-## Sending-Gate
+## Write-Gates
 
-Es wurde keine echte Mail versendet. Das ist der korrekte V1-Abschluss für die
+Es wurde keine echte Mail versendet und keine echte Draft-, Move-, Archive-,
+Trash- oder Statusmutation ausgeführt. Das ist der korrekte Abschluss für die
 vorliegende Umgebung: Es liegt keine explizit freigegebene sichere Testadresse
-und keine separate Testkonfiguration vor. `send_mode=allowed` wurde deshalb
-nicht in der laufenden Installation aktiviert. Der reale Versand bleibt ein
-manueller Gate mit sicherer Testadresse, bestätigter Mail.app-Identity und
-separater Freigabe.
+und keine separate Testkonfiguration vor. `send_mode=allowed` und
+`mutation_mode=allowed` wurden deshalb nicht aktiviert. Reale Write-E2E-Tests
+bleiben ein manueller Gate mit expliziter Freigabe, sicherer Testadresse bzw.
+Testmailbox und bestätigter Mail.app-Identity.
 
 `confirmation_required` bleibt bis zur Implementierung einer echten
 Confirmation-Grenze blockiert; ein Tool-Aufruf darf diese Grenze nicht
@@ -97,10 +104,11 @@ NSAppleEventsUsageDescription: vorhanden
 Genau dieses Bundle liegt unter
 `<private local path>/Applications/apple-platform-mcp.app`; das vorherige Bundle
 ist als `<private local path>/Applications/apple-platform-mcp.app.previous-20260826-0315`
-recoverbar. Der LaunchAgent `<private LaunchAgent identifier>` wurde
-neu geladen. Der laufende App-Prozess liefert über `mail_server_info` den
-Commit, `Debug`, Version `0.1.0`, `send_mode=denied`,
-`mailbox_mutations=false`, `computer_use=false` und `accessibility=false`.
+recoverbar. Der LaunchAgent `<private LaunchAgent identifier>` wird
+nach dem kontrollierten Bundle-Update neu geladen. Der laufende App-Prozess
+soll über `mail_server_info` den neuen Commit, `Debug`, Version `0.1.0`,
+`send_mode=denied`, `mutation_mode=denied`, `mailbox_mutations=true`,
+`computer_use=false` und `accessibility=false` liefern.
 
 ## Remote-E2E
 
@@ -118,7 +126,9 @@ mail_server_info
 `/healthz` und `/readyz` lieferten jeweils `200`; der lokale App-Liveness-
 Endpoint lieferte `200`; `tools/list` und `mail_server_info` antworteten über
 die neue App. Dabei wurde kein Mailbox-Inhalt gelesen, keine Mutation und kein
-Versand ausgelöst.
+Versand ausgelöst. Die lokale Tool-Liste enthält die fünf Read-Tools, die
+Send-Fähigkeit sowie die fünf separat policy-gesteuerten Draft-/Mailbox-
+Mutationstools.
 
 Der öffentliche Cloudflare-Host `<private Cloudflare Access endpoint>` ist erreichbar und
 liegt hinter Access. Unauthenticated `healthz` und MCP-Requests liefern `401`,
