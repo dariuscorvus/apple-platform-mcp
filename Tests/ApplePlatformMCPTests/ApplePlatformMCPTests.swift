@@ -47,6 +47,139 @@ struct ReferenceCodecTests {
   }
 }
 
+@Suite("Mail metadata reads")
+struct MailMetadataReadTests {
+  @Test("metadata-only reads do not require source, body parsing, or attachment content")
+  func metadataOnlyReadPlan() {
+    let plan = MailMessageReadPlan(includeBody: false, includeAttachmentMetadata: false)
+
+    #expect(plan.loadsMessageSource == false)
+    #expect(plan.parsesBody == false)
+    #expect(plan.loadsAttachmentContent == false)
+    #expect(plan.readsHeaders == true)
+  }
+
+  @Test("body reads opt into source and body parsing but not attachment content")
+  func bodyReadPlan() {
+    let plan = MailMessageReadPlan(includeBody: true, includeAttachmentMetadata: false)
+
+    #expect(plan.loadsMessageSource)
+    #expect(plan.parsesBody)
+    #expect(plan.loadsAttachmentContent == false)
+  }
+}
+
+@Suite("Bounded newest-first traversal")
+struct BoundedNewestFirstTraversalTests {
+  private struct Element: Sendable {
+    let id: String
+    let receivedAt: Date?
+    let matches: Bool
+  }
+
+  @Test("merges sources newest-first and stops after the requested page plus lookahead")
+  func boundedOrderingAndWork() {
+    let sourceA = [
+      Element(id: "a3", receivedAt: Date(timeIntervalSince1970: 30), matches: true),
+      Element(id: "a1", receivedAt: Date(timeIntervalSince1970: 10), matches: true),
+      Element(id: "a0", receivedAt: Date(timeIntervalSince1970: 0), matches: true),
+    ]
+    let sourceB = [
+      Element(id: "b2", receivedAt: Date(timeIntervalSince1970: 20), matches: true),
+      Element(id: "b1", receivedAt: Date(timeIntervalSince1970: 15), matches: true),
+      Element(id: "b0", receivedAt: Date(timeIntervalSince1970: 5), matches: true),
+    ]
+
+    let result = BoundedNewestFirstTraversal.search(
+      sources: [sourceA, sourceB],
+      offset: 0,
+      limit: 3,
+      date: { $0.receivedAt },
+      matches: { $0.matches },
+      elementAt: { source, index in source[index] },
+      count: { $0.count }
+    )
+
+    #expect(result.elements.map(\.id) == ["a3", "b2", "b1"])
+    #expect(result.hasMore)
+    #expect(result.inspected < sourceA.count + sourceB.count)
+  }
+
+  @Test("offset pages preserve the same ordering")
+  func offsetPagination() {
+    let source = (1...5).reversed().map {
+      Element(
+        id: "m\($0)", receivedAt: Date(timeIntervalSince1970: TimeInterval($0)), matches: true)
+    }
+
+    let result = BoundedNewestFirstTraversal.search(
+      sources: [Array(source)],
+      offset: 2,
+      limit: 2,
+      date: { $0.receivedAt },
+      matches: { $0.matches },
+      elementAt: { source, index in source[index] },
+      count: { $0.count }
+    )
+
+    #expect(result.elements.map(\.id) == ["m3", "m2"])
+    #expect(result.hasMore)
+  }
+}
+
+@Suite("Canonical Inbox resolution")
+struct CanonicalInboxResolutionTests {
+  @Test("selects Mail.app-provided canonical candidates without localized-name heuristics")
+  func selectsByAccountReference() {
+    let account = ReferenceCodec.account(rawID: "account-1")
+    let candidate = CanonicalInboxCandidate(
+      accountID: account,
+      mailboxID: ReferenceCodec.mailbox(accountRawID: "account-1", path: ["Posteingang"]),
+      path: ["Posteingang"]
+    )
+    let unrelated = CanonicalInboxCandidate(
+      accountID: ReferenceCodec.account(rawID: "account-2"),
+      mailboxID: ReferenceCodec.mailbox(accountRawID: "account-2", path: ["INBOX"]),
+      path: ["INBOX"]
+    )
+
+    let resolved = CanonicalInboxResolver.resolve(
+      accountID: account,
+      candidates: [unrelated, candidate]
+    )
+
+    #expect(resolved == candidate)
+  }
+
+  @Test("does not invent an Inbox when Mail.app exposes no canonical candidate")
+  func doesNotGuess() {
+    let account = ReferenceCodec.account(rawID: "account-1")
+    #expect(CanonicalInboxResolver.resolve(accountID: account, candidates: []) == nil)
+  }
+
+  @Test("prefers the account-specific child over Mail.app's aggregate Inbox container")
+  func prefersSpecificChildOverAggregateContainer() {
+    let account = ReferenceCodec.account(rawID: "account-1")
+    let aggregate = CanonicalInboxCandidate(
+      accountID: account,
+      mailboxID: ReferenceCodec.mailbox(
+        accountRawID: "account-1", path: ["All Inboxes"]),
+      path: ["All Inboxes"]
+    )
+    let specific = CanonicalInboxCandidate(
+      accountID: account,
+      mailboxID: ReferenceCodec.mailbox(
+        accountRawID: "account-1", path: ["All Inboxes", "Account Inbox"]),
+      path: ["All Inboxes", "Account Inbox"]
+    )
+
+    #expect(
+      CanonicalInboxResolver.resolve(accountID: account, candidates: [aggregate, specific])
+        == specific
+    )
+  }
+}
+
 @Suite("Mail content")
 struct MailContentSanitizerTests {
   @Test("removes active HTML and remote resources")
@@ -130,6 +263,156 @@ struct SearchCursorTests {
   }
 }
 
+@Suite("Search scopes")
+struct MailSearchScopeTests {
+  @Test("unscoped search defaults to the canonical Inbox scope")
+  func defaultsToInbox() {
+    #expect(MailSearchQuery().scope == .inbox)
+  }
+
+  @Test("scope changes invalidate an existing cursor")
+  func cursorBindsScope() {
+    let inboxQuery = MailSearchQuery(scope: .inbox, limit: 10)
+    let cursor = SearchCursorCodec.encode(query: inboxQuery, offset: 10)
+
+    #expect(throws: MailError.self) {
+      try SearchCursorCodec.decode(
+        cursor,
+        query: MailSearchQuery(scope: .all, limit: 10)
+      )
+    }
+  }
+}
+
+@Suite("Sending policy")
+struct MailSendingPolicyTests {
+  private static let account = MailAccountModel(
+    id: ReferenceCodec.account(rawID: "send-account"),
+    displayName: "Send Fixture",
+    emailAddresses: ["from@example.invalid"],
+    enabled: true
+  )
+
+  @Test("allowed sending delegates the validated request to the repository")
+  func allowsSending() async throws {
+    let repository = FakeMailRepository(accounts: [Self.account])
+    let service = MailToolService(
+      repository: repository,
+      policy: MailPolicy(sendMode: .allowed)
+    )
+    let request = MailSendRequest(
+      accountID: Self.account.id,
+      fromIdentity: "from@example.invalid",
+      to: [MailAddress(address: "recipient@example.invalid")],
+      subject: "Hello",
+      body: "Message body"
+    )
+
+    let result = try await service.sendMessage(request)
+
+    #expect(result.accepted)
+    #expect(await repository.recordedSendRequest() == request)
+  }
+
+  @Test("rejects a disabled account before delegation")
+  func rejectsDisabledAccount() async {
+    let account = MailAccountModel(
+      id: Self.account.id,
+      displayName: Self.account.displayName,
+      emailAddresses: Self.account.emailAddresses,
+      enabled: false
+    )
+    let service = MailToolService(
+      repository: FakeMailRepository(accounts: [account]),
+      policy: MailPolicy(sendMode: .allowed)
+    )
+    await #expect(throws: MailError.self) {
+      try await service.sendMessage(
+        MailSendRequest(
+          accountID: account.id,
+          fromIdentity: "from@example.invalid",
+          to: [MailAddress(address: "recipient@example.invalid")],
+          subject: "Hello",
+          body: "Body"
+        )
+      )
+    }
+  }
+
+  @Test("rejects From identities not configured on the account")
+  func rejectsFromSpoofing() async {
+    let service = MailToolService(
+      repository: FakeMailRepository(accounts: [Self.account]),
+      policy: MailPolicy(sendMode: .allowed)
+    )
+    await #expect(throws: MailError.self) {
+      try await service.sendMessage(
+        MailSendRequest(
+          accountID: Self.account.id,
+          fromIdentity: "spoof@example.invalid",
+          to: [MailAddress(address: "recipient@example.invalid")],
+          subject: "Hello",
+          body: "Body"
+        )
+      )
+    }
+  }
+
+  @Test("rejects empty and malformed recipient lists")
+  func rejectsRecipientLists() async {
+    let service = MailToolService(
+      repository: FakeMailRepository(accounts: [Self.account]),
+      policy: MailPolicy(sendMode: .allowed)
+    )
+    for recipients in [
+      [MailAddress](),
+      [MailAddress(address: "not-an-email")],
+    ] {
+      await #expect(throws: MailError.self) {
+        try await service.sendMessage(
+          MailSendRequest(
+            accountID: Self.account.id,
+            fromIdentity: "from@example.invalid",
+            to: recipients,
+            subject: "Hello",
+            body: "Body"
+          )
+        )
+      }
+    }
+  }
+
+  @Test("enforces subject and body send limits")
+  func enforcesSendLimits() async {
+    let service = MailToolService(
+      repository: FakeMailRepository(accounts: [Self.account]),
+      policy: MailPolicy(sendMode: .allowed, maxSendBodyBytes: 3, maxSubjectBytes: 3)
+    )
+    await #expect(throws: MailError.self) {
+      try await service.sendMessage(
+        MailSendRequest(
+          accountID: Self.account.id,
+          fromIdentity: "from@example.invalid",
+          to: [MailAddress(address: "recipient@example.invalid")],
+          subject: "Long",
+          body: "ok"
+        )
+      )
+    }
+    await #expect(throws: MailError.self) {
+      try await service.sendMessage(
+        MailSendRequest(
+          accountID: Self.account.id,
+          fromIdentity: "from@example.invalid",
+          to: [MailAddress(address: "recipient@example.invalid")],
+          subject: "ok",
+          body: "Long"
+        )
+      )
+    }
+  }
+}
+
 @Suite("Read-only policy")
 struct MailPolicyTests {
   @Test("caps client result limits")
@@ -181,6 +464,16 @@ struct ConfigurationTests {
 
     #expect(configuration.allowedAccountIDs == Set([account]))
   }
+
+  @Test("decodes a separately controlled send mode")
+  func decodesSendMode() throws {
+    let configuration = try JSONDecoder().decode(
+      MailServerConfiguration.self,
+      from: Data(#"{"send_mode":"allowed"}"#.utf8)
+    )
+
+    #expect(configuration.policy.sendMode == .allowed)
+  }
 }
 
 @Suite("Permission contract")
@@ -194,8 +487,8 @@ struct PermissionContractTests {
 
 @Suite("Tool catalog")
 struct MCPToolCatalogTests {
-  @Test("exposes only read-only tools")
-  func readOnlyTools() {
+  @Test("exposes read tools and a policy-controlled send tool")
+  func readAndSendTools() {
     let names = Set(MCPToolCatalog.tools.map(\.name))
     #expect(
       names == [
@@ -204,8 +497,12 @@ struct MCPToolCatalogTests {
         "mail_list_mailboxes",
         "mail_search_messages",
         "mail_get_message",
+        "mail_send_message",
       ])
-    #expect(MCPToolCatalog.tools.allSatisfy { $0.annotations.readOnlyHint == true })
+    #expect(
+      MCPToolCatalog.tools.first(where: { $0.name == "mail_send_message" })?.annotations
+        .readOnlyHint
+        == false)
   }
 }
 
@@ -296,6 +593,7 @@ struct MCPContractTests {
         "mail_list_mailboxes",
         "mail_search_messages",
         "mail_get_message",
+        "mail_send_message",
       ])
 
     let searchTool = try #require(listed.tools.first(where: { $0.name == "mail_search_messages" }))
@@ -307,10 +605,52 @@ struct MCPContractTests {
     #expect(
       searchSchema["properties"]?.objectValue?["cursor"]?.objectValue?["type"]?.stringValue
         == "string")
+    #expect(
+      searchSchema["properties"]?.objectValue?["scope"]?.objectValue?["type"]?.stringValue
+        == "string")
 
     let info = try await client.callTool(name: "mail_server_info")
     #expect(info.isError == false)
     #expect(!info.content.isEmpty)
+
+    await client.disconnect()
+    await serverTransport.disconnect()
+    _ = try await serverTask.value
+  }
+
+  @Test("routes the send tool through the independent send policy")
+  func sendsThroughMCP() async throws {
+    let account = MailAccountModel(
+      id: ReferenceCodec.account(rawID: "mcp-send-account"),
+      displayName: "MCP Send Fixture",
+      emailAddresses: ["from@example.invalid"],
+      enabled: true
+    )
+    let repository = FakeMailRepository(accounts: [account])
+    let service = MailToolService(
+      repository: repository,
+      policy: MailPolicy(sendMode: .allowed)
+    )
+    let (clientTransport, serverTransport) = await InMemoryTransport.createConnectedPair()
+    let serverTask = Task {
+      try await ApplePlatformMCPServer(service: service).run(transport: serverTransport)
+    }
+    let client = Client(name: "send-contract-test", version: "1.0.0")
+
+    _ = try await client.connect(transport: clientTransport)
+    let result = try await client.callTool(
+      name: "mail_send_message",
+      arguments: [
+        "account_id": .string(account.id.opaqueValue),
+        "from_identity": .string("from@example.invalid"),
+        "to": .array([.object(["address": .string("recipient@example.invalid")])]),
+        "subject": .string("Hello"),
+        "body": .string("Message body"),
+      ]
+    )
+
+    #expect(result.isError == false)
+    #expect(await repository.recordedSendRequest()?.subject == "Hello")
 
     await client.disconnect()
     await serverTransport.disconnect()
@@ -335,13 +675,41 @@ struct MailToolServiceTests {
 
     #expect(accounts.map(\.displayName) == ["Allowed"])
   }
+  @Test("preserves explicit search scope when applying policy bounds")
+  func preservesSearchScope() async throws {
+    let repository = FakeMailRepository(accounts: [])
+    let service = MailToolService(repository: repository)
+
+    _ = try await service.searchMessages(MailSearchQuery(scope: .all, limit: 10))
+
+    #expect(await repository.recordedSearchQuery()?.scope == .all)
+  }
+
+  @Test("rejects body-backed text search in metadata-only V1 search")
+  func rejectsTextSearch() async {
+    let service = MailToolService(repository: FakeMailRepository(accounts: []))
+
+    await #expect(throws: MailError.self) {
+      try await service.searchMessages(MailSearchQuery(text: "body phrase", limit: 10))
+    }
+  }
 }
 
 private actor FakeMailRepository: MailRepository {
   let accounts: [MailAccountModel]
+  private var lastQuery: MailSearchQuery?
+  private var lastSendRequest: MailSendRequest?
 
   init(accounts: [MailAccountModel]) {
     self.accounts = accounts
+  }
+
+  func recordedSearchQuery() -> MailSearchQuery? {
+    lastQuery
+  }
+
+  func recordedSendRequest() -> MailSendRequest? {
+    lastSendRequest
   }
 
   func listAccounts(includeDisabled: Bool) async throws -> [MailAccountModel] {
@@ -353,7 +721,8 @@ private actor FakeMailRepository: MailRepository {
   }
 
   func searchMessages(_ query: MailSearchQuery) async throws -> MailSearchPage {
-    MailSearchPage(messages: [])
+    lastQuery = query
+    return MailSearchPage(messages: [])
   }
 
   func getMessage(
@@ -365,4 +734,48 @@ private actor FakeMailRepository: MailRepository {
   ) async throws -> MailMessageRecord {
     throw MailError.messageNotFound
   }
+
+  func sendMessage(_ request: MailSendRequest) async throws -> MailSendResult {
+    lastSendRequest = request
+    return MailSendResult(
+      accepted: true,
+      accountID: request.accountID,
+      fromIdentity: request.fromIdentity
+    )
+  }
 }
+
+#if canImport(MailScriptingBridge)
+  @Suite("Local Mail.app read integration")
+  struct LocalMailAppReadIntegrationTests {
+    @Test("resolves a message reference from Mail.app's canonical Inbox")
+    func resolvesCanonicalInboxMessage() async throws {
+      let repository: ScriptingBridgeMailRepository
+      do {
+        repository = try ScriptingBridgeMailRepository()
+      } catch MailError.mailNotRunning {
+        return
+      } catch MailError.permissionDenied {
+        return
+      }
+
+      do {
+        let page = try await repository.searchMessages(MailSearchQuery(limit: 1))
+        guard let summary = page.messages.first else { return }
+        let record = try await repository.getMessage(
+          id: summary.id,
+          includeBody: false,
+          bodyFormat: .plainText,
+          includeAttachmentMetadata: false,
+          maxBodyBytes: 1_024
+        )
+        #expect(record.summary.id == summary.id)
+        #expect(record.body == nil)
+      } catch MailError.mailNotRunning {
+        return
+      } catch MailError.permissionDenied {
+        return
+      }
+    }
+  }
+#endif

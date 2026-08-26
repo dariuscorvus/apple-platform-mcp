@@ -8,6 +8,39 @@ import Testing
 
 @Suite("Synthetic Mail fixture")
 struct SyntheticMailFixtureTests {
+  @Test("default Inbox search is newest-first and does bounded work")
+  func defaultInboxSearchIsNewestFirstAndBounded() async throws {
+    let repository = SyntheticMailFixture.repository()
+    let service = MailToolService(repository: repository)
+
+    let page = try await service.searchMessages(MailSearchQuery(limit: 2))
+
+    #expect(page.messages.compactMap(\.subject) == ["Invoice 3", "Invoice 2"])
+    #expect(await repository.lastInspectedCount() < 4)
+  }
+
+  @Test("unread and sender filters stay within the canonical Inbox")
+  func filtersInboxSummaries() async throws {
+    let repository = SyntheticMailFixture.repository()
+    let service = MailToolService(repository: repository)
+
+    let page = try await service.searchMessages(
+      MailSearchQuery(from: "billing@example.invalid", unreadOnly: true, limit: 10)
+    )
+
+    #expect(page.messages.compactMap(\.subject) == ["Invoice 2", "Invoice 1"])
+  }
+
+  @Test("explicit all scope includes the non-Inbox fixture mailbox")
+  func explicitAllScope() async throws {
+    let service = MailToolService(repository: SyntheticMailFixture.repository())
+
+    let page = try await service.searchMessages(MailSearchQuery(scope: .all, limit: 10))
+
+    #expect(page.messages.first?.subject == "Invoice archive")
+    #expect(page.messages.count == 4)
+  }
+
   @Test("serves opaque paginated results over MCP")
   func servesSearchPageOverMCP() async throws {
     let service = MailToolService(repository: SyntheticMailFixture.repository())
@@ -73,7 +106,7 @@ struct SyntheticMailFixtureTests {
 
     #expect(secondPage.messages.count == 1)
     #expect(secondPage.nextCursor == nil)
-    #expect(secondPage.messages.first?.subject == "Invoice 3")
+    #expect(secondPage.messages.first?.subject == "Invoice 1")
   }
 
   @Test("uses strict received-date bounds and excludes undated messages")
@@ -178,6 +211,142 @@ struct SyntheticMailFixtureTests {
   }
 }
 
+@Suite("Synthetic workflow benchmark")
+struct SyntheticWorkflowBenchmarkTests {
+  private struct Row: Codable {
+    let workflow: String
+    let iterations: Int
+    let minimumMilliseconds: Double
+    let medianMilliseconds: Double
+    let maximumMilliseconds: Double
+    let resultCount: Int
+  }
+
+  private struct Report: Codable {
+    let schemaVersion: Int
+    let fixture: String
+    let workflows: [Row]
+  }
+
+  @Test("measures the bounded V1 agent workflows without emitting mail data")
+  func measuresAgentWorkflows() async throws {
+    let iterations = 7
+    let workflows: [(String, Double, (MailToolService) async throws -> Int)] = [
+      (
+        "list_accounts", 1_000,
+        { service in
+          try await service.listAccounts(includeDisabled: false).count
+        }
+      ),
+      (
+        "list_mailboxes", 2_000,
+        { service in
+          try await service.listMailboxes(
+            accountID: SyntheticMailFixture.account.id, includeCounts: false
+          ).count
+        }
+      ),
+      (
+        "newest_10_inbox", 2_000,
+        { service in
+          try await service.searchMessages(MailSearchQuery(limit: 10)).messages.count
+        }
+      ),
+      (
+        "unread_10_inbox", 3_000,
+        { service in
+          try await service.searchMessages(
+            MailSearchQuery(unreadOnly: true, limit: 10)
+          ).messages.count
+        }
+      ),
+      (
+        "get_metadata_only", 2_000,
+        { service in
+          let record = try await service.getMessage(
+            id: SyntheticMailFixture.messageReferences[0],
+            includeBody: false,
+            bodyFormat: .plainText,
+            includeAttachmentMetadata: false,
+            maxBodyBytes: nil
+          )
+          return record.body == nil ? 1 : 0
+        }
+      ),
+      (
+        "get_message_body", 3_000,
+        { service in
+          let record = try await service.getMessage(
+            id: SyntheticMailFixture.messageReferences[0],
+            includeBody: true,
+            bodyFormat: .plainText,
+            includeAttachmentMetadata: false,
+            maxBodyBytes: 1_024
+          )
+          return record.body?.plainText == nil ? 0 : 1
+        }
+      ),
+      (
+        "sender_search_inbox", 5_000,
+        { service in
+          try await service.searchMessages(
+            MailSearchQuery(from: "billing@example.invalid", limit: 10)
+          ).messages.count
+        }
+      ),
+      (
+        "subject_search_inbox", 5_000,
+        { service in
+          try await service.searchMessages(
+            MailSearchQuery(subject: "invoice", limit: 10)
+          ).messages.count
+        }
+      ),
+      (
+        "broad_archive_search", .infinity,
+        { service in
+          try await service.searchMessages(
+            MailSearchQuery(scope: .all, subject: "invoice", limit: 10)
+          ).messages.count
+        }
+      ),
+    ]
+
+    var rows: [Row] = []
+    for (workflow, budgetMilliseconds, operation) in workflows {
+      var samples: [UInt64] = []
+      var resultCount = 0
+      for _ in 0..<iterations {
+        let service = MailToolService(repository: SyntheticMailFixture.repository())
+        let start = DispatchTime.now().uptimeNanoseconds
+        resultCount = try await operation(service)
+        samples.append(DispatchTime.now().uptimeNanoseconds - start)
+      }
+      let sorted = samples.sorted()
+      let median = sorted[sorted.count / 2]
+      let row = Row(
+        workflow: workflow,
+        iterations: iterations,
+        minimumMilliseconds: Double(sorted[0]) / 1_000_000,
+        medianMilliseconds: Double(median) / 1_000_000,
+        maximumMilliseconds: Double(sorted[sorted.count - 1]) / 1_000_000,
+        resultCount: resultCount
+      )
+      rows.append(row)
+      if budgetMilliseconds.isFinite {
+        #expect(row.maximumMilliseconds < budgetMilliseconds)
+      }
+    }
+
+    let report = Report(schemaVersion: 1, fixture: "synthetic", workflows: rows)
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.sortedKeys]
+    let data = try encoder.encode(report)
+    let line = String(decoding: data, as: UTF8.self)
+    FileHandle.standardOutput.write(Data("MAIL_WORKFLOW_BENCHMARK \(line)\n".utf8))
+  }
+}
+
 private enum SyntheticMailFixture {
   static let account = MailAccountModel(
     id: ReferenceCodec.account(rawID: "fixture-account"),
@@ -194,6 +363,46 @@ private enum SyntheticMailFixture {
     role: .inbox,
     unreadCount: 2,
     totalCount: 3
+  )
+
+  static let archiveMailbox = Mailbox(
+    id: ReferenceCodec.mailbox(accountRawID: "fixture-account", path: ["Archive"]),
+    accountID: account.id,
+    name: "Archive",
+    path: ["Archive"],
+    role: .archive,
+    unreadCount: 0,
+    totalCount: 1
+  )
+
+  static let archiveRecord = MailMessageRecord(
+    summary: MailMessageSummary(
+      id: ReferenceCodec.message(
+        accountRawID: "fixture-account",
+        mailboxPath: ["Archive"],
+        messageRawID: "archive-message"
+      ),
+      accountID: account.id,
+      mailboxID: archiveMailbox.id,
+      subject: "Invoice archive",
+      sender: MailAddress(address: "billing@example.invalid"),
+      recipients: [MailAddress(address: "fixture@example.invalid")],
+      receivedAt: Date(timeIntervalSince1970: 4),
+      sentAt: Date(timeIntervalSince1970: 4),
+      isRead: true,
+      isFlagged: false,
+      hasAttachments: false,
+      size: 128
+    ),
+    messageIDHeader: "<archive@example.invalid>",
+    inReplyTo: nil,
+    references: [],
+    body: MailBody(
+      plainText: "Archived synthetic fixture message.",
+      truncated: false,
+      originalByteCount: 35
+    ),
+    attachments: []
   )
 
   static let messageReferences = (1...3).map { index in
@@ -248,8 +457,8 @@ private enum SyntheticMailFixture {
   static func repository(records: [MailMessageRecord]? = nil) -> SyntheticMailRepository {
     SyntheticMailRepository(
       accounts: [account],
-      mailboxes: [mailbox],
-      records: records ?? Self.records
+      mailboxes: [mailbox, archiveMailbox],
+      records: records ?? Self.records + [archiveRecord]
     )
   }
 }
@@ -258,6 +467,7 @@ private actor SyntheticMailRepository: MailRepository {
   let accounts: [MailAccountModel]
   let mailboxes: [Mailbox]
   let records: [MailMessageRecord]
+  private var inspectedCount = 0
 
   init(
     accounts: [MailAccountModel],
@@ -267,6 +477,10 @@ private actor SyntheticMailRepository: MailRepository {
     self.accounts = accounts
     self.mailboxes = mailboxes
     self.records = records
+  }
+
+  func lastInspectedCount() -> Int {
+    inspectedCount
   }
 
   func listAccounts(includeDisabled: Bool) async throws -> [MailAccountModel] {
@@ -282,36 +496,59 @@ private actor SyntheticMailRepository: MailRepository {
 
   func searchMessages(_ query: MailSearchQuery) async throws -> MailSearchPage {
     let offset = try SearchCursorCodec.decode(query.cursor, query: query)
-    let matches = records.map(\.summary).filter { summary in
-      if let accountIDs = query.accountIDs, !accountIDs.contains(summary.accountID) {
-        return false
+    let boundedLimit = max(1, query.limit)
+    let scopedRecords = records.filter { record in
+      switch query.scope {
+      case .inbox:
+        return record.summary.mailboxID == SyntheticMailFixture.mailbox.id
+      case .mailbox:
+        return query.mailboxIDs?.contains(record.summary.mailboxID) == true
+      case .all:
+        return true
       }
-      if let mailboxIDs = query.mailboxIDs, !mailboxIDs.contains(summary.mailboxID) {
-        return false
+    }
+    let orderedRecords = scopedRecords.sorted {
+      ($0.summary.receivedAt ?? .distantPast) > ($1.summary.receivedAt ?? .distantPast)
+    }
+
+    inspectedCount = 0
+    var matchedCount = 0
+    var page: [MailMessageSummary] = []
+    for record in orderedRecords {
+      inspectedCount += 1
+      let summary = record.summary
+      if let accountIDs = query.accountIDs, !accountIDs.contains(summary.accountID) {
+        continue
       }
       if let subject = query.subject,
         !(summary.subject?.localizedCaseInsensitiveContains(subject) ?? false)
       {
-        return false
+        continue
       }
       if let from = query.from,
         !(summary.sender?.address.localizedCaseInsensitiveContains(from) ?? false)
       {
-        return false
+        continue
       }
-      if query.unreadOnly && summary.isRead { return false }
-      if query.flaggedOnly && !summary.isFlagged { return false }
-      return query.matchesReceivedDate(summary.receivedAt)
+      if query.unreadOnly && summary.isRead { continue }
+      if query.flaggedOnly && !summary.isFlagged { continue }
+      if !query.matchesReceivedDate(summary.receivedAt) { continue }
+
+      if matchedCount < offset {
+        matchedCount += 1
+        continue
+      }
+      matchedCount += 1
+      page.append(summary)
+      if page.count > boundedLimit {
+        return MailSearchPage(
+          messages: Array(page.prefix(boundedLimit)),
+          nextCursor: SearchCursorCodec.encode(query: query, offset: offset + boundedLimit)
+        )
+      }
     }
 
-    let boundedLimit = max(1, query.limit)
-    let page = Array(matches.dropFirst(offset).prefix(boundedLimit))
-    let end = offset + page.count
-    let nextCursor =
-      end < matches.count
-      ? SearchCursorCodec.encode(query: query, offset: end)
-      : nil
-    return MailSearchPage(messages: page, nextCursor: nextCursor)
+    return MailSearchPage(messages: page)
   }
 
   func getMessage(
@@ -331,6 +568,14 @@ private actor SyntheticMailRepository: MailRepository {
       references: record.references,
       body: includeBody ? record.body : nil,
       attachments: includeAttachmentMetadata ? record.attachments : []
+    )
+  }
+
+  func sendMessage(_ request: MailSendRequest) async throws -> MailSendResult {
+    MailSendResult(
+      accepted: true,
+      accountID: request.accountID,
+      fromIdentity: request.fromIdentity
     )
   }
 }

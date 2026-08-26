@@ -632,6 +632,18 @@ typedef enum MailTypeOfAccount MailTypeOfAccount;
 @property (readonly) BOOL downloaded;  // Indicates whether the attachment has been downloaded.
 - (NSString *) id;  // The unique identifier of the attachment.
 
-
 @end
+
+// Creates and sends one outgoing Mail.app message through its configured
+// account/provider path. Recipient dictionaries use `address` and optional
+// `name` keys. Returns NO when Mail.app cannot create or send the message.
+FOUNDATION_EXPORT BOOL APSMailScriptingBridgeSendMessage(
+  MailApplication *application,
+  NSString *sender,
+  NSString *subject,
+  NSString *body,
+  NSArray<NSDictionary<NSString *, NSString *> *> *toRecipients,
+  NSArray<NSDictionary<NSString *, NSString *> *> *ccRecipients,
+  NSArray<NSDictionary<NSString *, NSString *> *> *bccRecipients
+);
 

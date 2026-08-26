@@ -60,8 +60,11 @@ class FakeBackend implements MCPBackend {
 
 function tokenConfig(overrides: Partial<GatewayConfig> = {}): GatewayConfig {
   return {
-    executable: "/unused-in-test",
-    args: [],
+    backend: {
+      kind: "stdio",
+      executable: "/unused-in-test",
+      args: [],
+    },
     host: "127.0.0.1",
     port: 0,
     endpointPath: "/mail",

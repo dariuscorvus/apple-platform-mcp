@@ -13,8 +13,10 @@
   <string>/Users/YOU/projects/apple-platform-mcp</string>
   <key>EnvironmentVariables</key>
   <dict>
-    <key>APPLE_PLATFORM_MCP_EXECUTABLE</key>
-    <string>/Users/YOU/.jcode/scratch/apple-platform-mcp.xcarchive/Products/Applications/apple-platform-mcp.app/Contents/MacOS/apple-platform-mcp</string>
+    <key>APPLE_PLATFORM_MCP_APP_BUNDLE</key>
+    <string>/Users/YOU/Applications/apple-platform-mcp.app</string>
+    <key>APPLE_PLATFORM_MCP_LOCAL_HTTP_URL</key>
+    <string>http://127.0.0.1:8765/mcp</string>
     <key>APPLE_PLATFORM_MCP_HTTP_HOST</key>
     <string>127.0.0.1</string>
     <key>APPLE_PLATFORM_MCP_HTTP_PORT</key>

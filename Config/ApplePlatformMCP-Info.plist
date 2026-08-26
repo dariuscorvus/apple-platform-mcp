@@ -14,6 +14,10 @@
 	<string>0.1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>ApplePlatformMCPBuildCommit</key>
+	<string>$(APPLE_PLATFORM_MCP_BUILD_COMMIT)</string>
+	<key>ApplePlatformMCPBuildConfiguration</key>
+	<string>$(CONFIGURATION)</string>
 	<key>LSBackgroundOnly</key>
 	<true/>
 	<key>LSApplicationCategoryType</key>

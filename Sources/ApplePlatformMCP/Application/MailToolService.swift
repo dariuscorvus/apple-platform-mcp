@@ -10,6 +10,7 @@ public struct MailToolService: Sendable {
   }
 
   public var policyMode: MailPolicy.Mode { policy.mode }
+  public var sendMode: MailPolicy.SendMode { policy.sendMode }
   public var maxResults: Int { policy.maxResults }
   public var maxBodyBytes: Int { policy.maxBodyBytes }
   public var hasAccountAllowlist: Bool { policy.allowedAccountIDs != nil }
@@ -31,7 +32,26 @@ public struct MailToolService: Sendable {
   }
 
   public func searchMessages(_ query: MailSearchQuery) async throws -> MailSearchPage {
+    guard query.text == nil else {
+      throw MailError.unsupported(
+        "Full-text body search is disabled in Mail.app-only V1; use sender or subject filters."
+      )
+    }
     let boundedLimit = try policy.boundedLimit(query.limit)
+    switch query.scope {
+    case .inbox:
+      guard query.mailboxIDs == nil || query.mailboxIDs?.isEmpty == true else {
+        throw MailError.invalidInput("mailbox_ids requires scope=mailbox")
+      }
+    case .mailbox:
+      guard let mailboxIDs = query.mailboxIDs, !mailboxIDs.isEmpty else {
+        throw MailError.invalidInput("scope=mailbox requires mailbox_ids")
+      }
+    case .all:
+      guard query.mailboxIDs == nil || query.mailboxIDs?.isEmpty == true else {
+        throw MailError.invalidInput("mailbox_ids cannot be combined with scope=all")
+      }
+    }
     for accountID in query.accountIDs ?? [] {
       try policy.validateAccount(accountID)
     }
@@ -53,6 +73,7 @@ public struct MailToolService: Sendable {
     let boundedQuery = MailSearchQuery(
       accountIDs: scopedAccountIDs,
       mailboxIDs: scopedMailboxIDs,
+      scope: query.scope,
       from: query.from,
       to: query.to,
       subject: query.subject,
@@ -110,5 +131,54 @@ public struct MailToolService: Sendable {
       includeAttachmentMetadata: includeAttachmentMetadata,
       maxBodyBytes: min(requestedBodyBytes, policy.maxBodyBytes)
     )
+  }
+
+  public func sendMessage(_ request: MailSendRequest) async throws -> MailSendResult {
+    switch policy.sendMode {
+    case .allowed:
+      break
+    case .denied:
+      throw MailError.policyDenied("Sending is disabled by policy.")
+    case .confirmationRequired:
+      throw MailError.policyDenied("Sending requires explicit confirmation.")
+    }
+
+    try policy.validateAccount(request.accountID)
+    let accounts = try await repository.listAccounts(includeDisabled: true)
+    guard let account = accounts.first(where: { $0.id == request.accountID }) else {
+      throw MailError.accountNotFound
+    }
+    guard account.enabled else {
+      throw MailError.policyDenied("Sending from a disabled account is not allowed.")
+    }
+    guard !request.fromIdentity.isEmpty,
+      account.emailAddresses.contains(where: {
+        $0.localizedCaseInsensitiveCompare(request.fromIdentity) == .orderedSame
+      })
+    else {
+      throw MailError.policyDenied("from_identity must belong to the selected Mail.app account.")
+    }
+
+    let recipients = request.to + request.cc + request.bcc
+    guard !recipients.isEmpty else {
+      throw MailError.invalidInput("At least one recipient is required.")
+    }
+    guard recipients.count <= policy.maxRecipients else {
+      throw MailError.invalidInput("The recipient list exceeds the configured limit.")
+    }
+    guard recipients.allSatisfy({ MailAddressValidator.isValid($0.address) }) else {
+      throw MailError.invalidInput("Every recipient must be a valid email address.")
+    }
+
+    let subjectBytes = request.subject.data(using: .utf8)?.count ?? 0
+    guard subjectBytes <= policy.maxSubjectBytes else {
+      throw MailError.invalidInput("The subject exceeds the configured limit.")
+    }
+    let bodyBytes = request.body.data(using: .utf8)?.count ?? 0
+    guard bodyBytes <= policy.maxSendBodyBytes else {
+      throw MailError.bodyTooLarge
+    }
+
+    return try await repository.sendMessage(request)
   }
 }

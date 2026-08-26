@@ -102,6 +102,10 @@ private actor HTTPFakeMailRepository: MailRepository {
   ) async throws -> MailMessageRecord {
     throw MailError.messageNotFound
   }
+
+  func sendMessage(_ request: MailSendRequest) async throws -> MailSendResult {
+    throw MailError.unsupportedByAccount
+  }
 }
 
 @Suite("Streamable HTTP routing")
@@ -558,8 +562,8 @@ struct StreamableHTTPRoutingTests {
     #expect(rejected.statusCode == 429)
   }
 
-  @Test("publishes only the five read-only Mail tools over HTTP")
-  func publishesReadOnlyToolCatalog() async throws {
+  @Test("publishes read tools and the policy-controlled send tool over HTTP")
+  func publishesReadAndSendToolCatalog() async throws {
     let service = MailToolService(repository: HTTPFakeMailRepository())
     let server = await ApplePlatformMCPServer(service: service).makeServer()
     let runtime = ApplePlatformMCPStreamableHTTPRuntime(
@@ -597,6 +601,7 @@ struct StreamableHTTPRoutingTests {
           "mail_list_mailboxes",
           "mail_search_messages",
           "mail_get_message",
+          "mail_send_message",
         ]))
   }
 

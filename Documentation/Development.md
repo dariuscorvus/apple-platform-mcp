@@ -159,4 +159,12 @@ The optional file is:
 
 The bootstrap uses JSON so the local server has no YAML parser dependency. The file contains policy references and limits only; Mail.app remains the owner of account credentials.
 
-An absent file means read-only defaults. Invalid configuration fails closed. Write modes are not accepted.
+An absent file means read-only defaults with `send_mode=denied`. Invalid
+configuration fails closed. The supported send modes are `denied`, `allowed`,
+and `confirmation_required`; the latter is intentionally blocked until a
+separate confirmation boundary exists. No write mode enables mailbox
+mutations.
+
+Optional send limits are `max_send_body_bytes`, `max_subject_bytes`, and
+`max_recipients`. The account and identity values are always sourced from
+Mail.app; configuration never contains provider credentials.

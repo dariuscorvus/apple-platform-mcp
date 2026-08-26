@@ -59,6 +59,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.dariuscorvus.apple-platform-mcp
+        APPLE_PLATFORM_MCP_BUILD_COMMIT: unknown
         PRODUCT_NAME: apple-platform-mcp
         PRODUCT_MODULE_NAME: ApplePlatformMCPExecutable
         EXECUTABLE_NAME: apple-platform-mcp

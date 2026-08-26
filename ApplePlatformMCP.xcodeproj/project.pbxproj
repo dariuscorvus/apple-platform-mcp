@@ -7,15 +7,20 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		001E709EB4DF8D73D66FD55F /* CanonicalInboxResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 469CE91DDDB56298E26D316C /* CanonicalInboxResolver.swift */; };
 		102B3B1654A7E591E543C903 /* MailAutomationDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C1734D8C7DB6309BF0AF0D9 /* MailAutomationDiagnostics.swift */; };
 		1075B3498B271512BC92FC78 /* NIOHTTP1 in Frameworks */ = {isa = PBXBuildFile; productRef = 946291FA772A34EE86D20C2E /* NIOHTTP1 */; };
 		163D8C4E207164E1503E7BBF /* Logging in Frameworks */ = {isa = PBXBuildFile; productRef = 4BA1F22BD06F2F5F1A8ADD0F /* Logging */; };
 		1A9D61DA23FE824516C65BD7 /* MailAutomationDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C1734D8C7DB6309BF0AF0D9 /* MailAutomationDiagnostics.swift */; };
+		1AA89F458FC0753CB90A83F3 /* BoundedNewestFirstTraversal.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46C755BE52D87AA3E8E00DE /* BoundedNewestFirstTraversal.swift */; };
 		2062A9B56D7348E28D85107D /* MCP in Frameworks */ = {isa = PBXBuildFile; productRef = 37E2E2E53CF4D757C2BD92CA /* MCP */; };
+		2452F6561FFD8812BA86B598 /* BuildProvenance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2908CB2A359A023864D75F53 /* BuildProvenance.swift */; };
 		26C48656690A6EAB4838E9F1 /* MCP in Frameworks */ = {isa = PBXBuildFile; productRef = 7EC475AD9348F154C8A9698A /* MCP */; };
 		3396BAF3E171AD88A7986F40 /* NIOCore in Frameworks */ = {isa = PBXBuildFile; productRef = 34DAAF5A93DC94B85D4BEE98 /* NIOCore */; };
+		359A6E93FB1BF1E830567912 /* BuildProvenance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2908CB2A359A023864D75F53 /* BuildProvenance.swift */; };
 		35E3F0B5B842B90F259D18F4 /* MailContentSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4090D1720B5BC24BEE5F3D37 /* MailContentSanitizer.swift */; };
 		3810FA9CBF0FD201743F2408 /* MailToolService.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECA3DD70D9C8367A06A590B7 /* MailToolService.swift */; };
+		39A6793365A7C5B2AB6F2592 /* BoundedNewestFirstTraversal.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46C755BE52D87AA3E8E00DE /* BoundedNewestFirstTraversal.swift */; };
 		3CF66204EDAEA2AAF3070E44 /* HTTPRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F77553143C9909E8F786F586 /* HTTPRouter.swift */; };
 		3E70EA2D9B74B22D604BCC11 /* MCPServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DC44195A8E3289AAED62727 /* MCPServer.swift */; };
 		3EA016EB9DA9C2AB5E9DE44E /* StatelessHTTPTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 255FEAE531A3EA33A07AF828 /* StatelessHTTPTransport.swift */; };
@@ -40,6 +45,7 @@
 		A5190F1A7FA3D5C645BAB847 /* MCPServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DC44195A8E3289AAED62727 /* MCPServer.swift */; };
 		ACECB4855CDF256399E2CD9C /* SyntheticMailFixtureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4165D4289A204B7D38912D0C /* SyntheticMailFixtureTests.swift */; };
 		B450715900DE40473E9EDE04 /* MailToolService.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECA3DD70D9C8367A06A590B7 /* MailToolService.swift */; };
+		B6DED2024D3C59767C76A3CF /* CanonicalInboxResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 469CE91DDDB56298E26D316C /* CanonicalInboxResolver.swift */; };
 		C28564219C2C3495E44EFF9D /* ServerCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2B30676EDFDF38A2037F5D6 /* ServerCommand.swift */; };
 		C28E79B437C8016C4C18CE9B /* LoopbackHTTPListenerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C66852A6A52AB3437FE6E327 /* LoopbackHTTPListenerTests.swift */; };
 		C2D5C7A56BAA62ED142C0FF6 /* Mail.m in Sources */ = {isa = PBXBuildFile; fileRef = 2E2FB9C48CFCCB7649C6A5A9 /* Mail.m */; };
@@ -58,6 +64,7 @@
 /* Begin PBXFileReference section */
 		0DC44195A8E3289AAED62727 /* MCPServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPServer.swift; sourceTree = "<group>"; };
 		255FEAE531A3EA33A07AF828 /* StatelessHTTPTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatelessHTTPTransport.swift; sourceTree = "<group>"; };
+		2908CB2A359A023864D75F53 /* BuildProvenance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildProvenance.swift; sourceTree = "<group>"; };
 		2C1734D8C7DB6309BF0AF0D9 /* MailAutomationDiagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MailAutomationDiagnostics.swift; sourceTree = "<group>"; };
 		2E2FB9C48CFCCB7649C6A5A9 /* Mail.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Mail.m; sourceTree = "<group>"; };
 		2F9F7152CE05BF17424C9AC6 /* ApplePlatformMCPMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplePlatformMCPMain.swift; sourceTree = "<group>"; };
@@ -65,6 +72,7 @@
 		4090D1720B5BC24BEE5F3D37 /* MailContentSanitizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MailContentSanitizer.swift; sourceTree = "<group>"; };
 		4165D4289A204B7D38912D0C /* SyntheticMailFixtureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyntheticMailFixtureTests.swift; sourceTree = "<group>"; };
 		41F0370CBFF4BC2DAEC91750 /* StreamableHTTPRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamableHTTPRuntime.swift; sourceTree = "<group>"; };
+		469CE91DDDB56298E26D316C /* CanonicalInboxResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanonicalInboxResolver.swift; sourceTree = "<group>"; };
 		517B820FED9B69B48281075A /* HTTPServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPServer.swift; sourceTree = "<group>"; };
 		638E1187D0E8F36C8770C761 /* ApplePlatformMCPTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplePlatformMCPTests.swift; sourceTree = "<group>"; };
 		67581097C2BD591ECF52EFDC /* StreamableHTTPRoutingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamableHTTPRoutingTests.swift; sourceTree = "<group>"; };
@@ -76,6 +84,7 @@
 		BBC834EEBD7E1F69C3FCE076 /* ApplePlatformMCP-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ApplePlatformMCP-Bridging-Header.h"; sourceTree = "<group>"; };
 		C66852A6A52AB3437FE6E327 /* LoopbackHTTPListenerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopbackHTTPListenerTests.swift; sourceTree = "<group>"; };
 		D185D5E2A4D96FE690DB1307 /* StreamableHTTPCommandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamableHTTPCommandTests.swift; sourceTree = "<group>"; };
+		D46C755BE52D87AA3E8E00DE /* BoundedNewestFirstTraversal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoundedNewestFirstTraversal.swift; sourceTree = "<group>"; };
 		E9CBDA587D15BF3281F4F308 /* ScriptingBridgeMailRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptingBridgeMailRepository.swift; sourceTree = "<group>"; };
 		ECA3DD70D9C8367A06A590B7 /* MailToolService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MailToolService.swift; sourceTree = "<group>"; };
 		F1681C7F0AA9DFA0CEFF579E /* DomainModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DomainModels.swift; sourceTree = "<group>"; };
@@ -121,6 +130,7 @@
 		2AD05C58E9EA9E2CE5E13322 /* Support */ = {
 			isa = PBXGroup;
 			children = (
+				2908CB2A359A023864D75F53 /* BuildProvenance.swift */,
 				33B701AAC0B6D41B43C6F183 /* Doctor.swift */,
 				A2B30676EDFDF38A2037F5D6 /* ServerCommand.swift */,
 				8D0FE45735C19936A5F710C6 /* ServerConfiguration.swift */,
@@ -245,6 +255,8 @@
 		C7FCE16FCEEF378A08EBF80F /* Automation */ = {
 			isa = PBXGroup;
 			children = (
+				D46C755BE52D87AA3E8E00DE /* BoundedNewestFirstTraversal.swift */,
+				469CE91DDDB56298E26D316C /* CanonicalInboxResolver.swift */,
 				2C1734D8C7DB6309BF0AF0D9 /* MailAutomationDiagnostics.swift */,
 				E9CBDA587D15BF3281F4F308 /* ScriptingBridgeMailRepository.swift */,
 			);
@@ -357,6 +369,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				9A2BE6EF269EFD830286D267 /* ApplePlatformMCPTests.swift in Sources */,
+				1AA89F458FC0753CB90A83F3 /* BoundedNewestFirstTraversal.swift in Sources */,
+				359A6E93FB1BF1E830567912 /* BuildProvenance.swift in Sources */,
+				001E709EB4DF8D73D66FD55F /* CanonicalInboxResolver.swift in Sources */,
 				DA37C86C1C9B13CD4C5F9078 /* Doctor.swift in Sources */,
 				54532EE5168FA07896AA31C5 /* DomainModels.swift in Sources */,
 				726A3BE6E7D8BE8F680BD651 /* HTTPRouter.swift in Sources */,
@@ -384,6 +399,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				9183E1B31A6D4A31401C6A75 /* ApplePlatformMCPMain.swift in Sources */,
+				39A6793365A7C5B2AB6F2592 /* BoundedNewestFirstTraversal.swift in Sources */,
+				2452F6561FFD8812BA86B598 /* BuildProvenance.swift in Sources */,
+				B6DED2024D3C59767C76A3CF /* CanonicalInboxResolver.swift in Sources */,
 				DC4B9349E2DABC2F44562BF4 /* Doctor.swift in Sources */,
 				8EE8711C8CE009FFD958B475 /* DomainModels.swift in Sources */,
 				3CF66204EDAEA2AAF3070E44 /* HTTPRouter.swift in Sources */,
@@ -448,6 +466,7 @@
 		3AE2D933454150A577A63F47 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				APPLE_PLATFORM_MCP_BUILD_COMMIT = unknown;
 				CODE_SIGN_ENTITLEMENTS = Config/ApplePlatformMCP.entitlements;
 				EXECUTABLE_NAME = "apple-platform-mcp";
 				HEADER_SEARCH_PATHS = (
@@ -474,6 +493,7 @@
 		5165B32AA7F18E02007124E2 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				APPLE_PLATFORM_MCP_BUILD_COMMIT = unknown;
 				CODE_SIGN_ENTITLEMENTS = Config/ApplePlatformMCP.entitlements;
 				ENABLE_HARDENED_RUNTIME = YES;
 				EXECUTABLE_NAME = "apple-platform-mcp";

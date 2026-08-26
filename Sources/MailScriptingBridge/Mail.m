@@ -3200,4 +3200,67 @@ static const codeForPropertyName_t codeForPropertyNameData__[] = {
 
 @end
 
+static BOOL APSMailAppendRecipients(
+  MailApplication *application,
+  SBElementArray *target,
+  NSArray<NSDictionary<NSString *, NSString *> *> *values,
+  NSString *scriptingClassName
+)
+{
+  Class recipientClass = [application classForScriptingClass:scriptingClassName];
+  if (recipientClass == Nil) return NO;
 
+  for (NSDictionary<NSString *, NSString *> *value in values) {
+    NSString *address = value[@"address"];
+    if (![address isKindOfClass:[NSString class]] || address.length == 0) return NO;
+
+    NSMutableDictionary *properties = [NSMutableDictionary dictionaryWithObject:address forKey:@"address"];
+    NSString *name = value[@"name"];
+    if ([name isKindOfClass:[NSString class]] && name.length > 0) {
+      properties[@"name"] = name;
+    }
+
+    MailRecipient *recipient = [[recipientClass alloc] initWithProperties:properties];
+    if (recipient == nil) return NO;
+    [target addObject:recipient];
+  }
+
+  return YES;
+}
+
+BOOL APSMailScriptingBridgeSendMessage(
+  MailApplication *application,
+  NSString *sender,
+  NSString *subject,
+  NSString *body,
+  NSArray<NSDictionary<NSString *, NSString *> *> *toRecipients,
+  NSArray<NSDictionary<NSString *, NSString *> *> *ccRecipients,
+  NSArray<NSDictionary<NSString *, NSString *> *> *bccRecipients
+)
+{
+  Class messageClass = [application classForScriptingClass:@"outgoing message"];
+  if (messageClass == Nil) return NO;
+  if (![sender isKindOfClass:[NSString class]] || sender.length == 0) return NO;
+  if (![subject isKindOfClass:[NSString class]] || ![body isKindOfClass:[NSString class]]) return NO;
+
+  NSDictionary *properties = @{
+    @"sender": sender,
+    @"subject": subject,
+    @"content": body,
+  };
+  MailOutgoingMessage *message = [[messageClass alloc] initWithProperties:properties];
+  if (message == nil) return NO;
+
+  [[application outgoingMessages] addObject:message];
+  if (!APSMailAppendRecipients(application, [message toRecipients], toRecipients, @"to recipient")) {
+    return NO;
+  }
+  if (!APSMailAppendRecipients(application, [message ccRecipients], ccRecipients, @"cc recipient")) {
+    return NO;
+  }
+  if (!APSMailAppendRecipients(application, [message bccRecipients], bccRecipients, @"bcc recipient")) {
+    return NO;
+  }
+
+  return [message send];
+}

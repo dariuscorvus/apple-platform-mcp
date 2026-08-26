@@ -1,14 +1,19 @@
 import Foundation
 
-/// Local configuration for the first read-only release.
+/// Local configuration for the Mail.app-backed V1 release.
 ///
-/// The file is optional. Missing configuration always means read-only defaults.
+/// The file is optional. Missing configuration always means read-only,
+/// send-denied defaults.
 /// References are copied from `mail_list_accounts` and
 /// `mail_list_mailboxes`; they are not account names or provider credentials.
 public struct MailServerConfiguration: Codable, Equatable, Sendable {
   public let mode: MailPolicy.Mode
+  public let sendMode: MailPolicy.SendMode
   public let maxResults: Int
   public let maxBodyBytes: Int
+  public let maxSendBodyBytes: Int
+  public let maxSubjectBytes: Int
+  public let maxRecipients: Int
   public let allowedAccountIDs: Set<AccountReference>?
   public let allowedMailboxIDs: Set<MailboxReference>?
 
@@ -21,14 +26,22 @@ public struct MailServerConfiguration: Codable, Equatable, Sendable {
 
   public init(
     mode: MailPolicy.Mode = .readOnly,
+    sendMode: MailPolicy.SendMode = .denied,
     maxResults: Int = 50,
     maxBodyBytes: Int = 262_144,
+    maxSendBodyBytes: Int = 262_144,
+    maxSubjectBytes: Int = 10_000,
+    maxRecipients: Int = 100,
     allowedAccountIDs: Set<AccountReference>? = nil,
     allowedMailboxIDs: Set<MailboxReference>? = nil
   ) {
     self.mode = mode
+    self.sendMode = sendMode
     self.maxResults = max(1, maxResults)
     self.maxBodyBytes = max(1, maxBodyBytes)
+    self.maxSendBodyBytes = max(1, maxSendBodyBytes)
+    self.maxSubjectBytes = max(1, maxSubjectBytes)
+    self.maxRecipients = max(1, maxRecipients)
     self.allowedAccountIDs = allowedAccountIDs
     self.allowedMailboxIDs = allowedMailboxIDs
   }
@@ -36,8 +49,12 @@ public struct MailServerConfiguration: Codable, Equatable, Sendable {
   public var policy: MailPolicy {
     MailPolicy(
       mode: mode,
+      sendMode: sendMode,
       maxResults: maxResults,
       maxBodyBytes: maxBodyBytes,
+      maxSendBodyBytes: maxSendBodyBytes,
+      maxSubjectBytes: maxSubjectBytes,
+      maxRecipients: maxRecipients,
       allowedAccountIDs: allowedAccountIDs,
       allowedMailboxIDs: allowedMailboxIDs
     )
@@ -67,8 +84,12 @@ public struct MailServerConfiguration: Codable, Equatable, Sendable {
 
   private enum CodingKeys: String, CodingKey {
     case mode
+    case sendMode = "send_mode"
     case maxResults = "max_results"
     case maxBodyBytes = "max_body_bytes"
+    case maxSendBodyBytes = "max_send_body_bytes"
+    case maxSubjectBytes = "max_subject_bytes"
+    case maxRecipients = "max_recipients"
     case allowedAccountIDs = "allowed_account_ids"
     case allowedMailboxIDs = "allowed_mailbox_ids"
   }
@@ -82,8 +103,14 @@ public struct MailServerConfiguration: Codable, Equatable, Sendable {
 
     self.init(
       mode: mode,
+      sendMode: try container.decodeIfPresent(MailPolicy.SendMode.self, forKey: .sendMode)
+        ?? .denied,
       maxResults: try container.decodeIfPresent(Int.self, forKey: .maxResults) ?? 50,
       maxBodyBytes: try container.decodeIfPresent(Int.self, forKey: .maxBodyBytes) ?? 262_144,
+      maxSendBodyBytes: try container.decodeIfPresent(Int.self, forKey: .maxSendBodyBytes)
+        ?? 262_144,
+      maxSubjectBytes: try container.decodeIfPresent(Int.self, forKey: .maxSubjectBytes) ?? 10_000,
+      maxRecipients: try container.decodeIfPresent(Int.self, forKey: .maxRecipients) ?? 100,
       allowedAccountIDs: try container.decodeIfPresent(
         Set<AccountReference>.self, forKey: .allowedAccountIDs),
       allowedMailboxIDs: try container.decodeIfPresent(

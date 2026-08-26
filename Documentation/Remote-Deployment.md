@@ -20,17 +20,20 @@ Cloudflare Tunnel
     v
 Remote Streamable HTTP gateway
     |
-    | stdio
+    | loopback Streamable HTTP
     v
-Signed Apple Platform MCP executable
+Signed Apple Platform MCP app launched through Launch Services
     |
     v
 Mail.app through ScriptingBridge and Apple Events
 ```
 
-The Swift server remains a local stdio process. The gateway is a small Bun or
-Node process that forwards MCP discovery and tool calls. Mail content is still
-subject to the local read-only policy, limits, and sanitization.
+The Swift server remains loopback-only and is launched as its signed app bundle
+through macOS Launch Services. The gateway is a small Bun or Node process that
+forwards MCP discovery and tool calls to that local Streamable HTTP endpoint.
+This preserves the app bundle's TCC identity for Mail automation. Mail content
+is still subject to the local read/send policy, limits, and sanitization;
+mailbox mutations remain disabled.
 
 ## Security boundary
 
@@ -41,8 +44,9 @@ subject to the local read-only policy, limits, and sanitization.
 - Set an explicit `APPLE_PLATFORM_MCP_HTTP_ORIGINS` list for browser clients.
 - Do not commit tunnel credentials, Access audience values, token files, or
   user-specific launchd plists.
-- The gateway exposes only the existing read-only tool catalog. It does not
-  add send, delete, draft, attachment export, or arbitrary code execution.
+- The gateway exposes the local read tools and the separately policy-controlled
+  `mail_send_message` capability. It does not add delete, draft, attachment
+  export, mailbox mutation, or arbitrary code execution.
 
 Cloudflare Access Managed OAuth performs the public OAuth flow. The gateway
 does not implement a second OAuth server. It validates the assertion that
@@ -52,7 +56,7 @@ Cloudflare adds after the request passes Access policy.
 
 - macOS 13 or newer with Mail.app available
 - a signed Apple Platform MCP app build
-- Mail.app open in the same user session as the gateway
+- Mail.app available in the same user session as the gateway
 - Automation permission for the signed app bundle
 - Bun or Node 18 or newer
 - a Cloudflare-managed DNS zone and `cloudflared`
@@ -72,12 +76,13 @@ xcodebuild \
   DEVELOPMENT_TEAM='<team>' \
   archive
 
-APP="$HOME/.jcode/scratch/apple-platform-mcp.xcarchive/Products/Applications/apple-platform-mcp.app/Contents/MacOS/apple-platform-mcp"
-"$APP" doctor --request-automation
+APP="$HOME/.jcode/scratch/apple-platform-mcp.xcarchive/Products/Applications/apple-platform-mcp.app"
+"$APP/Contents/MacOS/apple-platform-mcp" doctor --request-automation
 ```
 
-Use the exact executable path from the archive. The gateway needs the embedded
-executable, not an unsigned copy or a shell wrapper.
+Install the exact signed app bundle from the archive at a stable path. The
+gateway launches that bundle through Launch Services; do not point it at an
+unsigned executable copy or shell wrapper.
 
 ## 2. Build the gateway
 
@@ -103,7 +108,8 @@ values are public identifiers, not passwords, but still keep deployment
 configuration outside the repository.
 
 ```sh
-export APPLE_PLATFORM_MCP_EXECUTABLE="$HOME/.jcode/scratch/apple-platform-mcp.xcarchive/Products/Applications/apple-platform-mcp.app/Contents/MacOS/apple-platform-mcp"
+export APPLE_PLATFORM_MCP_APP_BUNDLE="$HOME/Applications/apple-platform-mcp.app"
+export APPLE_PLATFORM_MCP_LOCAL_HTTP_URL=http://127.0.0.1:8765/mcp
 export APPLE_PLATFORM_MCP_HTTP_HOST=127.0.0.1
 export APPLE_PLATFORM_MCP_HTTP_PORT=3766
 export APPLE_PLATFORM_MCP_HTTP_PATH=/apple-platform
@@ -119,8 +125,10 @@ Optional variables:
 
 | Variable | Purpose |
 | --- | --- |
-| `APPLE_PLATFORM_MCP_ARGUMENTS_JSON` | JSON array of arguments passed to the Swift executable. Default: `[]`. |
-| `APPLE_PLATFORM_MCP_WORKING_DIRECTORY` | Working directory for the Swift child process. |
+| `APPLE_PLATFORM_MCP_LOCAL_HTTP_URL` | Loopback MCP URL for the Launch Services app. Default: `http://127.0.0.1:8765/mcp`. |
+| `APPLE_PLATFORM_MCP_EXECUTABLE` | Legacy stdio backend. Use only instead of `APPLE_PLATFORM_MCP_APP_BUNDLE`. |
+| `APPLE_PLATFORM_MCP_ARGUMENTS_JSON` | Legacy stdio backend arguments. Default: `[]`. |
+| `APPLE_PLATFORM_MCP_WORKING_DIRECTORY` | Legacy stdio backend working directory. |
 | `APPLE_PLATFORM_MCP_HTTP_HOST` | Listener address. Keep this `127.0.0.1`. |
 | `APPLE_PLATFORM_MCP_HTTP_PORT` | Local listener port. Default: `3766`. |
 | `APPLE_PLATFORM_MCP_HTTP_PATH` | Exact MCP path. This deployment uses `/apple-platform`; the code default is `/mail`. |
@@ -135,11 +143,12 @@ GET  http://127.0.0.1:3766/readyz
 POST http://127.0.0.1:3766/apple-platform
 ```
 
-`/readyz` sends a live MCP ping to the Swift child. It does not read message
-content and detects a closed stdio connection instead of trusting the cached
-tool list. The backend clears its cache and reconnects with a fresh child
-client after a transport close. Request cancellation from the remote client is
-also forwarded to the local MCP request. The MCP path is exact, so
+`/readyz` sends a live MCP ping to the Swift app. It does not read message
+content and detects a failed loopback connection instead of trusting the cached
+tool list. The gateway connects to an existing loopback backend when available;
+otherwise it launches a new hidden app instance with `/usr/bin/open -gj -n` and
+waits for readiness. Request cancellation from the remote client is also
+forwarded to the local MCP request. The MCP path is exact, so
 `/apple-platform/anything` and other paths return 404.
 
 ## 4. Create the Cloudflare Tunnel
@@ -259,7 +268,7 @@ https://mcp.example.com/mail
 
 Use the exact callback displayed by ChatGPT when configuring the Access
 application. Complete the Access login and consent flow, then verify that the
-connector lists `mail_server_info` and the other read-only tools.
+connector lists `mail_server_info` and the other policy-controlled tools.
 
 ChatGPT custom MCP apps require Developer Mode and a workspace plan that
 supports full MCP connectors, such as Business, Enterprise, or Edu. Individual
@@ -298,16 +307,16 @@ codex mcp login apple-platform-mcp
 ```
 
 The command opens the Access authorization URL and returns through Codex's local
-OAuth callback. Verify the registered URL and run a read-only smoke test:
+OAuth callback. Verify the registered URL and run a non-sensitive discovery smoke test:
 
 ```sh
 codex mcp get apple-platform-mcp
 codex exec --ephemeral --sandbox read-only --json \
-  'Use the configured apple-platform-mcp server. Invoke only the read-only tool mail_server_info. Do not call any other tool and do not modify files.'
+  'Use the configured apple-platform-mcp server. Invoke only mail_server_info. Do not call mail_send_message or any mailbox mutation tool.'
 ```
 
 The expected result is a successful `mail_server_info` response with
-`mode: "read_only"`. Do not use the hostname root as the MCP URL when the
+`send_mode: "denied"` unless sending was explicitly enabled. Do not use the hostname root as the MCP URL when the
 gateway is configured on a path.
 
 ## 9. Keep the services running with launchd

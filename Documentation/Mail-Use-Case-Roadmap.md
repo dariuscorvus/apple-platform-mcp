@@ -24,7 +24,7 @@ The installed signed server and repository behavior were investigated after repe
 | Mailbox listing with counts | Approximately 33 seconds |
 | External All Mail `whose read status is false` probe | Exceeded 120 seconds |
 
-The current ScriptingBridge repository traverses every enabled account and collected mailbox when no mailbox references are supplied. It evaluates messages individually, stops only after enough matching results exist, and encodes pagination as a matching-result offset. Overlapping Mail views can therefore repeat work.
+The earlier baseline repository traversed every enabled account and collected mailbox when no mailbox references were supplied. It evaluated messages individually, stopped only after enough matching results existed, and encoded pagination as a matching-result offset. The current V1 defaults to Mail.app's canonical Inbox and applies a bounded newest-first application traversal for the requested page. This bounds the work requested from the application layer; it does not establish how much internal work Mail.app performs for an Apple Event.
 
 These measurements are diagnostic evidence, not the synthetic-fixture acceptance evidence required by ADR-0001.
 

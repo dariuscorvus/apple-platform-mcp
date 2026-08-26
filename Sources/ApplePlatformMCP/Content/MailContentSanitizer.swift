@@ -74,6 +74,11 @@ public enum MailContentSanitizer {
     parseSource(source).headers[name.lowercased()]
   }
 
+  /// Parses a header block without splitting or decoding a message body.
+  public static func parseHeadersOnly(_ headers: String) -> [String: String] {
+    parseHeaders(headers)
+  }
+
   private struct ExtractedBodies {
     var plainText: String?
     var html: String?

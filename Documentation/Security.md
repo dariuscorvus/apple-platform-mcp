@@ -1,6 +1,8 @@
 # Security model
 
-The server mediates access to local mail. The default is read-only.
+The server mediates access to local mail. Reading is enabled by default;
+sending is denied by default and is independently policy-controlled. Mailbox
+mutations remain disabled.
 
 ## Boundaries
 
@@ -32,7 +34,7 @@ second mail adapter:
   substitute for OAuth
 
 Remote access does not change the local permission boundary. Mail.app,
-Automation approval, the signed app bundle, and the configured read-only policy
+Automation approval, the signed app bundle, and the configured read/send policy
 must all remain on the Mac running the gateway.
 
 ## Untrusted content
@@ -43,6 +45,11 @@ Message bodies and HTML are data. They cannot alter tool selection, policy, reci
 
 The stdio channel is reserved for MCP protocol messages. Startup failures go to `stderr`. The implementation does not log message bodies, subjects, recipients, search text, attachment contents, or Apple Event payloads.
 
-## Write roadmap
+## Sending boundary
 
-Drafts and sending are not implemented in this release. Any future send capability must use a short-lived, one-time Prepare/Confirm action tied to a content hash and a fresh draft read. Direct send tools are not part of the API.
+`mail_send_message` is a separate capability. It validates the selected
+enabled account, configured From identity, recipient syntax, subject limit, and
+body limit before delegating to Mail.app. `send_mode=denied` is the default;
+`confirmation_required` is represented in policy and remains blocked until a
+future confirmation boundary is implemented. Message content cannot change
+policy. Mail.app chooses SMTP, OAuth, and provider authentication.

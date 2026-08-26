@@ -19,10 +19,21 @@ export type GatewayAuth =
       token: string;
     };
 
+export type GatewayBackendConfig =
+  | {
+      kind: "stdio";
+      executable: string;
+      args: string[];
+      cwd?: string;
+    }
+  | {
+      kind: "launch-services";
+      appBundle: string;
+      url: string;
+    };
+
 export interface GatewayConfig {
-  executable: string;
-  args: string[];
-  cwd?: string;
+  backend: GatewayBackendConfig;
   host: string;
   port: number;
   endpointPath: string;
@@ -34,8 +45,27 @@ export interface GatewayConfig {
 export async function loadGatewayConfig(
   env: Record<string, string | undefined> = process.env,
 ): Promise<GatewayConfig> {
-  const executable = required(env, "APPLE_PLATFORM_MCP_EXECUTABLE");
-  const args = parseArguments(env["APPLE_PLATFORM_MCP_ARGUMENTS_JSON"]);
+  const appBundle = env["APPLE_PLATFORM_MCP_APP_BUNDLE"]?.trim();
+  const executable = env["APPLE_PLATFORM_MCP_EXECUTABLE"]?.trim();
+  if (!appBundle && !executable) {
+    throw new Error("APPLE_PLATFORM_MCP_APP_BUNDLE or APPLE_PLATFORM_MCP_EXECUTABLE is required.");
+  }
+  const backend: GatewayBackendConfig = appBundle
+    ? {
+        kind: "launch-services",
+        appBundle,
+        url: validateLocalBackendURL(
+          env["APPLE_PLATFORM_MCP_LOCAL_HTTP_URL"] ?? "http://127.0.0.1:8765/mcp",
+        ),
+      }
+    : {
+        kind: "stdio",
+        executable: executable!,
+        args: parseArguments(env["APPLE_PLATFORM_MCP_ARGUMENTS_JSON"]),
+        ...(env["APPLE_PLATFORM_MCP_WORKING_DIRECTORY"]?.trim()
+          ? { cwd: env["APPLE_PLATFORM_MCP_WORKING_DIRECTORY"].trim() }
+          : {}),
+      };
   const host = env["APPLE_PLATFORM_MCP_HTTP_HOST"]?.trim() || "127.0.0.1";
   const port = parsePort(env["APPLE_PLATFORM_MCP_HTTP_PORT"] ?? "3766");
   const endpointPath = validateEndpointPath(env["APPLE_PLATFORM_MCP_HTTP_PATH"] ?? "/mail");
@@ -79,11 +109,7 @@ export async function loadGatewayConfig(
   }
 
   return {
-    executable,
-    args,
-    ...(env["APPLE_PLATFORM_MCP_WORKING_DIRECTORY"]?.trim()
-      ? { cwd: env["APPLE_PLATFORM_MCP_WORKING_DIRECTORY"].trim() }
-      : {}),
+    backend,
     host,
     port,
     endpointPath,
@@ -91,6 +117,23 @@ export async function loadGatewayConfig(
     allowedOrigins,
     auth,
   };
+}
+
+function validateLocalBackendURL(value: string): string {
+  const url = new URL(value);
+  if (
+    url.protocol !== "http:" ||
+    url.hostname !== "127.0.0.1" ||
+    !url.port ||
+    url.pathname !== "/mcp" ||
+    url.search ||
+    url.hash
+  ) {
+    throw new Error(
+      "APPLE_PLATFORM_MCP_LOCAL_HTTP_URL must be http://127.0.0.1:<port>/mcp.",
+    );
+  }
+  return url.toString();
 }
 
 export function validateEndpointPath(value: string): string {
@@ -104,12 +147,6 @@ export function validateEndpointPath(value: string): string {
   ) {
     throw new Error(`Invalid APPLE_PLATFORM_MCP_HTTP_PATH: ${value}`);
   }
-  return value;
-}
-
-function required(env: Record<string, string | undefined>, name: string): string {
-  const value = env[name]?.trim();
-  if (!value) throw new Error(`${name} is required.`);
   return value;
 }
 

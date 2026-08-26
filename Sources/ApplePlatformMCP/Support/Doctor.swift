@@ -50,7 +50,7 @@ public struct DoctorReport: Codable, Equatable, Sendable {
 
 public enum ApplePlatformMCPDoctor {
   public static let serverName = "apple-platform-mcp"
-  public static let serverVersion = "0.1.0"
+  public static let serverVersion = ApplePlatformMCPBuildProvenance.serverVersion
 
   public static func inspect(
     configurationURL: URL = MailServerConfiguration.defaultURL,

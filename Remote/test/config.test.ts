@@ -7,6 +7,21 @@ import { loadGatewayConfig } from "../src/config.js";
 const executable = "/Applications/apple-platform-mcp.app/Contents/MacOS/apple-platform-mcp";
 
 describe("remote gateway configuration", () => {
+  it("loads a Launch Services backend configuration", async () => {
+    const config = await loadGatewayConfig({
+      APPLE_PLATFORM_MCP_APP_BUNDLE: "/Applications/apple-platform-mcp.app",
+      APPLE_PLATFORM_MCP_EXECUTABLE: executable,
+      APPLE_PLATFORM_MCP_LOCAL_HTTP_URL: "http://127.0.0.1:8765/mcp",
+      APPLE_PLATFORM_MCP_HTTP_TOKEN: "0123456789abcdef0123456789abcdef",
+    });
+
+    expect(config.backend).toEqual({
+      kind: "launch-services",
+      appBundle: "/Applications/apple-platform-mcp.app",
+      url: "http://127.0.0.1:8765/mcp",
+    });
+  });
+
   it("loads Cloudflare Access configuration and optional process settings", async () => {
     const config = await loadGatewayConfig({
       APPLE_PLATFORM_MCP_EXECUTABLE: executable,
@@ -22,9 +37,12 @@ describe("remote gateway configuration", () => {
     });
 
     expect(config).toEqual({
-      executable,
-      args: ["doctor"],
-      cwd: "/Users/example",
+      backend: {
+        kind: "stdio",
+        executable,
+        args: ["doctor"],
+        cwd: "/Users/example",
+      },
       host: "127.0.0.1",
       port: 3766,
       endpointPath: "/mail",

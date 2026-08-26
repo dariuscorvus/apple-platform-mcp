@@ -1,5 +1,8 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import {
   CallToolResultSchema,
   type CallToolResult,
@@ -23,6 +26,172 @@ export interface MCPBackend {
   ): Promise<CallToolResult>;
   ping(signal?: AbortSignal): Promise<void>;
   close(): Promise<void>;
+}
+
+export interface LaunchServicesHTTPBackendOptions {
+  appBundle: string;
+  url: string;
+  requestTimeoutMs: number;
+  startupTimeoutMs?: number;
+  launch?: (appBundle: string, url: URL) => Promise<void>;
+}
+
+const execFileAsync = promisify(execFile);
+
+export function launchServicesArguments(appBundle: string, url: URL): string[] {
+  if (url.protocol !== "http:" || url.hostname !== "127.0.0.1") {
+    throw new Error("The local Apple Platform MCP backend URL must use http://127.0.0.1.");
+  }
+  return [
+    "-gj",
+    "-n",
+    appBundle,
+    "--args",
+    "serve",
+    "--transport",
+    "streamable-http",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    url.port || "80",
+  ];
+}
+
+export async function launchApplicationThroughLaunchServices(
+  appBundle: string,
+  url: URL,
+): Promise<void> {
+  await execFileAsync("/usr/bin/open", launchServicesArguments(appBundle, url));
+}
+
+export class LaunchServicesHTTPBackend implements MCPBackend {
+  private client: Client;
+  private tools: Tool[] | undefined;
+  private startTask: Promise<void> | undefined;
+  private lifecycleGeneration = 0;
+  private readonly url: URL;
+  private readonly launch: (appBundle: string, url: URL) => Promise<void>;
+
+  public constructor(private readonly options: LaunchServicesHTTPBackendOptions) {
+    this.url = new URL(options.url);
+    launchServicesArguments(options.appBundle, this.url);
+    this.launch = options.launch ?? launchApplicationThroughLaunchServices;
+    this.client = this.createClient();
+  }
+
+  public async start(signal?: AbortSignal): Promise<void> {
+    if (!this.startTask) {
+      const generation = this.lifecycleGeneration;
+      const task = this.launchAndConnect(generation);
+      this.startTask = task;
+      void task.catch(() => {
+        if (this.startTask === task) this.startTask = undefined;
+      });
+    }
+    await waitForAbortable(this.startTask, signal);
+  }
+
+  public async listTools(signal?: AbortSignal): Promise<Tool[]> {
+    await this.start(signal);
+    if (this.tools) return [...this.tools];
+    const result = await this.client.listTools(undefined, this.requestOptions(signal));
+    this.tools = result.tools;
+    return [...this.tools];
+  }
+
+  public async callTool(
+    name: string,
+    args?: Record<string, unknown>,
+    signal?: AbortSignal,
+  ): Promise<CallToolResult> {
+    await this.start(signal);
+    const result = await this.client.callTool(
+      { name, arguments: args },
+      CallToolResultSchema,
+      this.requestOptions(signal),
+    );
+    if (!("content" in result)) {
+      throw new Error("The local MCP backend returned an unsupported task result.");
+    }
+    return result as CallToolResult;
+  }
+
+  public async ping(signal?: AbortSignal): Promise<void> {
+    await this.start(signal);
+    await this.client.ping(this.requestOptions(signal));
+  }
+
+  public async close(): Promise<void> {
+    this.lifecycleGeneration += 1;
+    const client = this.client;
+    this.client = this.createClient();
+    this.startTask = undefined;
+    this.tools = undefined;
+    await client.close().catch(() => undefined);
+  }
+
+  private async launchAndConnect(generation: number): Promise<void> {
+    if (!(await this.isBackendLive())) {
+      await this.launch(this.options.appBundle, this.url);
+      const deadline = Date.now() + (this.options.startupTimeoutMs ?? 10_000);
+      while (!(await this.isBackendLive())) {
+        if (Date.now() >= deadline) {
+          throw new Error("Timed out waiting for the Launch Services backend.");
+        }
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+    }
+    await this.connectOnce(generation);
+  }
+
+  private async isBackendLive(): Promise<boolean> {
+    try {
+      const response = await fetch(new URL("/health/live", this.url.origin), {
+        signal: AbortSignal.timeout(Math.min(this.options.requestTimeoutMs, 1_000)),
+      });
+      return response.status === 200;
+    } catch {
+      return false;
+    }
+  }
+
+  private async connectOnce(generation: number): Promise<void> {
+    const client = this.createClient();
+    const transport = new StreamableHTTPClientTransport(this.url);
+    try {
+      await client.connect(transport, this.requestOptions());
+      const result = await client.listTools(undefined, this.requestOptions());
+      if (this.lifecycleGeneration !== generation) {
+        throw new Error("The local MCP backend connection was superseded.");
+      }
+      this.client = client;
+      this.tools = result.tools;
+    } catch (error) {
+      await client.close().catch(() => undefined);
+      throw error;
+    }
+  }
+
+  private createClient(): Client {
+    const client = new Client({
+      name: "apple-platform-mcp-remote-gateway",
+      version: "0.1.0",
+    });
+    client.onclose = () => {
+      if (this.client !== client) return;
+      this.lifecycleGeneration += 1;
+      this.tools = undefined;
+      this.startTask = undefined;
+    };
+    return client;
+  }
+
+  private requestOptions(signal?: AbortSignal): { timeout: number; signal?: AbortSignal } {
+    return {
+      timeout: this.options.requestTimeoutMs,
+      ...(signal ? { signal } : {}),
+    };
+  }
 }
 
 export class SwiftStdioBackend implements MCPBackend {

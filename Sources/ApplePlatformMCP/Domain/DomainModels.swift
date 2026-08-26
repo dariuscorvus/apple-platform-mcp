@@ -232,6 +232,68 @@ public struct MailAddress: Codable, Hashable, Sendable {
   }
 }
 
+public enum MailAddressValidator {
+  public static func isValid(_ value: String) -> Bool {
+    let address = value.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard
+      !address.isEmpty,
+      address == value,
+      address.rangeOfCharacter(from: .whitespacesAndNewlines) == nil,
+      address.unicodeScalars.allSatisfy({ $0.value >= 0x20 && $0.value != 0x7F }),
+      address.filter({ $0 == "@" }).count == 1,
+      let at = address.firstIndex(of: "@")
+    else {
+      return false
+    }
+    let local = address[..<at]
+    let domain = address[address.index(after: at)...]
+    guard !local.isEmpty, !domain.isEmpty, domain.first != ".", domain.last != "." else {
+      return false
+    }
+    return !domain.contains("..") && !domain.contains("<") && !domain.contains(">")
+  }
+}
+
+public struct MailSendRequest: Codable, Equatable, Sendable {
+  public let accountID: AccountReference
+  public let fromIdentity: String
+  public let to: [MailAddress]
+  public let cc: [MailAddress]
+  public let bcc: [MailAddress]
+  public let subject: String
+  public let body: String
+
+  public init(
+    accountID: AccountReference,
+    fromIdentity: String,
+    to: [MailAddress],
+    cc: [MailAddress] = [],
+    bcc: [MailAddress] = [],
+    subject: String,
+    body: String
+  ) {
+    self.accountID = accountID
+    self.fromIdentity = fromIdentity
+    self.to = to
+    self.cc = cc
+    self.bcc = bcc
+    self.subject = subject
+    self.body = body
+  }
+}
+
+public struct MailSendResult: Codable, Equatable, Sendable {
+  public let accepted: Bool
+  public let accountID: AccountReference
+  public let fromIdentity: String
+
+  public init(accepted: Bool, accountID: AccountReference, fromIdentity: String) {
+    self.accepted = accepted
+    self.accountID = accountID
+    self.fromIdentity = fromIdentity
+  }
+}
+
 public struct AccountCapabilities: Codable, Hashable, Sendable {
   public let canRead: Bool
   public let canSearch: Bool
@@ -417,9 +479,19 @@ public enum MailBodyFormat: String, Codable, Hashable, Sendable {
   case both
 }
 
+public enum MailSearchScope: String, Codable, Hashable, Sendable {
+  /// Resolve each eligible account's Mail.app canonical Inbox.
+  case inbox
+  /// Search only the explicitly supplied mailbox references.
+  case mailbox
+  /// Explicit broad traversal of eligible accounts and mailboxes.
+  case all
+}
+
 public struct MailSearchQuery: Codable, Hashable, Sendable {
   public let accountIDs: [AccountReference]?
   public let mailboxIDs: [MailboxReference]?
+  public let scope: MailSearchScope
   public let from: String?
   public let to: String?
   public let subject: String?
@@ -434,6 +506,7 @@ public struct MailSearchQuery: Codable, Hashable, Sendable {
   public init(
     accountIDs: [AccountReference]? = nil,
     mailboxIDs: [MailboxReference]? = nil,
+    scope: MailSearchScope = .inbox,
     from: String? = nil,
     to: String? = nil,
     subject: String? = nil,
@@ -447,6 +520,7 @@ public struct MailSearchQuery: Codable, Hashable, Sendable {
   ) {
     self.accountIDs = accountIDs
     self.mailboxIDs = mailboxIDs
+    self.scope = scope
     self.from = from
     self.to = to
     self.subject = subject
@@ -539,6 +613,7 @@ public enum SearchCursorCodec {
     queryWithoutCursor = MailSearchQuery(
       accountIDs: query.accountIDs,
       mailboxIDs: query.mailboxIDs,
+      scope: query.scope,
       from: query.from,
       to: query.to,
       subject: query.subject,
@@ -573,6 +648,8 @@ public protocol MailRepository: Sendable {
     includeAttachmentMetadata: Bool,
     maxBodyBytes: Int
   ) async throws -> MailMessageRecord
+
+  func sendMessage(_ request: MailSendRequest) async throws -> MailSendResult
 }
 
 /// Adapter boundary used by the application layer. The protocol keeps all
@@ -588,6 +665,7 @@ public enum MailError: Error, LocalizedError, Equatable, Sendable {
   case ambiguousReference
   case operationTimedOut
   case unsupportedByAccount
+  case unsupported(String)
   case bodyTooLarge
   case invalidInput(String)
   case invalidConfiguration(String)
@@ -604,6 +682,7 @@ public enum MailError: Error, LocalizedError, Equatable, Sendable {
     case .ambiguousReference: return "ambiguousReference"
     case .operationTimedOut: return "operationTimedOut"
     case .unsupportedByAccount: return "unsupportedByAccount"
+    case .unsupported: return "unsupported"
     case .bodyTooLarge: return "bodyTooLarge"
     case .invalidInput: return "invalidInput"
     case .invalidConfiguration: return "invalidConfiguration"
@@ -641,6 +720,7 @@ public enum MailError: Error, LocalizedError, Equatable, Sendable {
     case .operationTimedOut:
       return "Mail.app did not complete the operation within the time budget."
     case .unsupportedByAccount: return "The Mail account does not support this operation."
+    case .unsupported(let message): return message
     case .bodyTooLarge: return "The requested message body exceeds the configured limit."
     case .invalidInput(let message): return message
     case .invalidConfiguration(let message): return message

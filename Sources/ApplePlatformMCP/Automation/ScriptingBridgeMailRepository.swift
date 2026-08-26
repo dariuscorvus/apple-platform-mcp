@@ -4,6 +4,28 @@ import Foundation
   import MailScriptingBridge
 #endif
 
+/// Describes the minimum Mail.app reads needed to build a message record.
+///
+/// `source` is a body-bearing property. Header reads use Mail.app's separate
+/// `all headers` property and never imply HTML parsing or attachment-content
+/// access. Keeping this plan explicit makes metadata-only behavior testable.
+public struct MailMessageReadPlan: Sendable {
+  public let readsHeaders: Bool
+  public let loadsMessageSource: Bool
+  public let parsesBody: Bool
+  public let loadsAttachmentContent: Bool
+
+  public init(includeBody: Bool, includeAttachmentMetadata: Bool) {
+    readsHeaders = true
+    loadsMessageSource = includeBody
+    parsesBody = includeBody
+    // Attachment metadata is represented by Mail.app properties. V1 never
+    // exports or reads attachment content as part of a message read.
+    loadsAttachmentContent = false
+    _ = includeAttachmentMetadata
+  }
+}
+
 /// The only type that is allowed to touch Mail.app's generated ScriptingBridge
 /// objects. The actor serializes every Apple Events call.
 public actor ScriptingBridgeMailRepository: MailRepository {
@@ -47,15 +69,23 @@ public actor ScriptingBridgeMailRepository: MailRepository {
       throw MailError.accountNotFound
     }
 
-    return collectMailboxes(from: account, accountRawID: rawAccountID, includeCounts: includeCounts)
-      .map(\.model)
+    let canonicalPath = canonicalInboxSnapshot(
+      for: account,
+      accountRawID: rawAccountID,
+      includeCounts: false
+    )?.path.joined(separator: "\u{1F}")
+    return collectMailboxes(
+      from: account,
+      accountRawID: rawAccountID,
+      includeCounts: includeCounts,
+      canonicalInboxPaths: canonicalPath.map { [$0] } ?? []
+    ).map(\.model)
   }
 
   public func searchMessages(_ query: MailSearchQuery) async throws -> MailSearchPage {
     try ensureMailIsReachable()
 
     let offset = try SearchCursorCodec.decode(query.cursor, query: query)
-
     let selectedAccountIDs = try query.accountIDs?.map { reference -> String in
       guard
         let components = ReferenceCodec.decode(reference),
@@ -66,16 +96,14 @@ public actor ScriptingBridgeMailRepository: MailRepository {
       return rawID
     }
 
-    let selectedMailboxReferences = query.mailboxIDs ?? []
-    let selectedMailboxValues = try selectedMailboxReferences.map { reference in
+    let selectedMailboxValues = try (query.mailboxIDs ?? []).map { reference in
       guard let components = ReferenceCodec.decode(reference) else {
         throw MailError.invalidInput("mailbox_ids contains an invalid reference")
       }
       return components
     }
     let selectedLimit = max(1, query.limit)
-    var results: [MailMessageSummary] = []
-    var matchedCount = 0
+    var sources: [SearchSource] = []
 
     for account in allAccounts() where account.enabled {
       let rawAccountID = accountRawID(account)
@@ -83,48 +111,66 @@ public actor ScriptingBridgeMailRepository: MailRepository {
         continue
       }
 
-      let mailboxes = collectMailboxes(
-        from: account, accountRawID: rawAccountID, includeCounts: false)
+      let mailboxes: [MailboxSnapshot]
+      switch query.scope {
+      case .inbox:
+        mailboxes =
+          canonicalInboxSnapshot(
+            for: account,
+            accountRawID: rawAccountID,
+            includeCounts: false
+          ).map { [$0] } ?? []
+      case .mailbox:
+        mailboxes = selectedMailboxValues.compactMap { components in
+          guard components["account"] == rawAccountID,
+            let pathValue = components["path"]
+          else { return nil }
+          let path = pathValue.components(separatedBy: "\u{1F}")
+          return resolveMailbox(
+            from: account,
+            accountRawID: rawAccountID,
+            path: path,
+            includeCounts: false
+          )
+        }
+      case .all:
+        mailboxes = collectMailboxes(
+          from: account,
+          accountRawID: rawAccountID,
+          includeCounts: false
+        )
+      }
+
       for mailbox in mailboxes {
-        if !selectedMailboxReferences.isEmpty {
-          let matchesMailbox = selectedMailboxValues.contains { components in
-            components["account"] == rawAccountID
-              && components["path"] == mailbox.path.joined(separator: "\u{1F}")
-          }
-          if !matchesMailbox { continue }
-        }
-
-        for case let message as MailMessage in mailbox.raw.messages() {
-          if matches(message, query: query) {
-            if matchedCount < offset {
-              matchedCount += 1
-              continue
-            }
-
-            matchedCount += 1
-            results.append(
-              makeSummary(
-                message,
-                accountRawID: rawAccountID,
-                mailboxPath: mailbox.path,
-                mailboxReference: mailbox.model.id,
-                accountReference: mailbox.model.accountID
-              ).summary)
-            if results.count > selectedLimit {
-              return MailSearchPage(
-                messages: Array(results.dropLast()),
-                nextCursor: SearchCursorCodec.encode(
-                  query: query,
-                  offset: offset + selectedLimit
-                )
-              )
-            }
-          }
-        }
+        sources.append(SearchSource(raw: mailbox.raw.messages(), snapshot: mailbox))
       }
     }
 
-    return MailSearchPage(messages: results)
+    let traversal = BoundedNewestFirstTraversal.search(
+      sources: sources,
+      offset: offset,
+      limit: selectedLimit,
+      date: { $0.message.dateReceived },
+      matches: { matches($0.message, query: query) },
+      elementAt: { source, index in
+        SearchEntry(message: source.raw[index] as! MailMessage, snapshot: source.snapshot)
+      },
+      count: { $0.raw.count }
+    )
+    let summaries = traversal.elements.map { entry in
+      makeSummary(
+        entry.message,
+        accountRawID: ReferenceCodec.decode(entry.snapshot.model.accountID)?["id"] ?? "",
+        mailboxPath: entry.snapshot.path,
+        mailboxReference: entry.snapshot.model.id,
+        accountReference: entry.snapshot.model.accountID
+      ).summary
+    }
+    let nextCursor =
+      traversal.hasMore
+      ? SearchCursorCodec.encode(query: query, offset: offset + selectedLimit)
+      : nil
+    return MailSearchPage(messages: summaries, nextCursor: nextCursor)
   }
 
   public func getMessage(
@@ -147,12 +193,14 @@ public actor ScriptingBridgeMailRepository: MailRepository {
     }
 
     let mailboxPath = mailboxValue.components(separatedBy: "\u{1F}")
-    guard
-      let mailbox = collectMailboxes(
+    let mailbox =
+      collectMailboxes(
         from: account, accountRawID: rawAccountID, includeCounts: false
-      )
-      .first(where: { $0.path == mailboxPath })
-    else {
+      ).first(where: { $0.path == mailboxPath })
+      ?? canonicalInboxSnapshot(
+        for: account, accountRawID: rawAccountID, includeCounts: false
+      ).flatMap { $0.path == mailboxPath ? $0 : nil }
+    guard let mailbox else {
       throw MailError.mailboxNotFound
     }
 
@@ -174,11 +222,17 @@ public actor ScriptingBridgeMailRepository: MailRepository {
       accountReference: mailbox.model.accountID
     ).summary
 
-    let source = message.source ?? ""
-    let parsed = MailContentSanitizer.parseSource(source)
+    let readPlan = MailMessageReadPlan(
+      includeBody: includeBody,
+      includeAttachmentMetadata: includeAttachmentMetadata
+    )
+    let headerSource = readPlan.readsHeaders ? (message.allHeaders ?? "") : ""
+    let parsedHeaders = MailContentSanitizer.parseHeadersOnly(headerSource)
+    let source = readPlan.loadsMessageSource ? (message.source ?? "") : nil
     let body =
-      includeBody
-      ? MailContentSanitizer.body(from: source, format: bodyFormat, maxBytes: max(1, maxBodyBytes))
+      readPlan.parsesBody
+      ? MailContentSanitizer.body(
+        from: source ?? "", format: bodyFormat, maxBytes: max(1, maxBodyBytes))
       : nil
 
     let attachments =
@@ -193,13 +247,48 @@ public actor ScriptingBridgeMailRepository: MailRepository {
 
     return MailMessageRecord(
       summary: summary,
-      messageIDHeader: message.messageId ?? parsed.headers["message-id"],
-      inReplyTo: message.replyTo ?? parsed.headers["in-reply-to"],
-      references: (parsed.headers["references"] ?? "").split(whereSeparator: { $0.isWhitespace })
+      messageIDHeader: message.messageId ?? parsedHeaders["message-id"],
+      inReplyTo: message.replyTo ?? parsedHeaders["in-reply-to"],
+      references: (parsedHeaders["references"] ?? "").split(whereSeparator: { $0.isWhitespace })
         .map(String.init),
       body: body,
       attachments: attachments
     )
+  }
+
+  public func sendMessage(_ request: MailSendRequest) async throws -> MailSendResult {
+    #if canImport(MailScriptingBridge)
+      func recipientValues(_ values: [MailAddress]) -> [[String: String]] {
+        values.map { address in
+          var value = ["address": address.address]
+          if let displayName = address.displayName {
+            value["name"] = displayName
+          }
+          return value
+        }
+      }
+
+      guard
+        APSMailScriptingBridgeSendMessage(
+          application,
+          request.fromIdentity,
+          request.subject,
+          request.body,
+          recipientValues(request.to),
+          recipientValues(request.cc),
+          recipientValues(request.bcc)
+        )
+      else {
+        throw MailError.unsupportedByAccount
+      }
+      return MailSendResult(
+        accepted: true,
+        accountID: request.accountID,
+        fromIdentity: request.fromIdentity
+      )
+    #else
+      throw MailError.unsupportedByAccount
+    #endif
   }
 
   private struct MailboxSnapshot {
@@ -208,27 +297,166 @@ public actor ScriptingBridgeMailRepository: MailRepository {
     let path: [String]
   }
 
+  private struct SearchSource {
+    let raw: SBElementArray
+    let snapshot: MailboxSnapshot
+  }
+
+  private struct SearchEntry {
+    let message: MailMessage
+    let snapshot: MailboxSnapshot
+  }
+
+  private func canonicalInboxSnapshot(
+    for account: MailAccount,
+    accountRawID: String,
+    includeCounts: Bool
+  ) -> MailboxSnapshot? {
+    var rawCandidates: [(candidate: CanonicalInboxCandidate, raw: MailMailbox)] = []
+
+    if let canonicalRoot = application.inbox {
+      let rootName = canonicalRoot.name ?? "(unnamed)"
+      if let owner = canonicalRoot.account,
+        self.accountRawID(owner) == accountRawID
+      {
+        let path = [rootName]
+        rawCandidates.append(
+          (
+            CanonicalInboxCandidate(
+              accountID: ReferenceCodec.account(rawID: accountRawID),
+              mailboxID: ReferenceCodec.mailbox(accountRawID: accountRawID, path: path),
+              path: path
+            ),
+            canonicalRoot
+          )
+        )
+      }
+
+      for case let child as MailMailbox in canonicalRoot.mailboxes() {
+        guard
+          let owner = child.account,
+          self.accountRawID(owner) == accountRawID
+        else { continue }
+        let path = mailboxPath(child)
+        rawCandidates.append(
+          (
+            CanonicalInboxCandidate(
+              accountID: ReferenceCodec.account(rawID: accountRawID),
+              mailboxID: ReferenceCodec.mailbox(accountRawID: accountRawID, path: path),
+              path: path
+            ),
+            child
+          )
+        )
+      }
+    }
+
+    let accountReference = ReferenceCodec.account(rawID: accountRawID)
+    guard
+      let resolved = CanonicalInboxResolver.resolve(
+        accountID: accountReference,
+        candidates: rawCandidates.map(\.candidate)
+      )
+    else {
+      return nil
+    }
+    guard let raw = rawCandidates.first(where: { $0.candidate == resolved })?.raw else {
+      return nil
+    }
+    return makeMailboxSnapshot(
+      raw,
+      accountRawID: accountRawID,
+      path: resolved.path,
+      role: .inbox,
+      includeCounts: includeCounts
+    )
+  }
+
+  private func resolveMailbox(
+    from account: MailAccount,
+    accountRawID: String,
+    path: [String],
+    includeCounts: Bool
+  ) -> MailboxSnapshot? {
+    guard !path.isEmpty else { return nil }
+    var currentMailboxes: SBElementArray? = account.mailboxes()
+    var current: MailMailbox?
+
+    for component in path {
+      guard
+        let mailboxes = currentMailboxes,
+        let match = mailboxes.first(where: { mailbox in
+          (mailbox as? MailMailbox)?.name == component
+        }) as? MailMailbox
+      else {
+        return nil
+      }
+      current = match
+      currentMailboxes = match.mailboxes()
+    }
+
+    guard let current else { return nil }
+    return makeMailboxSnapshot(
+      current,
+      accountRawID: accountRawID,
+      path: path,
+      role: nil,
+      includeCounts: includeCounts
+    )
+  }
+
+  private func mailboxPath(_ mailbox: MailMailbox) -> [String] {
+    var path: [String] = []
+    var current: MailMailbox? = mailbox
+    var depth = 0
+    while let mailbox = current, depth < 32 {
+      path.insert(mailbox.name ?? "(unnamed)", at: 0)
+      current = mailbox.container
+      depth += 1
+    }
+    return path
+  }
+
+  private func makeMailboxSnapshot(
+    _ mailbox: MailMailbox,
+    accountRawID: String,
+    path: [String],
+    role: MailboxRole?,
+    includeCounts: Bool
+  ) -> MailboxSnapshot {
+    let name = mailbox.name ?? path.last ?? "(unnamed)"
+    let model = Mailbox(
+      id: ReferenceCodec.mailbox(accountRawID: accountRawID, path: path),
+      accountID: ReferenceCodec.account(rawID: accountRawID),
+      name: name,
+      path: path,
+      role: role ?? self.role(for: path),
+      unreadCount: includeCounts ? mailbox.unreadCount : nil,
+      totalCount: includeCounts ? mailbox.messages().count : nil
+    )
+    return MailboxSnapshot(raw: mailbox, model: model, path: path)
+  }
+
   private func collectMailboxes(
     from account: MailAccount,
     accountRawID: String,
-    includeCounts: Bool
+    includeCounts: Bool,
+    canonicalInboxPaths: Set<String> = []
   ) -> [MailboxSnapshot] {
     var result: [MailboxSnapshot] = []
 
     func visit(_ mailbox: MailMailbox, path: [String]) {
       let name = mailbox.name ?? "(unnamed)"
       let fullPath = path + [name]
-      let mailboxReference = ReferenceCodec.mailbox(accountRawID: accountRawID, path: fullPath)
-      let model = Mailbox(
-        id: mailboxReference,
-        accountID: ReferenceCodec.account(rawID: accountRawID),
-        name: name,
-        path: fullPath,
-        role: role(for: fullPath),
-        unreadCount: includeCounts ? mailbox.unreadCount : nil,
-        totalCount: includeCounts ? mailbox.messages().count : nil
+      result.append(
+        makeMailboxSnapshot(
+          mailbox,
+          accountRawID: accountRawID,
+          path: fullPath,
+          role: canonicalInboxPaths.contains(fullPath.joined(separator: "\u{1F}")) ? .inbox : nil,
+          includeCounts: includeCounts
+        )
       )
-      result.append(MailboxSnapshot(raw: mailbox, model: model, path: fullPath))
 
       for case let child as MailMailbox in mailbox.mailboxes() {
         visit(child, path: fullPath)
@@ -339,7 +567,10 @@ public actor ScriptingBridgeMailRepository: MailRepository {
         return false
       }
     }
-    if let text = query.text, !contains(message.source, value: text) {
+    if query.text != nil {
+      // Body-backed search is deliberately rejected by the application layer.
+      // Keep the adapter defensive so a direct repository call never loads
+      // message.source as part of a summary search.
       return false
     }
     if query.unreadOnly && message.readStatus {
@@ -357,7 +588,6 @@ public actor ScriptingBridgeMailRepository: MailRepository {
 
   private func role(for path: [String]) -> MailboxRole? {
     guard let last = path.last?.lowercased() else { return nil }
-    if last == "inbox" || last == "in" { return .inbox }
     if last.contains("draft") { return .drafts }
     if last.contains("sent") { return .sent }
     if last.contains("archive") { return .archive }

@@ -15,22 +15,40 @@ public struct MailPolicy: Sendable {
     }
   }
 
+  public enum SendMode: String, Codable, Sendable {
+    case denied
+    case allowed
+    case confirmationRequired = "confirmation_required"
+  }
+
   public let mode: Mode
+  public let sendMode: SendMode
   public let maxResults: Int
   public let maxBodyBytes: Int
+  public let maxSendBodyBytes: Int
+  public let maxSubjectBytes: Int
+  public let maxRecipients: Int
   public let allowedAccountIDs: Set<AccountReference>?
   public let allowedMailboxIDs: Set<MailboxReference>?
 
   public init(
     mode: Mode = .readOnly,
+    sendMode: SendMode = .denied,
     maxResults: Int = 50,
     maxBodyBytes: Int = 262_144,
+    maxSendBodyBytes: Int = 262_144,
+    maxSubjectBytes: Int = 10_000,
+    maxRecipients: Int = 100,
     allowedAccountIDs: Set<AccountReference>? = nil,
     allowedMailboxIDs: Set<MailboxReference>? = nil
   ) {
     self.mode = mode
+    self.sendMode = sendMode
     self.maxResults = max(1, maxResults)
     self.maxBodyBytes = max(1, maxBodyBytes)
+    self.maxSendBodyBytes = max(1, maxSendBodyBytes)
+    self.maxSubjectBytes = max(1, maxSubjectBytes)
+    self.maxRecipients = max(1, maxRecipients)
     self.allowedAccountIDs = allowedAccountIDs
     self.allowedMailboxIDs = allowedMailboxIDs
   }
