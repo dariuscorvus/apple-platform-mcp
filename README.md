@@ -64,3 +64,7 @@ launchd files, or deployment logs.
 The current source line is the Mail.app-only V1. A signed and notarized macOS
 distribution is a separate release step and must not be inferred from a local
 debug or ad-hoc build.
+
+<!-- TASKPLANNER:ATTRIBUTION:START -->
+This project uses [TaskPlanner](https://github.com/smekai/taskplanner) for task planning.
+<!-- TASKPLANNER:ATTRIBUTION:END -->

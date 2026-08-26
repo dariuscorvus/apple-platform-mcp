@@ -14,6 +14,7 @@ on:
 jobs:
   release:
     runs-on: macos-latest
+    environment: release
     permissions:
       contents: write
     env:
@@ -99,6 +100,7 @@ jobs:
               CODE_SIGN_STYLE=Manual \
               CODE_SIGN_IDENTITY="$SIGNING_IDENTITY" \
               DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
+              APPLE_PLATFORM_MCP_BUILD_COMMIT="$GITHUB_SHA" \
               archive
           else
             xcodebuild \
@@ -109,6 +111,7 @@ jobs:
               -archivePath "$archive_path" \
               -clonedSourcePackagesDirPath "$RUNNER_TEMP/apple-platform-mcp-packages" \
               CODE_SIGNING_ALLOWED=NO \
+              APPLE_PLATFORM_MCP_BUILD_COMMIT="$GITHUB_SHA" \
               archive
           fi
           echo "ARCHIVE_PATH=$archive_path" >> "$GITHUB_ENV"
@@ -133,6 +136,10 @@ jobs:
             -format UDZO \
             "$RUNNER_TEMP/apple-platform-mcp.dmg"
           echo "DMG_PATH=$RUNNER_TEMP/apple-platform-mcp.dmg" >> "$GITHUB_ENV"
+          shasum -a 256 "$RUNNER_TEMP/apple-platform-mcp.dmg" \
+            > "$RUNNER_TEMP/apple-platform-mcp.dmg.sha256"
+          echo "DMG_SHA256_PATH=$RUNNER_TEMP/apple-platform-mcp.dmg.sha256" \
+            >> "$GITHUB_ENV"
 
       - name: Notarize and staple DMG
         if: env.HAS_NOTARY_CREDENTIALS == 'true'
@@ -162,7 +169,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: apple-platform-mcp-dmg
-          path: ${{ env.DMG_PATH }}
+          path: |
+            ${{ env.DMG_PATH }}
+            ${{ env.DMG_SHA256_PATH }}
 
       - name: Publish GitHub release
         if: github.event_name == 'push'
@@ -177,4 +186,5 @@ jobs:
             --title "Apple Platform MCP ${GITHUB_REF_NAME}" \
             --generate-notes \
             "${prerelease_args[@]}" \
-            "$DMG_PATH"
+            "$DMG_PATH" \
+            "$DMG_SHA256_PATH"
