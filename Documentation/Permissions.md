@@ -11,6 +11,8 @@ apple-platform-mcp.app/Contents/MacOS/apple-platform-mcp
 The bundle contains:
 
 - `NSAppleEventsUsageDescription`
+- `NSRemindersFullAccessUsageDescription` for the explicit Reminders lifecycle
+- `NSRemindersUsageDescription` for the macOS 13 EventKit fallback
 - `com.apple.security.automation.apple-events`
 - no Accessibility entitlement
 - no Full Disk Access requirement
@@ -19,13 +21,35 @@ The Release configuration enables Hardened Runtime. `doctor` fails a signed dist
 
 The adapter performs a non-prompting Apple Events permission check before reading Mail. An MCP request never opens a TCC consent prompt. Use `apple-platform-mcp .../apple-platform-mcp doctor` to inspect state without reading account or message data.
 
-The explicit setup command is the only prompt-capable path:
+The explicit Mail setup command is the only prompt-capable Mail path:
 
 ```sh
 apple-platform-mcp doctor --request-automation
 ```
 
 It sends one harmless request for Mail.app's name. macOS then shows the Automation consent prompt for the signed `Apple Platform MCP` host. Allow Mail for that host, rerun the command, and require a `pass` result before starting the MCP server.
+
+Reminders has a separate explicit setup command:
+
+```sh
+apple-platform-mcp doctor --request-reminders
+```
+
+The command requests Reminders Full Access through EventKit and then prints a
+normalized status report. No Reminders MCP tool requests permission implicitly,
+including lifecycle writes. A `write_only`, denied, restricted, or
+not-yet-granted state cannot be used for reads or writes; the server requires
+Full Access.
+
+The command can exit non-zero because the independent Mail Automation check is
+also part of the report. For Reminders setup, inspect the JSON and require the
+`reminder_permission` check to be `pass`. If macOS displays a prompt, allow
+**Apple Platform MCP** under Reminders before starting the server.
+
+Reminders writes remain default-denied after TCC approval. They require a
+separate explicit local configuration (`reminder_mutation_mode=allowed`), and
+list deletion additionally requires `reminder_list_delete_enabled=true`. See
+[Reminders.md](Reminders.md) for the isolated three-stage smoke procedure.
 
 ## Development
 

@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 
 #if !XCODE_COMBINED_TEST_TARGET
@@ -33,6 +34,26 @@ struct StreamableHTTPCommandTests {
             host: "127.0.0.1",
             port: 8_765
           )))
+  }
+
+  @Test("accepts a configuration override for Streamable HTTP")
+  func parsesHTTPConfigurationOverride() throws {
+    let configurationURL = URL(
+      fileURLWithPath: "/private/tmp/apple-platform-mcp-reminders-smoke.json"
+    )
+
+    #expect(
+      try ApplePlatformMCPCommand.parse([
+        "serve",
+        "--transport", "streamable-http",
+        "--config", configurationURL.path,
+      ])
+        == .serve(
+          transport: .streamableHTTP(
+            host: "127.0.0.1",
+            port: 8_765
+          ),
+          configurationURL: configurationURL))
   }
 
   @Test("rejects a non-loopback HTTP bind address")

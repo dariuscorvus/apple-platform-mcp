@@ -25,21 +25,52 @@ struct ApplePlatformMCPMain {
         }
         exit(Int32(report.exitCode))
 
-      case .serve(.stdio):
-        let configuration = try MailServerConfiguration.load()
+      case .doctorReminders:
+        let report = await ApplePlatformMCPDoctor.requestReminders()
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        if let data = try? encoder.encode(report) {
+          FileHandle.standardOutput.write(data)
+          FileHandle.standardOutput.write(Data("\n".utf8))
+        }
+        exit(Int32(report.exitCode))
+
+      case .serve(transport: .stdio, configurationURL: let configurationURL):
+        let configuration = try MailServerConfiguration.load(
+          from: configurationURL ?? MailServerConfiguration.defaultURL
+        )
         let repository = try ScriptingBridgeMailRepository()
         let service = MailToolService(repository: repository, policy: configuration.policy)
+        let reminderRepository = EventKitReminderRepository()
+        let reminderService = ReminderToolService(
+          repository: reminderRepository,
+          maxResults: configuration.maxResults,
+          policy: configuration.reminderPolicy
+        )
         try await ApplePlatformMCPServer(
           service: service,
+          reminderService: reminderService,
           configuration: configuration
         ).run()
 
-      case .serve(.streamableHTTP(let host, let port)):
-        let configuration = try MailServerConfiguration.load()
+      case .serve(
+        transport: .streamableHTTP(let host, let port),
+        configurationURL: let configurationURL
+      ):
+        let configuration = try MailServerConfiguration.load(
+          from: configurationURL ?? MailServerConfiguration.defaultURL
+        )
         let repository = try ScriptingBridgeMailRepository()
         let service = MailToolService(repository: repository, policy: configuration.policy)
+        let reminderRepository = EventKitReminderRepository()
+        let reminderService = ReminderToolService(
+          repository: reminderRepository,
+          maxResults: configuration.maxResults,
+          policy: configuration.reminderPolicy
+        )
         let server = await ApplePlatformMCPServer(
           service: service,
+          reminderService: reminderService,
           configuration: configuration
         ).makeServer()
         let runtime = ApplePlatformMCPStreamableHTTPRuntime(

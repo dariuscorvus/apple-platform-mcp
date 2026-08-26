@@ -45,6 +45,7 @@ let package = Package(
       path: "Sources/ApplePlatformMCP",
       linkerSettings: [
         .linkedFramework("CoreServices"),
+        .linkedFramework("EventKit"),
         .linkedFramework("Security"),
         .linkedFramework("ScriptingBridge"),
       ]

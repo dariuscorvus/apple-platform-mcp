@@ -63,8 +63,8 @@ public enum ApplePlatformMCPDoctor {
       configuration = try MailServerConfiguration.load(from: configurationURL)
       let detail =
         FileManager.default.fileExists(atPath: configurationURL.path)
-        ? "Read-only configuration loaded."
-        : "No configuration file found; using read-only defaults."
+        ? "Configuration loaded."
+        : "No configuration file found; using safe defaults."
       checks.append(.init(name: "configuration", status: .pass, detail: detail))
     } catch {
       configuration = .default
@@ -130,12 +130,77 @@ public enum ApplePlatformMCPDoctor {
           : "NSAppleEventsUsageDescription is missing from the executable Info.plist."
       ))
 
+    let fullAccessUsageDescription =
+      bundle.object(
+        forInfoDictionaryKey: ReminderPermissionRequirements.fullAccessUsageDescriptionKey
+      ) as? String
+    let legacyUsageDescription =
+      bundle.object(forInfoDictionaryKey: ReminderPermissionRequirements.legacyUsageDescriptionKey)
+      as? String
+    checks.append(
+      .init(
+        name: "reminder_usage_descriptions",
+        status: fullAccessUsageDescription?.isEmpty == false
+          && legacyUsageDescription?.isEmpty == false ? .pass : .fail,
+        detail: fullAccessUsageDescription?.isEmpty == false
+          && legacyUsageDescription?.isEmpty == false
+          ? "Reminders Full Access and macOS 13 fallback usage descriptions are present."
+          : "Reminders usage descriptions are missing from the executable Info.plist."
+      ))
+
+    let reminderPermission = EventKitReminderRepository.currentAuthorizationStatus()
+    switch reminderPermission {
+    case .fullAccess:
+      checks.append(
+        .init(
+          name: "reminder_permission",
+          status: .pass,
+          detail: "Reminders Full Access is allowed."
+        ))
+    case .notDetermined:
+      checks.append(
+        .init(
+          name: "reminder_permission",
+          status: .warning,
+          detail: "Reminders access has not been requested. Run doctor --request-reminders."
+        ))
+    case .denied:
+      checks.append(
+        .init(
+          name: "reminder_permission",
+          status: .fail,
+          detail: "Reminders Full Access is denied."
+        ))
+    case .restricted:
+      checks.append(
+        .init(
+          name: "reminder_permission",
+          status: .fail,
+          detail: "Reminders access is restricted by the system."
+        ))
+    case .writeOnly:
+      checks.append(
+        .init(
+          name: "reminder_permission",
+          status: .fail,
+          detail: "Reminders access is write-only; this server requires Full Access."
+        ))
+    case .unavailable:
+      checks.append(
+        .init(
+          name: "reminder_permission",
+          status: .fail,
+          detail: "The Reminders EventKit store is unavailable on this host."
+        ))
+    }
+
     checks.append(signingCheck(bundle: bundle))
     checks.append(
       .init(
         name: "scope",
         status: .pass,
-        detail: "Read-only Mail.app access. No Accessibility or Full Disk Access requirement."
+        detail:
+          "Mail.app and Reminders access is policy-controlled; Reminder mutations default to denied. No Accessibility or Full Disk Access requirement."
       ))
 
     return DoctorReport(
@@ -158,6 +223,15 @@ public enum ApplePlatformMCPDoctor {
       // The follow-up report contains the normalized current state and the
       // ordinary doctor exit code. No Apple Event error is exposed.
     }
+    return inspect(configurationURL: configurationURL, bundle: bundle)
+  }
+
+  public static func requestReminders(
+    configurationURL: URL = MailServerConfiguration.defaultURL,
+    bundle: Bundle = .main
+  ) async -> DoctorReport {
+    let repository = EventKitReminderRepository()
+    _ = try? await repository.requestFullAccess()
     return inspect(configurationURL: configurationURL, bundle: bundle)
   }
 

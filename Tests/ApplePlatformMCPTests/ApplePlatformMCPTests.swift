@@ -600,6 +600,16 @@ struct MCPToolCatalogTests {
         "mail_list_mailboxes",
         "mail_search_messages",
         "mail_get_message",
+        "reminder_list_lists",
+        "reminder_list_reminders",
+        "reminder_get_reminder",
+        "reminder_create_reminder",
+        "reminder_update_reminder",
+        "reminder_complete_reminder",
+        "reminder_delete_reminder",
+        "reminder_create_list",
+        "reminder_update_list",
+        "reminder_delete_list",
         "mail_send_message",
         "mail_create_draft",
         "mail_move_message",
@@ -629,7 +639,7 @@ struct ApplePlatformMCPCommandTests {
   func rejectsBareServe() {
     #expect(
       throws: MailError.invalidInput(
-        "Usage: apple-platform-mcp serve --transport stdio|streamable-http [--host 127.0.0.1 --port 8765]"
+        "Usage: apple-platform-mcp serve --transport stdio|streamable-http [--host 127.0.0.1 --port 8765] [--config /absolute/path]"
       )
     ) {
       try ApplePlatformMCPCommand.parse(["serve"])
@@ -643,11 +653,44 @@ struct ApplePlatformMCPCommandTests {
         == .serve(transport: .stdio))
   }
 
+  @Test("accepts an explicit absolute configuration path for stdio")
+  func parsesStdioWithConfigurationOverride() throws {
+    let configurationURL = URL(
+      fileURLWithPath: "/private/tmp/apple-platform-mcp-reminders-smoke.json"
+    )
+
+    #expect(
+      try ApplePlatformMCPCommand.parse([
+        "serve",
+        "--transport", "stdio",
+        "--config", configurationURL.path,
+      ])
+        == .serve(transport: .stdio, configurationURL: configurationURL))
+  }
+
+  @Test("rejects relative configuration paths")
+  func rejectsRelativeConfigurationOverride() {
+    #expect(throws: MailError.self) {
+      try ApplePlatformMCPCommand.parse([
+        "serve",
+        "--transport", "stdio",
+        "--config", "reminders-smoke.json",
+      ])
+    }
+  }
+
   @Test("preserves the explicit Automation setup command")
   func parsesAutomationSetup() throws {
     #expect(
       try ApplePlatformMCPCommand.parse(["doctor", "--request-automation"])
         == .doctor(requestAutomation: true))
+  }
+
+  @Test("parses the explicit Reminders permission setup command")
+  func parsesRemindersSetup() throws {
+    #expect(
+      try ApplePlatformMCPCommand.parse(["doctor", "--request-reminders"])
+        == .doctorReminders)
   }
 
   @Test("rejects transports that are not implemented")
@@ -705,6 +748,16 @@ struct MCPContractTests {
         "mail_list_mailboxes",
         "mail_search_messages",
         "mail_get_message",
+        "reminder_list_lists",
+        "reminder_list_reminders",
+        "reminder_get_reminder",
+        "reminder_create_reminder",
+        "reminder_update_reminder",
+        "reminder_complete_reminder",
+        "reminder_delete_reminder",
+        "reminder_create_list",
+        "reminder_update_list",
+        "reminder_delete_list",
         "mail_send_message",
         "mail_create_draft",
         "mail_move_message",

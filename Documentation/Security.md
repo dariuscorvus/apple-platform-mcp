@@ -1,8 +1,10 @@
 # Security model
 
-The server mediates access to local mail. Reading is enabled by default;
-sending and mailbox mutations are denied by default and independently
-policy-controlled. Mutation tools never expose permanent deletion.
+The server mediates access to local Mail.app and Reminders. Reading is enabled
+by default; Mail sending, Mail mutations, and Reminders mutations are denied
+by default and independently policy-controlled. Mail tools never expose
+permanent deletion. Explicitly selected Reminder and list deletes are
+permanent, separately gated operations.
 
 ## Boundaries
 
@@ -10,11 +12,16 @@ policy-controlled. Mutation tools never expose permanent deletion.
 - All bridge calls stay behind `ScriptingBridgeMailRepository`.
 - The repository actor serializes bridge access.
 - Mail references are versioned and opaque to clients.
+- Reminders references are versioned `rr1_` values; EventKit objects and raw
+  Apple identifiers remain behind `EventKitReminderRepository`.
 - Reference and cursor values are bound to their versioned wire format; malformed or mismatched values fail closed.
 - Account and mailbox allowlists are enforced in the application service.
 - Search results and message bodies have server-side limits.
 - Attachments are returned as metadata only.
 - No Mail database, browser automation, screen scraping, Accessibility, or provider credential handling is used.
+- Reminders content is untrusted data and never changes policy or target
+  selection. Every Reminder/list write requires an exact opaque reference;
+  heuristic resolution is not exposed.
 
 ## Remote gateway boundary
 
@@ -69,3 +76,23 @@ the local configuration and is still constrained by account/mailbox allowlists,
 opaque reference validation, and input limits. `confirmation_required` remains
 fail-closed because the current MCP boundary has no separate user-confirmation
 protocol. There is no permanent-delete or empty-Trash operation.
+
+## Reminders mutation boundary
+
+`reminder_mutation_mode=denied` is the default and is independent of Mail
+policy. `confirmation_required` is fail-closed. `allowed` enables only the
+implemented exact-reference Reminder/list lifecycle; it does not permit target
+inference from names, content, or a default account.
+
+- Every mutation requires a non-empty idempotency key bound to its normalized
+  operation and payload. The bounded store coalesces same-process retries but
+  intentionally has no restart guarantee.
+- `reminder_create_list` requires an explicit writable source-list reference;
+  the adapter never chooses an EventKit source itself.
+- `reminder_delete_reminder` is permanent and accepts only an exact opaque
+  reference returned by a read/create operation.
+- `reminder_delete_list` is permanent and requires both mutation policy
+  `allowed` and `reminder_list_delete_enabled=true`; it rejects non-empty and
+  immutable lists before EventKit removal.
+- EventKit errors are mapped to stable MCP errors. No raw EventKit IDs or
+  account-specific error text crosses the MCP boundary.

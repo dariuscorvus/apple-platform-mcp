@@ -21,10 +21,13 @@ report. Redact those values before submitting evidence.
 ## Scope notes
 
 The security boundary includes the Swift MCP server, its Mail.app Apple Events
-adapter, the optional remote gateway, and the release/deployment configuration
-that connects them. Mail.app, macOS, Cloudflare, GitHub Actions, and provider
-services remain external trust boundaries.
+and policy-controlled Reminders EventKit adapters, the optional remote gateway,
+and the release/deployment configuration that connects them. Mail.app,
+Reminders, macOS, Cloudflare, GitHub Actions, and provider services remain
+external trust boundaries.
 
 The server intentionally defaults to read-only behavior. A report that relies
 on an operator explicitly enabling a mutation policy should state that
-prerequisite and the exact capability it enables.
+prerequisite and the exact capability it enables. Reminders mutations are
+independently default-denied; list deletion additionally requires its separate
+explicit gate and an exact opaque reference to an empty list.
