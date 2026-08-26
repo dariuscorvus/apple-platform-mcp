@@ -62,8 +62,8 @@ unchanged:
 The lifecycle tools are policy-controlled and require a non-empty
 `idempotency_key`:
 
-- `reminder_create_reminder`: `list_id`, `title`, optional `notes` and
-  `priority`
+- `reminder_create_reminder`: `list_id`, `title`, optional `notes`, `priority`,
+  and an explicit `due` value
 - `reminder_update_reminder`: `reminder_id` plus one or more of `list_id`,
   `title`, `notes`, or `priority`; omit a field to preserve it and send
   `notes: null` to clear it
@@ -74,9 +74,11 @@ The lifecycle tools are policy-controlled and require a non-empty
 - `reminder_delete_list`: `list_id`; permanently destructive and allowed only
   for an empty list
 
-`ReminderDue` and `ReminderRecurrence` are normalized on reads. Their write
-inputs are intentionally not exposed yet; they need the dedicated R-016/R-017
-date/recurrence hardening rather than free-form inference.
+`ReminderDue` is normalized on reads and can be supplied on create. All-day
+values use `date` plus `all_day: true`; timed values require `date`, `time`,
+and an explicit IANA `time_zone`. The create response is read back from
+EventKit, so it returns the native due value that was persisted. Recurrence
+write inputs remain intentionally out of scope for this slice.
 
 ## Write policy and idempotency
 
@@ -197,5 +199,5 @@ with the exact fresh references it created.
 ## Explicitly out of scope
 
 This implementation does not expose Calendar, Contacts, additional Mail
-features, heuristic resolution, Reminder due/recurrence writes, or a durable
-cross-restart idempotency store.
+features, heuristic resolution, Reminder alarms or recurrence writes, or a
+durable cross-restart idempotency store.

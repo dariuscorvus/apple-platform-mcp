@@ -477,6 +477,43 @@ struct ReminderEventKitValueNormalizationTests {
   }
 }
 
+@Suite("Reminder due validation")
+struct ReminderDueValidationTests {
+  @Test("maps an all-day due date to date-only components")
+  func mapsAllDayDueDate() throws {
+    let components = try ReminderDue.allDay(date: "2026-10-01").validatedDateComponents()
+
+    #expect(components.year == 2026)
+    #expect(components.month == 10)
+    #expect(components.day == 1)
+    #expect(components.timeZone == nil)
+  }
+
+  @Test("requires and preserves the explicit time zone for timed due values")
+  func preservesTimedTimezone() throws {
+    let components = try ReminderDue.timed(
+      date: "2026-10-01",
+      time: "09:30:00",
+      timeZone: "Europe/Berlin"
+    ).validatedDateComponents()
+
+    #expect(components.hour == 9)
+    #expect(components.minute == 30)
+    #expect(components.timeZone?.identifier == "Europe/Berlin")
+  }
+
+  @Test("rejects a timed due value without an explicit time zone")
+  func rejectsFloatingTimedDue() {
+    #expect(throws: ReminderError.self) {
+      try ReminderDue.timed(
+        date: "2026-10-01",
+        time: "09:30:00",
+        timeZone: nil
+      ).validatedDateComponents()
+    }
+  }
+}
+
 private actor FakeReminderRepository: ReminderRepository {
   var status: ReminderAuthorizationStatus
   let lists: [ReminderList]

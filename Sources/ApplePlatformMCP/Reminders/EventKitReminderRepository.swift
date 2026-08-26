@@ -128,6 +128,7 @@ public actor EventKitReminderRepository: ReminderRepository {
     reminder.title = request.title
     reminder.notes = request.notes
     reminder.priority = request.priority
+    reminder.dueDateComponents = try request.due?.validatedDateComponents()
 
     do {
       try eventStore.save(reminder, commit: true)

@@ -131,16 +131,36 @@ returned.
 ### `reminder_create_reminder`
 
 Input requires `list_id`, non-empty `title`, and `idempotency_key`. Optional
-`notes` and `priority` (0 through 9) are accepted. The target list must be an
-opaque current reference with `can_write=true`; the server does not choose a
-list implicitly.
+`notes` and `priority` (0 through 9) are accepted. An optional `due` object
+sets the native EventKit due value:
+
+```json
+{
+  "list_id": "rr1_opaque-list-reference",
+  "title": "Apple Developer Agreement akzeptieren",
+  "due": {
+    "date": "2026-10-01",
+    "all_day": true
+  },
+  "idempotency_key": "agreement-deadline-2026-10-01"
+}
+```
+
+`due.date` uses `YYYY-MM-DD`. For an all-day due value, set `all_day` to
+`true` and omit `time` and `time_zone`. For a timed due value, set `all_day`
+to `false` (or provide `time` without `all_day`) and provide `time` in
+`HH:mm:ss` plus an explicit IANA `time_zone`; the server never falls back to
+the machine's local time zone. Invalid calendar dates, times, or time-zone
+identifiers are rejected. The target list must be an opaque current reference
+with `can_write=true`; the server does not choose a list implicitly. The
+response is read back after saving and includes the normalized `due` value.
 
 ### `reminder_update_reminder`
 
 Input requires `reminder_id` and `idempotency_key`, plus at least one patch
 field: optional `list_id`, `title`, `notes`, or `priority`. Omitted fields are
 unchanged. `notes: null` clears notes; the response normalizes EventKit's empty
-cleared value to absent `notes`. Due and recurrence writes are not exposed.
+cleared value to absent `notes`. Due and recurrence updates are not exposed.
 
 ### `reminder_complete_reminder`
 

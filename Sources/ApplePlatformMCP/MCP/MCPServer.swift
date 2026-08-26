@@ -113,6 +113,21 @@ public enum MCPToolCatalog {
           "title": .stringSchema(description: "Non-empty Reminder title."),
           "notes": .stringSchema(description: "Optional Reminder note."),
           "priority": .integerSchema(description: "0 for none, or 1 through 9."),
+          "due": objectSchema(
+            properties: [
+              "date": .stringSchema(
+                description: "Calendar date in YYYY-MM-DD format."),
+              "time": .stringSchema(
+                description:
+                  "Optional local time in HH:mm:ss format; required for timed due values."),
+              "time_zone": .stringSchema(
+                description: "IANA time-zone identifier; required for timed due values."),
+              "all_day": .boolSchema(
+                description:
+                  "Whether the due value is all-day; defaults from the presence of time."),
+            ],
+            required: ["date"]
+          ),
           "idempotency_key": .stringSchema(
             description: "Stable key for retrying this exact create request in this server process."),
         ],
@@ -694,8 +709,27 @@ public struct ApplePlatformMCPServer: Sendable {
       listID: try requiredReminderListID(arguments),
       title: title,
       notes: try optionalString(arguments, key: "notes", field: "notes"),
-      priority: try optionalInt(arguments, key: "priority", field: "priority") ?? 0
+      priority: try optionalInt(arguments, key: "priority", field: "priority") ?? 0,
+      due: try optionalReminderDue(arguments, key: "due")
     )
+  }
+
+  private static func optionalReminderDue(
+    _ arguments: [String: Value]?,
+    key: String
+  ) throws -> ReminderDue? {
+    guard let value = arguments?[key] else { return nil }
+    guard !value.isNull else {
+      throw ReminderError.invalidInput("\(key) cannot be null")
+    }
+
+    do {
+      let data = try JSONEncoder().encode(value)
+      return try JSONDecoder().decode(ReminderDue.self, from: data)
+    } catch {
+      throw ReminderError.invalidInput(
+        "\(key) must contain date and, for timed values, time and time_zone")
+    }
   }
 
   private static func parseReminderUpdateRequest(

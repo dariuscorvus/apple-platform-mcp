@@ -266,6 +266,9 @@ public struct ReminderToolService: Sendable {
     try validate(request.listID)
     try validateTitle(request.title)
     try validatePriority(request.priority)
+    if let due = request.due {
+      _ = try due.validatedDateComponents()
+    }
   }
 
   private func validate(_ request: ReminderUpdateRequest) throws {

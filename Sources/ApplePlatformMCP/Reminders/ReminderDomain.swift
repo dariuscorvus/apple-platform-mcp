@@ -448,25 +448,28 @@ public struct ReminderItem: Codable, Hashable, Sendable {
   }
 }
 
-/// The safe, narrow create payload for the first Reminder write slice. Due
-/// dates and recurrence have dedicated hardening slices and are deliberately
-/// not inferred from free-form input here.
+/// The safe create payload for a Reminder write. Due values are represented
+/// explicitly so EventKit can persist a native date rather than relying on
+/// title or note text.
 public struct ReminderCreateRequest: Codable, Hashable, Sendable {
   public let listID: ReminderListReference
   public let title: String
   public let notes: String?
   public let priority: Int
+  public let due: ReminderDue?
 
   public init(
     listID: ReminderListReference,
     title: String,
     notes: String? = nil,
-    priority: Int = 0
+    priority: Int = 0,
+    due: ReminderDue? = nil
   ) {
     self.listID = listID
     self.title = title
     self.notes = notes
     self.priority = priority
+    self.due = due
   }
 
   private enum CodingKeys: String, CodingKey {
@@ -474,6 +477,7 @@ public struct ReminderCreateRequest: Codable, Hashable, Sendable {
     case title
     case notes
     case priority
+    case due
   }
 }
 
@@ -773,6 +777,47 @@ private enum ReminderDateCodec {
 }
 
 extension ReminderDue {
+  /// Converts a validated domain due value into the DateComponents shape used
+  /// by EventKit. Timed values must carry an explicit IANA time-zone
+  /// identifier; no process-local or machine-local time zone is inferred.
+  func validatedDateComponents() throws -> DateComponents {
+    switch self {
+    case .allDay(let date):
+      let utc = TimeZone(secondsFromGMT: 0)!
+      guard let value = ReminderDateValueParser.dateOnly(date, timeZone: utc) else {
+        throw ReminderError.unsupportedDue
+      }
+
+      var calendar = Calendar(identifier: .gregorian)
+      calendar.timeZone = utc
+      var components = calendar.dateComponents([.year, .month, .day], from: value)
+      components.timeZone = nil
+      return components
+
+    case .timed(let date, let time, let timeZoneIdentifier):
+      guard
+        let timeZoneIdentifier,
+        let timeZone = TimeZone(identifier: timeZoneIdentifier),
+        let value = ReminderDateValueParser.timed(
+          date: date,
+          time: time,
+          timeZone: timeZone
+        )
+      else {
+        throw ReminderError.unsupportedDue
+      }
+
+      var calendar = Calendar(identifier: .gregorian)
+      calendar.timeZone = timeZone
+      var components = calendar.dateComponents(
+        [.year, .month, .day, .hour, .minute, .second],
+        from: value
+      )
+      components.timeZone = timeZone
+      return components
+    }
+  }
+
   /// Used only for explicit read filters. All-day values use UTC midnight as
   /// a deterministic comparison anchor; timed values retain their EventKit
   /// time zone.

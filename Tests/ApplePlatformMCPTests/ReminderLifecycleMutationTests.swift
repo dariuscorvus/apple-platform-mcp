@@ -58,8 +58,55 @@ struct ReminderLifecycleServiceTests {
     #expect(first.title == "Create fixture")
     #expect(first.notes == "A note")
     #expect(first.priority == 5)
+    #expect(first.due == nil)
     #expect(ReminderReferenceCodec.isValid(first.id))
     #expect(await repository.createCallCount == 1)
+  }
+
+  @Test("creates an all-day Reminder due date and returns it")
+  func createsAllDayDueDate() async throws {
+    let repository = MutableReminderRepository(
+      lists: [ReminderList(id: Self.listID, name: "Fixture")]
+    )
+    let service = ReminderToolService(
+      repository: repository,
+      policy: .init(mutationMode: .allowed)
+    )
+    let due = ReminderDue.allDay(date: "2026-10-01")
+
+    let created = try await service.createReminder(
+      ReminderCreateRequest(
+        listID: Self.listID,
+        title: "Apple Developer Agreement akzeptieren",
+        due: due
+      ),
+      idempotencyKey: "create-all-day-due"
+    )
+
+    #expect(created.due == due)
+  }
+
+  @Test("creates a timed Reminder due date with its explicit time zone")
+  func createsTimedDueDateWithTimezone() async throws {
+    let repository = MutableReminderRepository(
+      lists: [ReminderList(id: Self.listID, name: "Fixture")]
+    )
+    let service = ReminderToolService(
+      repository: repository,
+      policy: .init(mutationMode: .allowed)
+    )
+    let due = ReminderDue.timed(
+      date: "2026-10-01",
+      time: "09:30:00",
+      timeZone: "Europe/Berlin"
+    )
+
+    let created = try await service.createReminder(
+      ReminderCreateRequest(listID: Self.listID, title: "Timed fixture", due: due),
+      idempotencyKey: "create-timed-due"
+    )
+
+    #expect(created.due == due)
   }
 
   @Test("updates selected fields, clears notes, and preserves omitted fields")
@@ -308,6 +355,13 @@ struct ReminderLifecycleMCPContractTests {
     #expect(
       createSchema["required"]?.arrayValue?.compactMap(\.stringValue)
         == ["list_id", "title", "idempotency_key"])
+    let dueSchema = try #require(createSchema["properties"]?.objectValue?["due"]?.objectValue)
+    let dueProperties = try #require(dueSchema["properties"]?.objectValue)
+    #expect(dueSchema["additionalProperties"]?.boolValue == false)
+    #expect(
+      dueProperties["date"]?.objectValue?["type"]?.stringValue == "string")
+    #expect(
+      dueProperties["all_day"]?.objectValue?["type"]?.stringValue == "boolean")
 
     let updateTool = try #require(
       listed.tools.first(where: { $0.name == "reminder_update_reminder" }))
@@ -323,11 +377,17 @@ struct ReminderLifecycleMCPContractTests {
         "title": .string("MCP lifecycle fixture"),
         "notes": .string("initial note"),
         "priority": .int(5),
+        "due": .object([
+          "date": .string("2026-10-01"),
+          "all_day": .bool(true),
+        ]),
         "idempotency_key": .string("mcp-create"),
       ]
     )
     #expect(create.isError == false)
     #expect(lifecycleText(create.content).contains("MCP lifecycle fixture"))
+    #expect(lifecycleText(create.content).contains("\"all_day\":true"))
+    #expect(lifecycleText(create.content).contains("\"date\":\"2026-10-01\""))
     let reminderID = await repository.latestCreatedID!
 
     let update = try await client.callTool(
@@ -513,7 +573,8 @@ private actor MutableReminderRepository: ReminderRepository {
       title: request.title,
       notes: request.notes,
       priority: request.priority,
-      completed: false
+      completed: false,
+      due: request.due
     )
     nextItemNumber += 1
     reminders.append(item)
