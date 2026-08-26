@@ -104,11 +104,11 @@ NSAppleEventsUsageDescription: vorhanden
 Genau dieses Bundle liegt unter
 `<private local path>/Applications/apple-platform-mcp.app`; das vorherige Bundle
 ist als `<private local path>/Applications/apple-platform-mcp.app.previous-20260826-0315`
-recoverbar. Der LaunchAgent `<private LaunchAgent identifier>` wird
+recoverbar. Der LaunchAgent `<private LaunchAgent identifier>` wurde
 nach dem kontrollierten Bundle-Update neu geladen. Der laufende App-Prozess
-soll über `mail_server_info` den neuen Commit, `Debug`, Version `0.1.0`,
-`send_mode=denied`, `mutation_mode=denied`, `mailbox_mutations=true`,
-`computer_use=false` und `accessibility=false` liefern.
+liefert über `mail_server_info` den Commit `d741405e738e3eae871362b05c42286b6a8e08ac`,
+`Debug`, Version `0.1.0`, `send_mode=denied`, `mutation_mode=denied`,
+`mailbox_mutations=true`, `computer_use=false` und `accessibility=false`.
 
 ## Remote-E2E
 
