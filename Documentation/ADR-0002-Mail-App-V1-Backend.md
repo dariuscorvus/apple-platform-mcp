@@ -31,13 +31,24 @@ V1 separates capabilities explicitly:
 | --- | --- |
 | Read accounts, mailboxes, search summaries, and message detail | enabled through Mail.app |
 | Send a message | separate capability; explicitly enabled and policy-controlled |
-| Delete, move, archive, mark read, flag, draft mutation, or other mailbox mutation | disabled |
+| Draft, move, archive, Trash, mark read, and flag mutations | separate capability; `mutation_mode=denied` by default |
 
 Message content is untrusted data. It can never change the send policy or
 authorize a mailbox mutation.
 
 Sending is therefore not an implicit consequence of read access, and mailbox
-mutations remain disabled even when sending is enabled.
+mutations remain disabled by default even when sending is enabled.
+
+## Controlled mutation extension
+
+On 2026-08-26 the implementation added a narrow mutation surface without
+changing the Mail.app-only backend decision. The tools are present for
+capability discovery, but the default policy remains `mutation_mode=denied`.
+An explicit local `mutation_mode=allowed` can enable draft creation, same-account
+moves, archive, reversible Trash moves, and read/flag updates. Permanent delete
+and empty-Trash operations are not part of the API. The
+`confirmation_required` mode remains fail-closed until a real confirmation
+boundary exists.
 
 ## Search scope and performance
 

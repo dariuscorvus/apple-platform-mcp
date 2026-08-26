@@ -32,8 +32,8 @@ The Swift server remains loopback-only and is launched as its signed app bundle
 through macOS Launch Services. The gateway is a small Bun or Node process that
 forwards MCP discovery and tool calls to that local Streamable HTTP endpoint.
 This preserves the app bundle's TCC identity for Mail automation. Mail content
-is still subject to the local read/send policy, limits, and sanitization;
-mailbox mutations remain disabled.
+is still subject to the local read/send/mutation policies, limits, and
+sanitization; `send_mode=denied` and `mutation_mode=denied` remain the defaults.
 
 ## Security boundary
 
@@ -44,9 +44,9 @@ mailbox mutations remain disabled.
 - Set an explicit `APPLE_PLATFORM_MCP_HTTP_ORIGINS` list for browser clients.
 - Do not commit tunnel credentials, Access audience values, token files, or
   user-specific launchd plists.
-- The gateway exposes the local read tools and the separately policy-controlled
-  `mail_send_message` capability. It does not add delete, draft, attachment
-  export, mailbox mutation, or arbitrary code execution.
+- The gateway exposes the same local tool catalog, including the separately
+  policy-controlled `mail_send_message` and mailbox-mutation capabilities. It
+  does not add permanent delete, attachment export, or arbitrary code execution.
 
 Cloudflare Access Managed OAuth performs the public OAuth flow. The gateway
 does not implement a second OAuth server. It validates the assertion that
@@ -316,7 +316,8 @@ codex exec --ephemeral --sandbox read-only --json \
 ```
 
 The expected result is a successful `mail_server_info` response with
-`send_mode: "denied"` unless sending was explicitly enabled. Do not use the hostname root as the MCP URL when the
+`send_mode: "denied"` and `mutation_mode: "denied"` unless a local policy was
+explicitly enabled. Do not use the hostname root as the MCP URL when the
 gateway is configured on a path.
 
 ## 9. Keep the services running with launchd

@@ -647,3 +647,14 @@ FOUNDATION_EXPORT BOOL APSMailScriptingBridgeSendMessage(
   NSArray<NSDictionary<NSString *, NSString *> *> *bccRecipients
 );
 
+// Creates an unsent outgoing Mail.app message and leaves it in the Drafts
+// mailbox. Recipient dictionaries use `address` and optional `name` keys.
+FOUNDATION_EXPORT BOOL APSMailScriptingBridgeCreateDraftMessage(
+  MailApplication *application,
+  NSString *sender,
+  NSString *subject,
+  NSString *body,
+  NSArray<NSDictionary<NSString *, NSString *> *> *toRecipients,
+  NSArray<NSDictionary<NSString *, NSString *> *> *ccRecipients,
+  NSArray<NSDictionary<NSString *, NSString *> *> *bccRecipients
+);

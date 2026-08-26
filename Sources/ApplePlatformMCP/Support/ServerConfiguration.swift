@@ -3,12 +3,13 @@ import Foundation
 /// Local configuration for the Mail.app-backed V1 release.
 ///
 /// The file is optional. Missing configuration always means read-only,
-/// send-denied defaults.
+/// send-denied, mutation-denied defaults.
 /// References are copied from `mail_list_accounts` and
 /// `mail_list_mailboxes`; they are not account names or provider credentials.
 public struct MailServerConfiguration: Codable, Equatable, Sendable {
   public let mode: MailPolicy.Mode
   public let sendMode: MailPolicy.SendMode
+  public let mutationMode: MailPolicy.MutationMode
   public let maxResults: Int
   public let maxBodyBytes: Int
   public let maxSendBodyBytes: Int
@@ -27,6 +28,7 @@ public struct MailServerConfiguration: Codable, Equatable, Sendable {
   public init(
     mode: MailPolicy.Mode = .readOnly,
     sendMode: MailPolicy.SendMode = .denied,
+    mutationMode: MailPolicy.MutationMode = .denied,
     maxResults: Int = 50,
     maxBodyBytes: Int = 262_144,
     maxSendBodyBytes: Int = 262_144,
@@ -37,6 +39,7 @@ public struct MailServerConfiguration: Codable, Equatable, Sendable {
   ) {
     self.mode = mode
     self.sendMode = sendMode
+    self.mutationMode = mutationMode
     self.maxResults = max(1, maxResults)
     self.maxBodyBytes = max(1, maxBodyBytes)
     self.maxSendBodyBytes = max(1, maxSendBodyBytes)
@@ -50,6 +53,7 @@ public struct MailServerConfiguration: Codable, Equatable, Sendable {
     MailPolicy(
       mode: mode,
       sendMode: sendMode,
+      mutationMode: mutationMode,
       maxResults: maxResults,
       maxBodyBytes: maxBodyBytes,
       maxSendBodyBytes: maxSendBodyBytes,
@@ -85,6 +89,7 @@ public struct MailServerConfiguration: Codable, Equatable, Sendable {
   private enum CodingKeys: String, CodingKey {
     case mode
     case sendMode = "send_mode"
+    case mutationMode = "mutation_mode"
     case maxResults = "max_results"
     case maxBodyBytes = "max_body_bytes"
     case maxSendBodyBytes = "max_send_body_bytes"
@@ -105,6 +110,9 @@ public struct MailServerConfiguration: Codable, Equatable, Sendable {
       mode: mode,
       sendMode: try container.decodeIfPresent(MailPolicy.SendMode.self, forKey: .sendMode)
         ?? .denied,
+      mutationMode: try container.decodeIfPresent(
+        MailPolicy.MutationMode.self, forKey: .mutationMode
+      ) ?? .denied,
       maxResults: try container.decodeIfPresent(Int.self, forKey: .maxResults) ?? 50,
       maxBodyBytes: try container.decodeIfPresent(Int.self, forKey: .maxBodyBytes) ?? 262_144,
       maxSendBodyBytes: try container.decodeIfPresent(Int.self, forKey: .maxSendBodyBytes)

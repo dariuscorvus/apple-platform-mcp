@@ -21,8 +21,15 @@ public struct MailPolicy: Sendable {
     case confirmationRequired = "confirmation_required"
   }
 
+  public enum MutationMode: String, Codable, Sendable {
+    case denied
+    case allowed
+    case confirmationRequired = "confirmation_required"
+  }
+
   public let mode: Mode
   public let sendMode: SendMode
+  public let mutationMode: MutationMode
   public let maxResults: Int
   public let maxBodyBytes: Int
   public let maxSendBodyBytes: Int
@@ -34,6 +41,7 @@ public struct MailPolicy: Sendable {
   public init(
     mode: Mode = .readOnly,
     sendMode: SendMode = .denied,
+    mutationMode: MutationMode = .denied,
     maxResults: Int = 50,
     maxBodyBytes: Int = 262_144,
     maxSendBodyBytes: Int = 262_144,
@@ -44,6 +52,7 @@ public struct MailPolicy: Sendable {
   ) {
     self.mode = mode
     self.sendMode = sendMode
+    self.mutationMode = mutationMode
     self.maxResults = max(1, maxResults)
     self.maxBodyBytes = max(1, maxBodyBytes)
     self.maxSendBodyBytes = max(1, maxSendBodyBytes)
@@ -80,6 +89,17 @@ public struct MailPolicy: Sendable {
   public func validateMailbox(_ mailboxID: MailboxReference) throws {
     guard mailboxIsAllowed(mailboxID) else {
       throw MailError.policyDenied("The requested mailbox is outside the configured allowlist.")
+    }
+  }
+
+  public func validateMutation() throws {
+    switch mutationMode {
+    case .allowed:
+      return
+    case .denied:
+      throw MailError.policyDenied("Mailbox mutations are disabled by policy.")
+    case .confirmationRequired:
+      throw MailError.policyDenied("Mailbox mutations require explicit confirmation.")
     }
   }
 }

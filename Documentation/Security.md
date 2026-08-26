@@ -1,8 +1,8 @@
 # Security model
 
 The server mediates access to local mail. Reading is enabled by default;
-sending is denied by default and is independently policy-controlled. Mailbox
-mutations remain disabled.
+sending and mailbox mutations are denied by default and independently
+policy-controlled. Mutation tools never expose permanent deletion.
 
 ## Boundaries
 
@@ -53,3 +53,19 @@ body limit before delegating to Mail.app. `send_mode=denied` is the default;
 `confirmation_required` is represented in policy and remains blocked until a
 future confirmation boundary is implemented. Message content cannot change
 policy. Mail.app chooses SMTP, OAuth, and provider authentication.
+
+## Mailbox mutation boundary
+
+The mutation surface is intentionally narrow:
+
+- `mail_create_draft` creates an unsent draft only;
+- `mail_move_message` requires an explicit same-account destination mailbox;
+- `mail_archive_message` resolves exactly one allowed Archive mailbox;
+- `mail_trash_message` moves to Trash and is reversible until Trash is emptied;
+- `mail_update_message` changes only read and flagged status.
+
+`mutation_mode=denied` is the default. `allowed` must be enabled explicitly in
+the local configuration and is still constrained by account/mailbox allowlists,
+opaque reference validation, and input limits. `confirmation_required` remains
+fail-closed because the current MCP boundary has no separate user-confirmation
+protocol. There is no permanent-delete or empty-Trash operation.

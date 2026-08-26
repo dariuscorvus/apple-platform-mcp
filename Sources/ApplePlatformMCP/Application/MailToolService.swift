@@ -11,6 +11,7 @@ public struct MailToolService: Sendable {
 
   public var policyMode: MailPolicy.Mode { policy.mode }
   public var sendMode: MailPolicy.SendMode { policy.sendMode }
+  public var mutationMode: MailPolicy.MutationMode { policy.mutationMode }
   public var maxResults: Int { policy.maxResults }
   public var maxBodyBytes: Int { policy.maxBodyBytes }
   public var hasAccountAllowlist: Bool { policy.allowedAccountIDs != nil }
@@ -180,5 +181,137 @@ public struct MailToolService: Sendable {
     }
 
     return try await repository.sendMessage(request)
+  }
+
+  public func createDraft(_ request: MailDraftRequest) async throws -> MailDraftResult {
+    try policy.validateMutation()
+    try policy.validateAccount(request.accountID)
+
+    let accounts = try await repository.listAccounts(includeDisabled: true)
+    guard let account = accounts.first(where: { $0.id == request.accountID }) else {
+      throw MailError.accountNotFound
+    }
+    guard account.enabled else {
+      throw MailError.policyDenied("Creating a draft on a disabled account is not allowed.")
+    }
+    guard !request.fromIdentity.isEmpty,
+      account.emailAddresses.contains(where: {
+        $0.localizedCaseInsensitiveCompare(request.fromIdentity) == .orderedSame
+      })
+    else {
+      throw MailError.policyDenied("from_identity must belong to the selected Mail.app account.")
+    }
+
+    try validateRecipients(request.to + request.cc + request.bcc, required: false)
+    try validateSubjectAndBody(subject: request.subject, body: request.body)
+
+    return try await repository.createDraft(request)
+  }
+
+  public func moveMessage(
+    id: MessageReference,
+    to mailboxID: MailboxReference
+  ) async throws -> MailMessageMutationResult {
+    try policy.validateMutation()
+    let sourceAccountID = try validateMessageReference(id)
+
+    guard
+      let targetComponents = ReferenceCodec.decode(mailboxID),
+      let targetRawAccountID = targetComponents["account"]
+    else {
+      throw MailError.mailboxNotFound
+    }
+    let targetAccountID = ReferenceCodec.account(rawID: targetRawAccountID)
+    try policy.validateAccount(targetAccountID)
+    try policy.validateMailbox(mailboxID)
+    guard sourceAccountID == targetAccountID else {
+      throw MailError.policyDenied("Moving a message between Mail.app accounts is not allowed.")
+    }
+
+    return try await repository.moveMessage(id: id, to: mailboxID)
+  }
+
+  public func archiveMessage(_ id: MessageReference) async throws -> MailMessageMutationResult {
+    try policy.validateMutation()
+    let accountID = try validateMessageReference(id)
+    let archiveMailboxes = try await repository.listMailboxes(
+      accountID: accountID,
+      includeCounts: false
+    ).filter { policy.mailboxIsAllowed($0.id) && $0.role == .archive }
+
+    guard let archiveMailbox = archiveMailboxes.first else {
+      throw MailError.mailboxNotFound
+    }
+    guard archiveMailboxes.count == 1 else {
+      throw MailError.ambiguousReference
+    }
+
+    let result = try await repository.moveMessage(id: id, to: archiveMailbox.id)
+    return MailMessageMutationResult(
+      accepted: result.accepted,
+      operation: .archive,
+      messageID: result.messageID,
+      mailboxID: result.mailboxID,
+      targetMailboxID: result.targetMailboxID
+    )
+  }
+
+  public func trashMessage(_ id: MessageReference) async throws -> MailMessageMutationResult {
+    try policy.validateMutation()
+    _ = try validateMessageReference(id)
+    return try await repository.trashMessage(id)
+  }
+
+  public func updateMessage(
+    _ request: MailMessageUpdateRequest
+  ) async throws -> MailMessageMutationResult {
+    try policy.validateMutation()
+    guard request.isRead != nil || request.isFlagged != nil else {
+      throw MailError.invalidInput("At least one message status must be provided.")
+    }
+    _ = try validateMessageReference(request.id)
+    return try await repository.updateMessage(request)
+  }
+
+  private func validateMessageReference(_ id: MessageReference) throws -> AccountReference {
+    guard
+      let components = ReferenceCodec.decode(id),
+      let rawAccountID = components["account"],
+      let rawMailboxPath = components["mailbox"]
+    else {
+      throw MailError.messageNotFound
+    }
+
+    let accountID = ReferenceCodec.account(rawID: rawAccountID)
+    try policy.validateAccount(accountID)
+    try policy.validateMailbox(
+      ReferenceCodec.mailbox(
+        accountRawID: rawAccountID,
+        path: rawMailboxPath.components(separatedBy: "\u{1F}")
+      ))
+    return accountID
+  }
+
+  private func validateRecipients(_ recipients: [MailAddress], required: Bool) throws {
+    if required && recipients.isEmpty {
+      throw MailError.invalidInput("At least one recipient is required.")
+    }
+    guard recipients.count <= policy.maxRecipients else {
+      throw MailError.invalidInput("The recipient list exceeds the configured limit.")
+    }
+    guard recipients.allSatisfy({ MailAddressValidator.isValid($0.address) }) else {
+      throw MailError.invalidInput("Every recipient must be a valid email address.")
+    }
+  }
+
+  private func validateSubjectAndBody(subject: String, body: String) throws {
+    let subjectBytes = subject.data(using: .utf8)?.count ?? 0
+    guard subjectBytes <= policy.maxSubjectBytes else {
+      throw MailError.invalidInput("The subject exceeds the configured limit.")
+    }
+    let bodyBytes = body.data(using: .utf8)?.count ?? 0
+    guard bodyBytes <= policy.maxSendBodyBytes else {
+      throw MailError.bodyTooLarge
+    }
   }
 }

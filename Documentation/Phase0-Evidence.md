@@ -37,6 +37,10 @@ All Mail automation calls are isolated in the serial `ScriptingBridgeMailReposit
   - `mail_list_mailboxes`
   - `mail_search_messages`
   - `mail_get_message`
+
+This Phase 0 entry is a historical read-only snapshot. The current server also
+publishes separately policy-gated draft and mailbox-mutation tools; the default
+`mutation_mode=denied` preserves the Phase 0 read-only behavior.
 - [x] `mail_server_info` returned `read_only` mode with `computer_use: false` and `accessibility: false`.
 - [x] Reference encoding, content sanitization, result limits, tool annotations, allowlists, and permission error recovery have unit coverage.
 - [x] Synthetic fixture tests cover query-bound pagination, message detail, attachment references, and account policy filtering without personal mailbox data.

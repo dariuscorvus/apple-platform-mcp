@@ -106,6 +106,27 @@ private actor HTTPFakeMailRepository: MailRepository {
   func sendMessage(_ request: MailSendRequest) async throws -> MailSendResult {
     throw MailError.unsupportedByAccount
   }
+
+  func createDraft(_ request: MailDraftRequest) async throws -> MailDraftResult {
+    throw MailError.unsupportedByAccount
+  }
+
+  func moveMessage(
+    id: MessageReference,
+    to mailboxID: MailboxReference
+  ) async throws -> MailMessageMutationResult {
+    throw MailError.unsupportedByAccount
+  }
+
+  func trashMessage(_ id: MessageReference) async throws -> MailMessageMutationResult {
+    throw MailError.unsupportedByAccount
+  }
+
+  func updateMessage(
+    _ request: MailMessageUpdateRequest
+  ) async throws -> MailMessageMutationResult {
+    throw MailError.unsupportedByAccount
+  }
 }
 
 @Suite("Streamable HTTP routing")
@@ -562,8 +583,8 @@ struct StreamableHTTPRoutingTests {
     #expect(rejected.statusCode == 429)
   }
 
-  @Test("publishes read tools and the policy-controlled send tool over HTTP")
-  func publishesReadAndSendToolCatalog() async throws {
+  @Test("publishes read and policy-controlled write tools over HTTP")
+  func publishesReadAndWriteToolCatalog() async throws {
     let service = MailToolService(repository: HTTPFakeMailRepository())
     let server = await ApplePlatformMCPServer(service: service).makeServer()
     let runtime = ApplePlatformMCPStreamableHTTPRuntime(
@@ -602,6 +623,11 @@ struct StreamableHTTPRoutingTests {
           "mail_search_messages",
           "mail_get_message",
           "mail_send_message",
+          "mail_create_draft",
+          "mail_move_message",
+          "mail_archive_message",
+          "mail_trash_message",
+          "mail_update_message",
         ]))
   }
 

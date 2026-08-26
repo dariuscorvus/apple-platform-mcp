@@ -578,4 +578,35 @@ private actor SyntheticMailRepository: MailRepository {
       fromIdentity: request.fromIdentity
     )
   }
+
+  func createDraft(_ request: MailDraftRequest) async throws -> MailDraftResult {
+    MailDraftResult(
+      accepted: true,
+      accountID: request.accountID,
+      fromIdentity: request.fromIdentity,
+      subject: request.subject
+    )
+  }
+
+  func moveMessage(
+    id: MessageReference,
+    to mailboxID: MailboxReference
+  ) async throws -> MailMessageMutationResult {
+    MailMessageMutationResult(
+      accepted: true,
+      operation: .move,
+      messageID: id,
+      targetMailboxID: mailboxID
+    )
+  }
+
+  func trashMessage(_ id: MessageReference) async throws -> MailMessageMutationResult {
+    MailMessageMutationResult(accepted: true, operation: .trash, messageID: id)
+  }
+
+  func updateMessage(
+    _ request: MailMessageUpdateRequest
+  ) async throws -> MailMessageMutationResult {
+    MailMessageMutationResult(accepted: true, operation: .update, messageID: request.id)
+  }
 }
