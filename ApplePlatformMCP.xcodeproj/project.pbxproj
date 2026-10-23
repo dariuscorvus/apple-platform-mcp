@@ -14,25 +14,42 @@
 		163D8C4E207164E1503E7BBF /* Logging in Frameworks */ = {isa = PBXBuildFile; productRef = 4BA1F22BD06F2F5F1A8ADD0F /* Logging */; };
 		1A9D61DA23FE824516C65BD7 /* MailAutomationDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C1734D8C7DB6309BF0AF0D9 /* MailAutomationDiagnostics.swift */; };
 		1AA89F458FC0753CB90A83F3 /* BoundedNewestFirstTraversal.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46C755BE52D87AA3E8E00DE /* BoundedNewestFirstTraversal.swift */; };
+		1CAE2FE4D102924721D9EB55 /* CalendarMCPTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC4EEFC899C661321F550FEB /* CalendarMCPTools.swift */; };
 		1DA7B39B3F507B918FD1D391 /* ReminderToolService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4E55630636B77E4BF2939FA /* ReminderToolService.swift */; };
 		2062A9B56D7348E28D85107D /* MCP in Frameworks */ = {isa = PBXBuildFile; productRef = 37E2E2E53CF4D757C2BD92CA /* MCP */; };
+		208D538A4FA6A21DE7F0B384 /* CNContactsRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34FEED7EEA57B253B857B7FE /* CNContactsRepository.swift */; };
 		20CC5FB480C616A91265F01D /* ReminderMutationFoundationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 802DCC08FD703207DDF97CA2 /* ReminderMutationFoundationTests.swift */; };
 		2452F6561FFD8812BA86B598 /* BuildProvenance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2908CB2A359A023864D75F53 /* BuildProvenance.swift */; };
 		26C48656690A6EAB4838E9F1 /* MCP in Frameworks */ = {isa = PBXBuildFile; productRef = 7EC475AD9348F154C8A9698A /* MCP */; };
+		275E07493487E22398720CB8 /* CalendarDomain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 158F388B6E17075A09229640 /* CalendarDomain.swift */; };
+		2BC3469A40802B839AC6439F /* CalendarToolService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D3F786BD3AE2F3576C38D94 /* CalendarToolService.swift */; };
+		2C845B6C13535DF912CB5A09 /* MailSearchPredicate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72DBA4038D70EC6EFECF932A /* MailSearchPredicate.swift */; };
 		30E5A11705865947BA1842E7 /* ReminderIdempotencyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D27B56F7241291E3369ED27 /* ReminderIdempotencyStore.swift */; };
 		3396BAF3E171AD88A7986F40 /* NIOCore in Frameworks */ = {isa = PBXBuildFile; productRef = 34DAAF5A93DC94B85D4BEE98 /* NIOCore */; };
 		359A6E93FB1BF1E830567912 /* BuildProvenance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2908CB2A359A023864D75F53 /* BuildProvenance.swift */; };
 		35E3F0B5B842B90F259D18F4 /* MailContentSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4090D1720B5BC24BEE5F3D37 /* MailContentSanitizer.swift */; };
+		36A66580A9E5FB41D802C8BF /* CalendarTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18B2E99006BCE7955C194B47 /* CalendarTests.swift */; };
+		370719C31E10BE6EF7A45CAE /* FilesFileSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9F8FF40AB7CC72C95152F01 /* FilesFileSystem.swift */; };
 		3810FA9CBF0FD201743F2408 /* MailToolService.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECA3DD70D9C8367A06A590B7 /* MailToolService.swift */; };
 		39A6793365A7C5B2AB6F2592 /* BoundedNewestFirstTraversal.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46C755BE52D87AA3E8E00DE /* BoundedNewestFirstTraversal.swift */; };
+		3A35B5A15C321159BF3FCC10 /* ContactsDomain.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3B1B62B9E0703693915A22 /* ContactsDomain.swift */; };
 		3CF66204EDAEA2AAF3070E44 /* HTTPRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F77553143C9909E8F786F586 /* HTTPRouter.swift */; };
 		3E70EA2D9B74B22D604BCC11 /* MCPServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DC44195A8E3289AAED62727 /* MCPServer.swift */; };
 		3EA016EB9DA9C2AB5E9DE44E /* StatelessHTTPTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 255FEAE531A3EA33A07AF828 /* StatelessHTTPTransport.swift */; };
+		42AD462CCAE6F641F12F5605 /* FilesDomain.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDB67618C4B527EDE9E9F264 /* FilesDomain.swift */; };
 		535F1DC59F9D512BF3D35874 /* ScriptingBridgeMailRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9CBDA587D15BF3281F4F308 /* ScriptingBridgeMailRepository.swift */; };
 		54532EE5168FA07896AA31C5 /* DomainModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1681C7F0AA9DFA0CEFF579E /* DomainModels.swift */; };
+		582CACE7443E80AE6E6A2AAB /* CalendarCreationJournal.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF56AF35DF399B0DC27DA896 /* CalendarCreationJournal.swift */; };
+		5BA898DF39CED3ED65AB8573 /* FilesDomain.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDB67618C4B527EDE9E9F264 /* FilesDomain.swift */; };
+		5CC6B7DCD48655103934180D /* NotesToolService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E43213BD7CA2F49E81B3E66 /* NotesToolService.swift */; };
+		61581CFCE28CFA3BCEE31897 /* CalendarMCPTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC4EEFC899C661321F550FEB /* CalendarMCPTools.swift */; };
 		61BEEDC4886435D8EC71BB45 /* ServerConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0FE45735C19936A5F710C6 /* ServerConfiguration.swift */; };
+		62E07879A77A5828E04BB7C9 /* CNContactsRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34FEED7EEA57B253B857B7FE /* CNContactsRepository.swift */; };
+		6440AAF23E9A7F437AAA2A9A /* MailSearch.m in Sources */ = {isa = PBXBuildFile; fileRef = 462938DD0C160B1EBC194D3F /* MailSearch.m */; };
+		6442991DDB9A406252D2D44C /* FilesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24E930ABAE78532C040BA790 /* FilesTests.swift */; };
 		667E01BFE07B8109C6E691E5 /* Mail.m in Sources */ = {isa = PBXBuildFile; fileRef = 2E2FB9C48CFCCB7649C6A5A9 /* Mail.m */; };
 		6A9DAF448884520391C132B9 /* EventKitReminderRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30CD0F67CE18B37153E7E6C /* EventKitReminderRepository.swift */; };
+		6B81093C2288322AC23D0983 /* ContactsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D0E429483B362FC0DF148C7 /* ContactsTests.swift */; };
 		6D02D883F1AB38EDC4076999 /* NIOHTTP1 in Frameworks */ = {isa = PBXBuildFile; productRef = 161F2ED4541E75D6A93DD6C5 /* NIOHTTP1 */; };
 		726A3BE6E7D8BE8F680BD651 /* HTTPRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F77553143C9909E8F786F586 /* HTTPRouter.swift */; };
 		740C352927D5AB9151376FBA /* EventKitReminderRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30CD0F67CE18B37153E7E6C /* EventKitReminderRepository.swift */; };
@@ -41,75 +58,118 @@
 		7E67E6AD587CC95D09E3CDDC /* NIOPosix in Frameworks */ = {isa = PBXBuildFile; productRef = 67AE4330B46015724C8ABE44 /* NIOPosix */; };
 		88F109BFD76F1E5960E14326 /* StatelessHTTPTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 255FEAE531A3EA33A07AF828 /* StatelessHTTPTransport.swift */; };
 		89A7749BF21929FC58F2B5D3 /* StreamableHTTPRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41F0370CBFF4BC2DAEC91750 /* StreamableHTTPRuntime.swift */; };
+		89F933407A533A4A864FD2D1 /* MailAttachmentIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CEB3CD816EF40EF87B22732 /* MailAttachmentIdentity.swift */; };
 		8A444BA81A7E7BB4A65EB872 /* NIOPosix in Frameworks */ = {isa = PBXBuildFile; productRef = 9FBB84328EFD9C42F3C32622 /* NIOPosix */; };
+		8BCD45AE4AB90E46B08B69A8 /* FilesFileSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9F8FF40AB7CC72C95152F01 /* FilesFileSystem.swift */; };
+		8DA10FB44FFA64809ADE6C6A /* Notes.m in Sources */ = {isa = PBXBuildFile; fileRef = 9ABEF17D96B5973FBCB6A93D /* Notes.m */; };
 		8EE8711C8CE009FFD958B475 /* DomainModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1681C7F0AA9DFA0CEFF579E /* DomainModels.swift */; };
 		8EEED3F2524B57E834C564E9 /* ReminderDomain.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7405772DA1E2A92F61C66F7 /* ReminderDomain.swift */; };
 		9183E1B31A6D4A31401C6A75 /* ApplePlatformMCPMain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F9F7152CE05BF17424C9AC6 /* ApplePlatformMCPMain.swift */; };
 		94B829E1672D0F40999174BB /* ReminderLifecycleMutationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD442F2AACDE9A35C0D7184B /* ReminderLifecycleMutationTests.swift */; };
 		95B39546ECB35E497302E15E /* Logging in Frameworks */ = {isa = PBXBuildFile; productRef = 0A83B5A35A8118DC0881260C /* Logging */; };
+		99286D87FD0829CAB2662932 /* MailSearchPredicate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72DBA4038D70EC6EFECF932A /* MailSearchPredicate.swift */; };
 		9A2BE6EF269EFD830286D267 /* ApplePlatformMCPTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 638E1187D0E8F36C8770C761 /* ApplePlatformMCPTests.swift */; };
 		9EDAE001150F209DD6BD0F1B /* StreamableHTTPCommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D185D5E2A4D96FE690DB1307 /* StreamableHTTPCommandTests.swift */; };
 		9F616261824303E81A1AEEC9 /* RemindersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87913E7F9A6E9A09C3C23175 /* RemindersTests.swift */; };
+		A11E908F9EDCA3E32FDAB8D3 /* EventKitCalendarRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11F1427D938BCAB91F00464A /* EventKitCalendarRepository.swift */; };
 		A186F51FA2C7542F78AA925F /* MailContentSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4090D1720B5BC24BEE5F3D37 /* MailContentSanitizer.swift */; };
 		A246462F0FCCF134F4303ED0 /* ReminderIdempotencyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D27B56F7241291E3369ED27 /* ReminderIdempotencyStore.swift */; };
+		A2D4A70DE716DB7FDE48E35C /* ContactsDomain.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3B1B62B9E0703693915A22 /* ContactsDomain.swift */; };
 		A5190F1A7FA3D5C645BAB847 /* MCPServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DC44195A8E3289AAED62727 /* MCPServer.swift */; };
 		ACECB4855CDF256399E2CD9C /* SyntheticMailFixtureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4165D4289A204B7D38912D0C /* SyntheticMailFixtureTests.swift */; };
+		AFC83AE2B7D7C2A1653F1862 /* ContactsMCPTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = D53BEC2FC02A976B7A37E547 /* ContactsMCPTools.swift */; };
+		B085EBC7076B3FEA7F9B2B88 /* MailAttachmentIdentityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA264F6C73AAC5EDAD14E2B /* MailAttachmentIdentityTests.swift */; };
+		B3AE30752995D5142DE23AF6 /* CalendarToolService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D3F786BD3AE2F3576C38D94 /* CalendarToolService.swift */; };
 		B450715900DE40473E9EDE04 /* MailToolService.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECA3DD70D9C8367A06A590B7 /* MailToolService.swift */; };
+		B5A7AF358A0C1BF989DE80FD /* CalendarCreationJournal.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF56AF35DF399B0DC27DA896 /* CalendarCreationJournal.swift */; };
+		B623D434E0A8B75D968CA668 /* NotesToolService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E43213BD7CA2F49E81B3E66 /* NotesToolService.swift */; };
 		B6DED2024D3C59767C76A3CF /* CanonicalInboxResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 469CE91DDDB56298E26D316C /* CanonicalInboxResolver.swift */; };
+		B9D674C2A09A8115FB8ECF53 /* FilesToolService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B230C3887C52301C36BF321 /* FilesToolService.swift */; };
 		C28564219C2C3495E44EFF9D /* ServerCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2B30676EDFDF38A2037F5D6 /* ServerCommand.swift */; };
 		C28E79B437C8016C4C18CE9B /* LoopbackHTTPListenerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C66852A6A52AB3437FE6E327 /* LoopbackHTTPListenerTests.swift */; };
 		C2D5C7A56BAA62ED142C0FF6 /* Mail.m in Sources */ = {isa = PBXBuildFile; fileRef = 2E2FB9C48CFCCB7649C6A5A9 /* Mail.m */; };
 		C5310A4C6D6C6F5B1B68F965 /* HTTPServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 517B820FED9B69B48281075A /* HTTPServer.swift */; };
 		CB6533AFDC07C721FB2744DC /* ServerCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2B30676EDFDF38A2037F5D6 /* ServerCommand.swift */; };
 		CDE77C25C6FFAFB833EF49AC /* ReminderPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B6861AF9988BAC11C702AE9 /* ReminderPolicy.swift */; };
+		D01EB42297D7732A4F5D8498 /* MailSearch.m in Sources */ = {isa = PBXBuildFile; fileRef = 462938DD0C160B1EBC194D3F /* MailSearch.m */; };
 		D24DA9454DB3B11AE98F7B03 /* MailPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DEE5BB3C5C654A9F36BB9F9 /* MailPolicy.swift */; };
+		D790C00FAA645FA6621C0A4B /* FilesToolService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B230C3887C52301C36BF321 /* FilesToolService.swift */; };
 		DA37C86C1C9B13CD4C5F9078 /* Doctor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B701AAC0B6D41B43C6F183 /* Doctor.swift */; };
+		DAC0A88C311068EA889B0D50 /* NotesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6F31B4346D18EB771A8E2AE /* NotesTests.swift */; };
 		DBF4B994920DF0F1E7EBDF7D /* NIOCore in Frameworks */ = {isa = PBXBuildFile; productRef = CC07C719AB24B009A8668D5F /* NIOCore */; };
 		DC4B9349E2DABC2F44562BF4 /* Doctor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B701AAC0B6D41B43C6F183 /* Doctor.swift */; };
+		DFFFB93D9645C43147C38E8D /* ContactsMCPTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = D53BEC2FC02A976B7A37E547 /* ContactsMCPTools.swift */; };
+		E4A614D37481F3186B82A52D /* EventKitCalendarRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11F1427D938BCAB91F00464A /* EventKitCalendarRepository.swift */; };
 		E8BB0505DC01F4ACA95D823B /* ReminderPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B6861AF9988BAC11C702AE9 /* ReminderPolicy.swift */; };
 		EAB992432502234F4ACFBB14 /* HTTPServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 517B820FED9B69B48281075A /* HTTPServer.swift */; };
+		EB1A787A8BC11A0F2710A401 /* MailSearchPredicateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 928960CF5DCD7A3C2DE83C22 /* MailSearchPredicateTests.swift */; };
+		EB976AD3466F5E4102F1EAE4 /* CalendarDomain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 158F388B6E17075A09229640 /* CalendarDomain.swift */; };
 		EF32D766D20AD9702C405836 /* StreamableHTTPRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41F0370CBFF4BC2DAEC91750 /* StreamableHTTPRuntime.swift */; };
+		EFFAF4E9B8F6144B28756C81 /* MailAttachmentIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CEB3CD816EF40EF87B22732 /* MailAttachmentIdentity.swift */; };
 		F0DEC078ADFEEEB95FBF1332 /* MailPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DEE5BB3C5C654A9F36BB9F9 /* MailPolicy.swift */; };
 		F3200C737B9EF692E5EFB805 /* ReminderDomain.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7405772DA1E2A92F61C66F7 /* ReminderDomain.swift */; };
+		F64344B3138676874BAC4FDB /* Notes.m in Sources */ = {isa = PBXBuildFile; fileRef = 9ABEF17D96B5973FBCB6A93D /* Notes.m */; };
 		FA3A235FB783032B6B9715E2 /* StreamableHTTPRoutingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67581097C2BD591ECF52EFDC /* StreamableHTTPRoutingTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		0B6861AF9988BAC11C702AE9 /* ReminderPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderPolicy.swift; sourceTree = "<group>"; };
 		0DC44195A8E3289AAED62727 /* MCPServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPServer.swift; sourceTree = "<group>"; };
+		11F1427D938BCAB91F00464A /* EventKitCalendarRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitCalendarRepository.swift; sourceTree = "<group>"; };
+		158F388B6E17075A09229640 /* CalendarDomain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarDomain.swift; sourceTree = "<group>"; };
+		18B2E99006BCE7955C194B47 /* CalendarTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarTests.swift; sourceTree = "<group>"; };
+		1D0E429483B362FC0DF148C7 /* ContactsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsTests.swift; sourceTree = "<group>"; };
+		24E930ABAE78532C040BA790 /* FilesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilesTests.swift; sourceTree = "<group>"; };
 		255FEAE531A3EA33A07AF828 /* StatelessHTTPTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatelessHTTPTransport.swift; sourceTree = "<group>"; };
 		2908CB2A359A023864D75F53 /* BuildProvenance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildProvenance.swift; sourceTree = "<group>"; };
+		2B230C3887C52301C36BF321 /* FilesToolService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilesToolService.swift; sourceTree = "<group>"; };
 		2C1734D8C7DB6309BF0AF0D9 /* MailAutomationDiagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MailAutomationDiagnostics.swift; sourceTree = "<group>"; };
 		2E2FB9C48CFCCB7649C6A5A9 /* Mail.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Mail.m; sourceTree = "<group>"; };
+		2E43213BD7CA2F49E81B3E66 /* NotesToolService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesToolService.swift; sourceTree = "<group>"; };
 		2F9F7152CE05BF17424C9AC6 /* ApplePlatformMCPMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplePlatformMCPMain.swift; sourceTree = "<group>"; };
 		33B701AAC0B6D41B43C6F183 /* Doctor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Doctor.swift; sourceTree = "<group>"; };
+		34FEED7EEA57B253B857B7FE /* CNContactsRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CNContactsRepository.swift; sourceTree = "<group>"; };
 		4090D1720B5BC24BEE5F3D37 /* MailContentSanitizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MailContentSanitizer.swift; sourceTree = "<group>"; };
 		4165D4289A204B7D38912D0C /* SyntheticMailFixtureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyntheticMailFixtureTests.swift; sourceTree = "<group>"; };
 		41F0370CBFF4BC2DAEC91750 /* StreamableHTTPRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamableHTTPRuntime.swift; sourceTree = "<group>"; };
+		462938DD0C160B1EBC194D3F /* MailSearch.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MailSearch.m; sourceTree = "<group>"; };
 		469CE91DDDB56298E26D316C /* CanonicalInboxResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanonicalInboxResolver.swift; sourceTree = "<group>"; };
 		517B820FED9B69B48281075A /* HTTPServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPServer.swift; sourceTree = "<group>"; };
 		638E1187D0E8F36C8770C761 /* ApplePlatformMCPTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplePlatformMCPTests.swift; sourceTree = "<group>"; };
 		67581097C2BD591ECF52EFDC /* StreamableHTTPRoutingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamableHTTPRoutingTests.swift; sourceTree = "<group>"; };
 		6DEE5BB3C5C654A9F36BB9F9 /* MailPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MailPolicy.swift; sourceTree = "<group>"; };
 		7196D7024879FC41537DD095 /* ApplePlatformMCPTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ApplePlatformMCPTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		72DBA4038D70EC6EFECF932A /* MailSearchPredicate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MailSearchPredicate.swift; sourceTree = "<group>"; };
+		7CEB3CD816EF40EF87B22732 /* MailAttachmentIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MailAttachmentIdentity.swift; sourceTree = "<group>"; };
 		7D27B56F7241291E3369ED27 /* ReminderIdempotencyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderIdempotencyStore.swift; sourceTree = "<group>"; };
+		7D3F786BD3AE2F3576C38D94 /* CalendarToolService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarToolService.swift; sourceTree = "<group>"; };
 		802DCC08FD703207DDF97CA2 /* ReminderMutationFoundationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderMutationFoundationTests.swift; sourceTree = "<group>"; };
 		87913E7F9A6E9A09C3C23175 /* RemindersTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersTests.swift; sourceTree = "<group>"; };
 		8D0FE45735C19936A5F710C6 /* ServerConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerConfiguration.swift; sourceTree = "<group>"; };
+		928960CF5DCD7A3C2DE83C22 /* MailSearchPredicateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MailSearchPredicateTests.swift; sourceTree = "<group>"; };
+		9ABEF17D96B5973FBCB6A93D /* Notes.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Notes.m; sourceTree = "<group>"; };
 		A2B30676EDFDF38A2037F5D6 /* ServerCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerCommand.swift; sourceTree = "<group>"; };
 		B03C097EB3884C30102B0645 /* apple-platform-mcp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "apple-platform-mcp.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		BAA264F6C73AAC5EDAD14E2B /* MailAttachmentIdentityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MailAttachmentIdentityTests.swift; sourceTree = "<group>"; };
 		BBC834EEBD7E1F69C3FCE076 /* ApplePlatformMCP-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ApplePlatformMCP-Bridging-Header.h"; sourceTree = "<group>"; };
+		BDB67618C4B527EDE9E9F264 /* FilesDomain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilesDomain.swift; sourceTree = "<group>"; };
 		C66852A6A52AB3437FE6E327 /* LoopbackHTTPListenerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopbackHTTPListenerTests.swift; sourceTree = "<group>"; };
+		CA3B1B62B9E0703693915A22 /* ContactsDomain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsDomain.swift; sourceTree = "<group>"; };
 		CD442F2AACDE9A35C0D7184B /* ReminderLifecycleMutationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderLifecycleMutationTests.swift; sourceTree = "<group>"; };
 		D185D5E2A4D96FE690DB1307 /* StreamableHTTPCommandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamableHTTPCommandTests.swift; sourceTree = "<group>"; };
 		D46C755BE52D87AA3E8E00DE /* BoundedNewestFirstTraversal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoundedNewestFirstTraversal.swift; sourceTree = "<group>"; };
 		D4E55630636B77E4BF2939FA /* ReminderToolService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderToolService.swift; sourceTree = "<group>"; };
+		D53BEC2FC02A976B7A37E547 /* ContactsMCPTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsMCPTools.swift; sourceTree = "<group>"; };
+		D6F31B4346D18EB771A8E2AE /* NotesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesTests.swift; sourceTree = "<group>"; };
 		E9CBDA587D15BF3281F4F308 /* ScriptingBridgeMailRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptingBridgeMailRepository.swift; sourceTree = "<group>"; };
 		ECA3DD70D9C8367A06A590B7 /* MailToolService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MailToolService.swift; sourceTree = "<group>"; };
+		EF56AF35DF399B0DC27DA896 /* CalendarCreationJournal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarCreationJournal.swift; sourceTree = "<group>"; };
 		F1681C7F0AA9DFA0CEFF579E /* DomainModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DomainModels.swift; sourceTree = "<group>"; };
 		F30CD0F67CE18B37153E7E6C /* EventKitReminderRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitReminderRepository.swift; sourceTree = "<group>"; };
 		F7405772DA1E2A92F61C66F7 /* ReminderDomain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderDomain.swift; sourceTree = "<group>"; };
 		F77553143C9909E8F786F586 /* HTTPRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPRouter.swift; sourceTree = "<group>"; };
+		F9F8FF40AB7CC72C95152F01 /* FilesFileSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilesFileSystem.swift; sourceTree = "<group>"; };
+		FC4EEFC899C661321F550FEB /* CalendarMCPTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarMCPTools.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -167,6 +227,14 @@
 			path = Policy;
 			sourceTree = "<group>";
 		};
+		3B8A735FF6B003CF0ACC21D4 /* Notes */ = {
+			isa = PBXGroup;
+			children = (
+				2E43213BD7CA2F49E81B3E66 /* NotesToolService.swift */,
+			);
+			path = Notes;
+			sourceTree = "<group>";
+		};
 		3EF55A44C0FFB37217BE491D /* Content */ = {
 			isa = PBXGroup;
 			children = (
@@ -180,10 +248,14 @@
 			children = (
 				95A35E845F070423C6FF0EE6 /* Application */,
 				C7FCE16FCEEF378A08EBF80F /* Automation */,
+				C81D4EFD5E3EE34F5011596B /* Calendar */,
+				8E31F8743B8E2D99FC684B33 /* Contacts */,
 				3EF55A44C0FFB37217BE491D /* Content */,
 				6E0AB9D3C0FD2A24CCB6940F /* Domain */,
+				59DA6A0367AF8AE84DF6D57F /* Files */,
 				B798FCAADFCB70A5D6158F27 /* HTTP */,
 				24410344A1E3854B1CB7FD04 /* MCP */,
+				3B8A735FF6B003CF0ACC21D4 /* Notes */,
 				2D5948C99E32D17EDAE78B91 /* Policy */,
 				87A81F56077D5ADEED60E327 /* Reminders */,
 				2AD05C58E9EA9E2CE5E13322 /* Support */,
@@ -207,6 +279,16 @@
 				9B00EB1B52DAED11A8DE489D /* ApplePlatformMCPTests */,
 			);
 			path = Tests;
+			sourceTree = "<group>";
+		};
+		59DA6A0367AF8AE84DF6D57F /* Files */ = {
+			isa = PBXGroup;
+			children = (
+				BDB67618C4B527EDE9E9F264 /* FilesDomain.swift */,
+				F9F8FF40AB7CC72C95152F01 /* FilesFileSystem.swift */,
+				2B230C3887C52301C36BF321 /* FilesToolService.swift */,
+			);
+			path = Files;
 			sourceTree = "<group>";
 		};
 		6E0AB9D3C0FD2A24CCB6940F /* Domain */ = {
@@ -238,6 +320,16 @@
 			path = Reminders;
 			sourceTree = "<group>";
 		};
+		8E31F8743B8E2D99FC684B33 /* Contacts */ = {
+			isa = PBXGroup;
+			children = (
+				34FEED7EEA57B253B857B7FE /* CNContactsRepository.swift */,
+				CA3B1B62B9E0703693915A22 /* ContactsDomain.swift */,
+				D53BEC2FC02A976B7A37E547 /* ContactsMCPTools.swift */,
+			);
+			path = Contacts;
+			sourceTree = "<group>";
+		};
 		95A35E845F070423C6FF0EE6 /* Application */ = {
 			isa = PBXGroup;
 			children = (
@@ -250,7 +342,13 @@
 			isa = PBXGroup;
 			children = (
 				638E1187D0E8F36C8770C761 /* ApplePlatformMCPTests.swift */,
+				18B2E99006BCE7955C194B47 /* CalendarTests.swift */,
+				1D0E429483B362FC0DF148C7 /* ContactsTests.swift */,
+				24E930ABAE78532C040BA790 /* FilesTests.swift */,
 				C66852A6A52AB3437FE6E327 /* LoopbackHTTPListenerTests.swift */,
+				BAA264F6C73AAC5EDAD14E2B /* MailAttachmentIdentityTests.swift */,
+				928960CF5DCD7A3C2DE83C22 /* MailSearchPredicateTests.swift */,
+				D6F31B4346D18EB771A8E2AE /* NotesTests.swift */,
 				CD442F2AACDE9A35C0D7184B /* ReminderLifecycleMutationTests.swift */,
 				802DCC08FD703207DDF97CA2 /* ReminderMutationFoundationTests.swift */,
 				87913E7F9A6E9A09C3C23175 /* RemindersTests.swift */,
@@ -285,6 +383,8 @@
 			children = (
 				BBC834EEBD7E1F69C3FCE076 /* ApplePlatformMCP-Bridging-Header.h */,
 				2E2FB9C48CFCCB7649C6A5A9 /* Mail.m */,
+				462938DD0C160B1EBC194D3F /* MailSearch.m */,
+				9ABEF17D96B5973FBCB6A93D /* Notes.m */,
 			);
 			path = MailScriptingBridge;
 			sourceTree = "<group>";
@@ -294,10 +394,24 @@
 			children = (
 				D46C755BE52D87AA3E8E00DE /* BoundedNewestFirstTraversal.swift */,
 				469CE91DDDB56298E26D316C /* CanonicalInboxResolver.swift */,
+				7CEB3CD816EF40EF87B22732 /* MailAttachmentIdentity.swift */,
 				2C1734D8C7DB6309BF0AF0D9 /* MailAutomationDiagnostics.swift */,
+				72DBA4038D70EC6EFECF932A /* MailSearchPredicate.swift */,
 				E9CBDA587D15BF3281F4F308 /* ScriptingBridgeMailRepository.swift */,
 			);
 			path = Automation;
+			sourceTree = "<group>";
+		};
+		C81D4EFD5E3EE34F5011596B /* Calendar */ = {
+			isa = PBXGroup;
+			children = (
+				EF56AF35DF399B0DC27DA896 /* CalendarCreationJournal.swift */,
+				158F388B6E17075A09229640 /* CalendarDomain.swift */,
+				FC4EEFC899C661321F550FEB /* CalendarMCPTools.swift */,
+				7D3F786BD3AE2F3576C38D94 /* CalendarToolService.swift */,
+				11F1427D938BCAB91F00464A /* EventKitCalendarRepository.swift */,
+			);
+			path = Calendar;
 			sourceTree = "<group>";
 		};
 		E1375C5678A5B329D80C4CB8 /* Products */ = {
@@ -408,19 +522,41 @@
 				9A2BE6EF269EFD830286D267 /* ApplePlatformMCPTests.swift in Sources */,
 				1AA89F458FC0753CB90A83F3 /* BoundedNewestFirstTraversal.swift in Sources */,
 				359A6E93FB1BF1E830567912 /* BuildProvenance.swift in Sources */,
+				62E07879A77A5828E04BB7C9 /* CNContactsRepository.swift in Sources */,
+				582CACE7443E80AE6E6A2AAB /* CalendarCreationJournal.swift in Sources */,
+				EB976AD3466F5E4102F1EAE4 /* CalendarDomain.swift in Sources */,
+				61581CFCE28CFA3BCEE31897 /* CalendarMCPTools.swift in Sources */,
+				36A66580A9E5FB41D802C8BF /* CalendarTests.swift in Sources */,
+				B3AE30752995D5142DE23AF6 /* CalendarToolService.swift in Sources */,
 				001E709EB4DF8D73D66FD55F /* CanonicalInboxResolver.swift in Sources */,
+				3A35B5A15C321159BF3FCC10 /* ContactsDomain.swift in Sources */,
+				AFC83AE2B7D7C2A1653F1862 /* ContactsMCPTools.swift in Sources */,
+				6B81093C2288322AC23D0983 /* ContactsTests.swift in Sources */,
 				DA37C86C1C9B13CD4C5F9078 /* Doctor.swift in Sources */,
 				54532EE5168FA07896AA31C5 /* DomainModels.swift in Sources */,
+				A11E908F9EDCA3E32FDAB8D3 /* EventKitCalendarRepository.swift in Sources */,
 				740C352927D5AB9151376FBA /* EventKitReminderRepository.swift in Sources */,
+				5BA898DF39CED3ED65AB8573 /* FilesDomain.swift in Sources */,
+				370719C31E10BE6EF7A45CAE /* FilesFileSystem.swift in Sources */,
+				6442991DDB9A406252D2D44C /* FilesTests.swift in Sources */,
+				B9D674C2A09A8115FB8ECF53 /* FilesToolService.swift in Sources */,
 				726A3BE6E7D8BE8F680BD651 /* HTTPRouter.swift in Sources */,
 				EAB992432502234F4ACFBB14 /* HTTPServer.swift in Sources */,
 				C28E79B437C8016C4C18CE9B /* LoopbackHTTPListenerTests.swift in Sources */,
 				3E70EA2D9B74B22D604BCC11 /* MCPServer.swift in Sources */,
 				C2D5C7A56BAA62ED142C0FF6 /* Mail.m in Sources */,
+				EFFAF4E9B8F6144B28756C81 /* MailAttachmentIdentity.swift in Sources */,
+				B085EBC7076B3FEA7F9B2B88 /* MailAttachmentIdentityTests.swift in Sources */,
 				1A9D61DA23FE824516C65BD7 /* MailAutomationDiagnostics.swift in Sources */,
 				35E3F0B5B842B90F259D18F4 /* MailContentSanitizer.swift in Sources */,
 				D24DA9454DB3B11AE98F7B03 /* MailPolicy.swift in Sources */,
+				6440AAF23E9A7F437AAA2A9A /* MailSearch.m in Sources */,
+				99286D87FD0829CAB2662932 /* MailSearchPredicate.swift in Sources */,
+				EB1A787A8BC11A0F2710A401 /* MailSearchPredicateTests.swift in Sources */,
 				3810FA9CBF0FD201743F2408 /* MailToolService.swift in Sources */,
+				F64344B3138676874BAC4FDB /* Notes.m in Sources */,
+				DAC0A88C311068EA889B0D50 /* NotesTests.swift in Sources */,
+				5CC6B7DCD48655103934180D /* NotesToolService.swift in Sources */,
 				F3200C737B9EF692E5EFB805 /* ReminderDomain.swift in Sources */,
 				30E5A11705865947BA1842E7 /* ReminderIdempotencyStore.swift in Sources */,
 				94B829E1672D0F40999174BB /* ReminderLifecycleMutationTests.swift in Sources */,
@@ -446,18 +582,34 @@
 				9183E1B31A6D4A31401C6A75 /* ApplePlatformMCPMain.swift in Sources */,
 				39A6793365A7C5B2AB6F2592 /* BoundedNewestFirstTraversal.swift in Sources */,
 				2452F6561FFD8812BA86B598 /* BuildProvenance.swift in Sources */,
+				208D538A4FA6A21DE7F0B384 /* CNContactsRepository.swift in Sources */,
+				B5A7AF358A0C1BF989DE80FD /* CalendarCreationJournal.swift in Sources */,
+				275E07493487E22398720CB8 /* CalendarDomain.swift in Sources */,
+				1CAE2FE4D102924721D9EB55 /* CalendarMCPTools.swift in Sources */,
+				2BC3469A40802B839AC6439F /* CalendarToolService.swift in Sources */,
 				B6DED2024D3C59767C76A3CF /* CanonicalInboxResolver.swift in Sources */,
+				A2D4A70DE716DB7FDE48E35C /* ContactsDomain.swift in Sources */,
+				DFFFB93D9645C43147C38E8D /* ContactsMCPTools.swift in Sources */,
 				DC4B9349E2DABC2F44562BF4 /* Doctor.swift in Sources */,
 				8EE8711C8CE009FFD958B475 /* DomainModels.swift in Sources */,
+				E4A614D37481F3186B82A52D /* EventKitCalendarRepository.swift in Sources */,
 				6A9DAF448884520391C132B9 /* EventKitReminderRepository.swift in Sources */,
+				42AD462CCAE6F641F12F5605 /* FilesDomain.swift in Sources */,
+				8BCD45AE4AB90E46B08B69A8 /* FilesFileSystem.swift in Sources */,
+				D790C00FAA645FA6621C0A4B /* FilesToolService.swift in Sources */,
 				3CF66204EDAEA2AAF3070E44 /* HTTPRouter.swift in Sources */,
 				C5310A4C6D6C6F5B1B68F965 /* HTTPServer.swift in Sources */,
 				A5190F1A7FA3D5C645BAB847 /* MCPServer.swift in Sources */,
 				667E01BFE07B8109C6E691E5 /* Mail.m in Sources */,
+				89F933407A533A4A864FD2D1 /* MailAttachmentIdentity.swift in Sources */,
 				102B3B1654A7E591E543C903 /* MailAutomationDiagnostics.swift in Sources */,
 				A186F51FA2C7542F78AA925F /* MailContentSanitizer.swift in Sources */,
 				F0DEC078ADFEEEB95FBF1332 /* MailPolicy.swift in Sources */,
+				D01EB42297D7732A4F5D8498 /* MailSearch.m in Sources */,
+				2C845B6C13535DF912CB5A09 /* MailSearchPredicate.swift in Sources */,
 				B450715900DE40473E9EDE04 /* MailToolService.swift in Sources */,
+				8DA10FB44FFA64809ADE6C6A /* Notes.m in Sources */,
+				B623D434E0A8B75D968CA668 /* NotesToolService.swift in Sources */,
 				8EEED3F2524B57E834C564E9 /* ReminderDomain.swift in Sources */,
 				A246462F0FCCF134F4303ED0 /* ReminderIdempotencyStore.swift in Sources */,
 				CDE77C25C6FFAFB833EF49AC /* ReminderPolicy.swift in Sources */,
@@ -482,10 +634,13 @@
 				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",
+					"-lsqlite3",
 					"-framework",
 					CoreServices,
 					"-framework",
 					EventKit,
+					"-framework",
+					Contacts,
 					"-framework",
 					Security,
 					"-framework",
@@ -528,10 +683,13 @@
 				MACH_O_TYPE = mh_execute;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
+					"-lsqlite3",
 					"-framework",
 					CoreServices,
 					"-framework",
 					EventKit,
+					"-framework",
+					Contacts,
 					"-framework",
 					Security,
 					"-framework",
@@ -558,10 +716,13 @@
 				MACH_O_TYPE = mh_execute;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
+					"-lsqlite3",
 					"-framework",
 					CoreServices,
 					"-framework",
 					EventKit,
+					"-framework",
+					Contacts,
 					"-framework",
 					Security,
 					"-framework",
@@ -583,10 +744,13 @@
 				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",
+					"-lsqlite3",
 					"-framework",
 					CoreServices,
 					"-framework",
 					EventKit,
+					"-framework",
+					Contacts,
 					"-framework",
 					Security,
 					"-framework",

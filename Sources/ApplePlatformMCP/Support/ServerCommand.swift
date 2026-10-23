@@ -8,6 +8,9 @@ public enum ApplePlatformMCPTransport: Equatable, Sendable {
 public enum ApplePlatformMCPCommand: Equatable, Sendable {
   case doctor(requestAutomation: Bool)
   case doctorReminders
+  case doctorNotes
+  case doctorContacts
+  case doctorCalendar
   case serve(
     transport: ApplePlatformMCPTransport,
     configurationURL: URL? = nil
@@ -28,11 +31,17 @@ public enum ApplePlatformMCPCommand: Equatable, Sendable {
         return .doctor(requestAutomation: false)
       case ["--request-automation"]:
         return .doctor(requestAutomation: true)
+      case ["--request-contacts"]:
+        return .doctorContacts
+      case ["--request-calendar"]:
+        return .doctorCalendar
+      case ["--request-notes"]:
+        return .doctorNotes
       case ["--request-reminders"]:
         return .doctorReminders
       default:
         throw MailError.invalidInput(
-          "Usage: apple-platform-mcp doctor [--request-automation|--request-reminders]"
+          "Usage: apple-platform-mcp doctor [--request-automation|--request-reminders|--request-notes|--request-calendar|--request-contacts]"
         )
       }
 
@@ -71,7 +80,7 @@ public enum ApplePlatformMCPCommand: Equatable, Sendable {
 
     default:
       throw MailError.invalidInput(
-        "Usage: apple-platform-mcp [serve --transport stdio|streamable-http [--host 127.0.0.1 --port 8765] [--config /absolute/path]|doctor [--request-automation|--request-reminders]]"
+        "Usage: apple-platform-mcp [serve --transport stdio|streamable-http [--host 127.0.0.1 --port 8765] [--config /absolute/path]|doctor [--request-automation|--request-reminders|--request-notes|--request-calendar|--request-contacts]]"
       )
     }
   }

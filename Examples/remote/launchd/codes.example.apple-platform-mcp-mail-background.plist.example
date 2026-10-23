@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>codes.example.apple-platform-mcp-mail-background</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/YOU/.local/libexec/apple-platform-mcp/mail-watchdog.sh</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>APPLE_PLATFORM_MCP_MAIL_WATCHDOG_INTERVAL_SECONDS</key>
+    <string>15</string>
+  </dict>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>ThrottleInterval</key>
+  <integer>10</integer>
+  <key>ProcessType</key>
+  <string>Background</string>
+  <key>StandardOutPath</key>
+  <string>/Users/YOU/Library/Logs/apple-platform-mcp-mail-background.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/YOU/Library/Logs/apple-platform-mcp-mail-background.error.log</string>
+</dict>
+</plist>

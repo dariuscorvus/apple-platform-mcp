@@ -372,6 +372,8 @@ struct ReminderMCPContractTests {
       reminderService: reminderService
     ).makeServer()
     let (clientTransport, serverTransport) = await InMemoryTransport.createConnectedPair()
+    // Accept queued client messages before asynchronous server registration starts.
+    try await serverTransport.connect()
     let serverTask = Task {
       try await server.start(transport: serverTransport)
       await server.waitUntilCompleted()
@@ -442,6 +444,8 @@ struct ReminderMCPContractTests {
       reminderService: reminderService
     ).makeServer()
     let (clientTransport, serverTransport) = await InMemoryTransport.createConnectedPair()
+    // Accept queued client messages before asynchronous server registration starts.
+    try await serverTransport.connect()
     let serverTask = Task {
       try await server.start(transport: serverTransport)
       await server.waitUntilCompleted()

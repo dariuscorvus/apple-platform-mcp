@@ -594,29 +594,42 @@ struct MCPToolCatalogTests {
   func readAndMutationTools() {
     let names = Set(MCPToolCatalog.tools.map(\.name))
     #expect(
-      names == [
-        "mail_server_info",
-        "mail_list_accounts",
-        "mail_list_mailboxes",
-        "mail_search_messages",
-        "mail_get_message",
-        "reminder_list_lists",
-        "reminder_list_reminders",
-        "reminder_get_reminder",
-        "reminder_create_reminder",
-        "reminder_update_reminder",
-        "reminder_complete_reminder",
-        "reminder_delete_reminder",
-        "reminder_create_list",
-        "reminder_update_list",
-        "reminder_delete_list",
-        "mail_send_message",
-        "mail_create_draft",
-        "mail_move_message",
-        "mail_archive_message",
-        "mail_trash_message",
-        "mail_update_message",
-      ])
+      names
+        == Set([
+          "contacts_list_containers", "contacts_search_contacts", "contacts_get_contact",
+          "calendar_list_calendars",
+          "calendar_search_events",
+          "calendar_get_event",
+          "calendar_check_conflicts",
+          "calendar_create_event",
+          "calendar_get_creation_outcome",
+          "notes_list_accounts",
+          "notes_list_folders",
+          "notes_search_notes",
+          "notes_get_note",
+          "notes_create_note",
+          "mail_server_info",
+          "mail_list_accounts",
+          "mail_list_mailboxes",
+          "mail_search_messages",
+          "mail_get_message",
+          "reminder_list_lists",
+          "reminder_list_reminders",
+          "reminder_get_reminder",
+          "reminder_create_reminder",
+          "reminder_update_reminder",
+          "reminder_complete_reminder",
+          "reminder_delete_reminder",
+          "reminder_create_list",
+          "reminder_update_list",
+          "reminder_delete_list",
+          "mail_send_message",
+          "mail_create_draft",
+          "mail_move_message",
+          "mail_archive_message",
+          "mail_trash_message",
+          "mail_update_message",
+        ]).union(ICloudToolCatalog.tools.map(\.name)))
     #expect(
       MCPToolCatalog.tools.first(where: { $0.name == "mail_send_message" })?.annotations
         .readOnlyHint
@@ -709,6 +722,8 @@ struct MCPContractTests {
     let service = MailToolService(repository: repository)
     let configuredServer = await ApplePlatformMCPServer(service: service).makeServer()
     let (clientTransport, serverTransport) = await InMemoryTransport.createConnectedPair()
+    // Accept queued client messages before asynchronous server registration starts.
+    try await serverTransport.connect()
     let serverTask = Task {
       try await configuredServer.start(transport: serverTransport)
       await configuredServer.waitUntilCompleted()
@@ -731,6 +746,8 @@ struct MCPContractTests {
     let repository = FakeMailRepository(accounts: [])
     let service = MailToolService(repository: repository)
     let (clientTransport, serverTransport) = await InMemoryTransport.createConnectedPair()
+    // Accept queued client messages before asynchronous server registration starts.
+    try await serverTransport.connect()
     let serverTask = Task {
       try await ApplePlatformMCPServer(service: service).run(transport: serverTransport)
     }
@@ -742,29 +759,7 @@ struct MCPContractTests {
     let listed = try await client.listTools()
     let names = Set(listed.tools.map(\.name))
     #expect(
-      names == [
-        "mail_server_info",
-        "mail_list_accounts",
-        "mail_list_mailboxes",
-        "mail_search_messages",
-        "mail_get_message",
-        "reminder_list_lists",
-        "reminder_list_reminders",
-        "reminder_get_reminder",
-        "reminder_create_reminder",
-        "reminder_update_reminder",
-        "reminder_complete_reminder",
-        "reminder_delete_reminder",
-        "reminder_create_list",
-        "reminder_update_list",
-        "reminder_delete_list",
-        "mail_send_message",
-        "mail_create_draft",
-        "mail_move_message",
-        "mail_archive_message",
-        "mail_trash_message",
-        "mail_update_message",
-      ])
+      names == Set(MCPToolCatalog.tools.map(\.name)))
 
     let searchTool = try #require(listed.tools.first(where: { $0.name == "mail_search_messages" }))
     let searchSchema = try #require(searchTool.inputSchema.objectValue)
@@ -802,6 +797,8 @@ struct MCPContractTests {
       policy: MailPolicy(sendMode: .allowed)
     )
     let (clientTransport, serverTransport) = await InMemoryTransport.createConnectedPair()
+    // Accept queued client messages before asynchronous server registration starts.
+    try await serverTransport.connect()
     let serverTask = Task {
       try await ApplePlatformMCPServer(service: service).run(transport: serverTransport)
     }
@@ -995,6 +992,12 @@ private actor FakeMailRepository: MailRepository {
       do {
         let page = try await repository.searchMessages(MailSearchQuery(limit: 1))
         guard let summary = page.messages.first else { return }
+        let scopedPage = try await repository.searchMessages(
+          MailSearchQuery(
+            accountIDs: [summary.accountID], mailboxIDs: [summary.mailboxID],
+            scope: .mailbox, subject: summary.subject, limit: 1
+          ))
+        #expect(scopedPage.messages.contains { $0.id == summary.id })
         let record = try await repository.getMessage(
           id: summary.id,
           includeBody: false,

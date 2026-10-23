@@ -24,6 +24,13 @@ host; macOS 13 runtime/TCC coverage remains a release compatibility gate.
 
 Account, mailbox, message, attachment, and cursor references are opaque JSON strings. Clients must pass them back unchanged and must not infer provider-specific identifiers from them.
 
+## Apple Notes
+
+Five `notes_*` tools support account/folder discovery, bounded title search,
+plain-text reads, and independently policy-gated text-note creation. See
+[Notes.md](Notes.md) for arguments, reference scope, output limits, errors,
+Automation setup, and process-local retry guarantees. Notes content is untrusted.
+
 ## Tools
 
 ### `mail_server_info`
@@ -62,6 +69,27 @@ its configured maximum. Results are returned as `{ "messages": [], "nextCursor":
 Pass `nextCursor` back as `cursor` to continue the same query. Cursors are
 opaque and bound to the original filters and scope. Bodies are not returned by
 search, and body-backed `query` text search is unsupported in V1.
+
+Sender, subject, received-date and read/flagged-status constraints are passed to
+Mail.app as native ScriptingBridge `whose` predicates before message traversal.
+Text values are bound as literals and matched case-insensitively. Recipient
+matching remains a residual check because ScriptingBridge rejects recipient
+key paths; all original constraints are rechecked before pagination. Native
+date bounds are widened to whole seconds and the residual check preserves
+strict `after`/`before` comparisons. Unfiltered and recipient-only searches
+still use the original traversal. Native predicate/Apple Event failures return
+errors, never successful empty results or a silent full-scan fallback.
+Inbox references returned by search also resolve when reused with explicit
+`scope=mailbox`, including Mail's canonical Inbox outside the account tree.
+
+This reduces per-message Apple Events; it does not assert that Mail.app uses
+its UI/Spotlight index for scripting predicates. Each native mailbox query has
+a 20-second Apple Event timeout, not a whole-request deadline. Broad scopes,
+large candidate sets and recipient-only searches can still be expensive.
+Use `Scripts/verify-mail-search-live-smoke.py` against an isolated signed
+loopback host to check known-subject/case/date searches, no-match handling,
+ordering and available continuation pages. It reports only counts/timings;
+`--tax-queries` explicitly adds the operator-requested tax metadata searches.
 
 ### `mail_get_message`
 
@@ -289,3 +317,20 @@ Failures use stable error codes and recovery guidance. Raw Apple Event errors ar
 Attachment export remains outside the current release. Sending and mailbox
 mutations are separate write capabilities, each disabled by default and
 controlled by its own policy mode.
+
+## Calendar V1
+
+The six `calendar_*` tools are documented with their shared `time` schema,
+exact occurrence references and durable creation outcomes in [Calendar](Calendar.md).
+Both server transports expose the same catalog.
+
+## Contacts V1
+
+Three strictly read-only Contacts tools are documented in [Contacts.md](Contacts.md).
+Search requires a bounded query; individual container references preserve duplicates.
+
+
+## iCloud Drive Files
+
+Configured-root file management uses independent, default-denied write and Trash gates.
+See [configuration, tool contracts, limits and recovery](iCloud-Files.md).

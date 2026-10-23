@@ -45,6 +45,8 @@ struct SyntheticMailFixtureTests {
   func servesSearchPageOverMCP() async throws {
     let service = MailToolService(repository: SyntheticMailFixture.repository())
     let (clientTransport, serverTransport) = await InMemoryTransport.createConnectedPair()
+    // Accept queued client messages before asynchronous server registration starts.
+    try await serverTransport.connect()
     let serverTask = Task {
       try await ApplePlatformMCPServer(service: service).run(transport: serverTransport)
     }

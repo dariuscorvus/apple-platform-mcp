@@ -71,6 +71,14 @@ def main() -> int:
             for item in tools_response.get("result", {}).get("tools", [])
         ]
         expected = {
+            "contacts_list_containers", "contacts_search_contacts", "contacts_get_contact",
+        "calendar_list_calendars", "calendar_search_events", "calendar_get_event",
+            "calendar_check_conflicts", "calendar_create_event", "calendar_get_creation_outcome",
+            "notes_list_accounts",
+            "notes_list_folders",
+            "notes_search_notes",
+            "notes_get_note",
+            "notes_create_note",
             "mail_server_info",
             "mail_list_accounts",
             "mail_list_mailboxes",
@@ -93,6 +101,11 @@ def main() -> int:
             "mail_trash_message",
             "mail_update_message",
         }
+        expected.update("icloud_" + name for name in (
+            "list_roots", "list_items", "search_items", "get_item", "download_item", "read_file",
+            "begin_upload", "upload_chunk", "get_upload_status", "commit_upload", "abort_upload",
+            "create_folder", "copy_item", "move_item", "rename_item", "trash_item",
+        ))
         if initialize_result.get("protocolVersion") != "2025-06-18":
             raise RuntimeError("initialize returned an unexpected protocol version")
         if set(tool_names) != expected:

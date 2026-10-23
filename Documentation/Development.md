@@ -54,7 +54,9 @@ xcodebuild \
 Run the same command with `test` instead of `build` for the unit and contract test target.
 For a combined Xcode run of the in-memory MCP contract suites, add
 `-parallel-testing-enabled NO`: on the current Xcode runner those suites are
-reliable in one process but can otherwise overlap during transport teardown.
+run in one process. In-memory fixtures explicitly connect the server transport
+before starting the client: the SDK drops messages sent to an unconnected peer,
+so concurrently starting both sides can otherwise lose initialization.
 
 For a local signed build, archive the app with a Developer ID identity and run the embedded executable from the archive:
 
@@ -185,3 +187,8 @@ Optional send limits are `max_send_body_bytes`, `max_subject_bytes`, and
 `max_recipients`. The account and identity values are always sourced from
 Mail.app; configuration never contains provider credentials. Account and
 mailbox allowlists apply to mutation operations as well.
+
+## iCloud Drive Files
+
+Configured-root file management uses independent, default-denied write and Trash gates.
+See [configuration, tool contracts, limits and recovery](iCloud-Files.md).

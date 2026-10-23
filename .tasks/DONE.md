@@ -1,5 +1,108 @@
 # Done
 
+## TASK-016: Merge the complete deployed capabilities into main
+**Priority:** P1 | **Tags:** git, integration, release
+
+### Verified result
+
+The complete deployed source is integrated through
+[PR #2](https://github.com/dariuscorvus/apple-platform-mcp/pull/2): Mail,
+Reminders, Notes, Calendar, Contacts and iCloud Files (51 tools). The public
+history excludes private deployment checkpoints and runtime configuration.
+README, policy/permission docs and deployment evidence describe the full surface.
+
+Local verification passed: 195 Swift tests in 43 suites, native Xcode tests,
+18 gateway tests/47 assertions plus typecheck/build, and 20 Python rollout tests.
+A contract-test startup race was fixed by connecting the server peer before
+client initialization. Required `xcode`, `remote` and universal-archive `release`
+checks gate the PR's merge into main; no protection bypass is used.
+
+The Mac mini configuration is unchanged: HighByteTech is the sole iCloud root,
+with writes denied and Trash disabled. TASK-013 retains the external eviction
+and cross-device synchronization acceptance gates.
+
+---
+
+
+## TASK-015: Deploy latest combined server to Mac mini
+**Priority:** P1 | **Tags:** deployment, files, macmini
+**Completed:** 2026-10-23
+
+### Result
+
+Deployed the signed universal Release checkpoint
+`d4bed24d3f5e00a4ad438c9a2c1811f262b5cd39` at the existing Mac mini app path.
+Integrated the newer host Mail/Notes/Calendar/Contacts source with Files in an
+isolated checkpoint; both original working checkouts and their uncommitted work
+were preserved. Added metadata-only iCloud coordination and a pending-read
+regression discovered during host acceptance.
+
+### Verification
+
+- 195 Swift tests, 18 gateway tests/typecheck and 20 Python guards passed;
+  development Files subset passed 15 tests.
+- Isolated and installed signed-host checks: 51 tools, all 35 previous tools
+  preserved; only HighByteTech exposed; bounded listing, invalid-reference and
+  write/Trash-denial checks passed. All five existing domains remain readable.
+- Existing authenticated MCP diagnostics report the deployed checkpoint and
+  one default-denied iCloud root. Readiness 200, unauthenticated gateway 401.
+- Previous app/config/plist backups verified. Production config and gateway
+  plist unchanged; prior signing identity/entitlements retained.
+- An initial probe-only initialization error triggered successful rollback;
+  corrected probe and final installation passed. Extended cloud acceptance
+  remains in TASK-013.
+- Exact source bundle, signed artifact and rollback paths:
+  `Documentation/iCloud-Mac-mini-Deployment.md`.
+
+---
+
+## TASK-014: Restrict Mac mini iCloud access to HighByteTech
+**Priority:** P1 | **Tags:** files, configuration, macmini
+**Completed:** 2026-10-23
+
+### Result and verification
+
+Verified existing `$HOME/Library/Mobile Documents/com~apple~CloudDocs/HighByteTech`
+on the Mac mini. Backed up the host JSON configuration with a verified SHA-256,
+then atomically set `highbytetech` as its sole `icloud_roots` entry, with
+`icloud_mutation_mode: denied` and `icloud_trash_enabled: false`. Reloaded JSON
+matches the intended settings; all unrelated configuration values are preserved.
+
+The installed app's stdio discovery advertises 35 tools and **no** `icloud_`
+tools. Configuration is prepared; active Files support still requires the separate
+app deployment. No installed app replacement or service restart was performed.
+Backup and verification evidence: `Documentation/iCloud-Files-Evidence.md`.
+
+---
+
+## TASK-012: Configured iCloud Drive file management
+**Priority:** P1 | **Tags:** files, icloud, security
+**Completed:** 2026-10-23
+
+### Result
+
+Implemented all 16 iCloud tools, configured-root confinement, authenticated
+references, revisions/conflict guards, independent default-denied write/Trash
+policy, durable private chunk uploads, quota/expiry and safe retry receipts.
+Documented configuration, permissions, limitations, diagnostics and recovery.
+Fixed premature native HTTP socket closure exposed by the larger responses.
+
+### Verification
+
+- SwiftPM: build and 147 tests passed (14 Files fixture tests plus large-response
+  listener coverage and existing Mail/Reminders regressions).
+- Gateway: typecheck and 13 tests passed; external stdio discovery found 37 tools.
+- Signed real-iCloud CLI smoke passed text/binary transfers and management through
+  stdio, native HTTP and the authenticated loopback gateway; 700,123 binary bytes
+  matched exactly on every transport.
+- Implementation and local verification are complete. Full live acceptance is
+  explicitly **not** complete: actual eviction/re-download and second-device
+  synchronization observation are tracked separately in TASK-013.
+- No deployment or installed host configuration changes. Evidence:
+  `Documentation/iCloud-Files-Evidence.md`.
+
+---
+
 ## TASK-011: Verify the isolated Reminders live-smoke path
 **Priority:** P0 | **Tags:** reminders, tcc, stdio, verification
 **Completed:** 2026-08-26

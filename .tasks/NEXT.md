@@ -46,3 +46,29 @@ repository's release process reviewable.
   maintainer. The remaining acceptance check is the next real pull request.
 
 ---
+
+## TASK-013: Complete iCloud eviction and second-device acceptance
+**Priority:** P1 | **Tags:** files, icloud, live-verification
+
+Complete the external acceptance gates remaining after TASK-012's implementation
+and signed local transport verification. Deployment remains a separate step.
+
+### Plan
+
+- Use a dedicated disposable fixture inside the approved HighByteTech root;
+  keep the installed root/write policy unchanged and do not alter existing user documents.
+- Obtain a genuinely evicted test file. After the provider reports NotDownloaded,
+  verify retryable bounded reads, request download, then compare text/binary bytes.
+- Independently observe the fixture on another signed-in device; record downloaded
+  binary SHA-256 and text evidence separately from local upload status.
+- Update the evidence record and mark acceptance complete only after both gates pass.
+
+### Current evidence
+
+The combined Mac mini release is deployed (TASK-015): 195 Swift tests and 18
+gateway tests passed, and live HighByteTech-only read access was verified. Earlier
+eviction requests still reported Current; real evicted-file re-download and an
+independent byte-for-byte sync observation remain unverified. Use the now-available
+Mac mini and development Mac for that separate acceptance, within HighByteTech only.
+
+---

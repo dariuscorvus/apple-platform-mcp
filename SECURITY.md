@@ -21,8 +21,10 @@ report. Redact those values before submitting evidence.
 ## Scope notes
 
 The security boundary includes the Swift MCP server, its Mail.app Apple Events
-and policy-controlled Reminders EventKit adapters, the optional remote gateway,
-and the release/deployment configuration that connects them. Mail.app,
+adapter, Reminders and Calendar EventKit adapters, Notes Apple Events adapter,
+read-only Contacts adapter, configured-root iCloud
+Files adapter, the optional remote gateway, and the release/deployment
+configuration that connects them. Mail.app,
 Reminders, macOS, Cloudflare, GitHub Actions, and provider services remain
 external trust boundaries.
 
@@ -31,3 +33,7 @@ on an operator explicitly enabling a mutation policy should state that
 prerequisite and the exact capability it enables. Reminders mutations are
 independently default-denied; list deletion additionally requires its separate
 explicit gate and an exact opaque reference to an empty list.
+
+Files access additionally requires explicitly configured iCloud roots. Its writes
+are independently default-denied and Trash requires a separate gate. File names,
+contents and private staging state must be redacted from vulnerability reports.

@@ -616,29 +616,7 @@ struct StreamableHTTPRoutingTests {
     let names = Set(tools.compactMap { $0["name"] as? String })
     #expect(
       names
-        == Set([
-          "mail_server_info",
-          "mail_list_accounts",
-          "mail_list_mailboxes",
-          "mail_search_messages",
-          "mail_get_message",
-          "reminder_list_lists",
-          "reminder_list_reminders",
-          "reminder_get_reminder",
-          "reminder_create_reminder",
-          "reminder_update_reminder",
-          "reminder_complete_reminder",
-          "reminder_delete_reminder",
-          "reminder_create_list",
-          "reminder_update_list",
-          "reminder_delete_list",
-          "mail_send_message",
-          "mail_create_draft",
-          "mail_move_message",
-          "mail_archive_message",
-          "mail_trash_message",
-          "mail_update_message",
-        ]))
+        == Set(MCPToolCatalog.tools.map(\.name)))
   }
 
   private func mcpRequest(_ body: String) -> HTTPRequest {
