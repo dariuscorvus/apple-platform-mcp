@@ -117,3 +117,11 @@ independent policy and an explicit calendar allowlist; durable creation outcomes
 prevent blind retries. Existing calendar events cannot be edited or deleted.
 Contacts is strictly read-only and excludes contact photos, addresses and notes.
 All domains share transport authentication and treat returned content as untrusted.
+
+## Remote service boundaries
+
+Scoped `/apple/<area>` connections filter discovery and reject foreign or
+unknown tools before forwarding. All use the configured origin/authentication
+checks. They share the current identity/audience and do not establish separate
+user authorization. The legacy combined endpoint remains available. See
+[service-connection security limits](Service-Connections.md).

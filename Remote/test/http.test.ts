@@ -1,3 +1,5 @@
+import { request as nodeRequest } from "node:http";
+import { APPLE_AREAS } from "../src/areas.js";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import type {
@@ -28,6 +30,10 @@ class FakeBackend implements MCPBackend {
       },
     },
   ];
+
+  public constructor(names?: string[]) {
+    if (names) this.tools = names.map((name) => ({ name, inputSchema: { type: "object" } }));
+  }
 
   public calls: string[] = [];
   public listSignals: AbortSignal[] = [];
@@ -169,6 +175,80 @@ describe("remote Streamable HTTP gateway", () => {
       expect(verified).toEqual(["invalid-access-assertion", "valid-access-assertion"]);
     } finally {
       await running.close();
+    }
+  });
+});
+
+describe("scoped Apple connections", () => {
+  const names = APPLE_AREAS.map((area) => `${area.toolPrefix}fixture`);
+  for (const kind of ["cloudflare", "token"] as const) {
+    it(`isolates all six catalogs and calls with ${kind} authentication, retaining legacy compatibility`, async () => {
+      const backend = new FakeBackend([...names, "unknown_fixture"]);
+      const running = await startHttpServer(tokenConfig(kind === "cloudflare" ? {
+        auth: { kind, teamDomain: "team.cloudflareaccess.com", audience: "audience" },
+      } : {}), backend, { verifier: { async verify(jwt) { if (jwt !== "valid") throw new Error("denied"); } } });
+      const clients: Client[] = [];
+      const headers: Record<string, string> = kind === "cloudflare" ? { "Cf-Access-Jwt-Assertion": "valid" } : {};
+      try {
+        for (const area of APPLE_AREAS) {
+          const path = kind === "token" ? `${area.path}/${TOKEN}` : area.path;
+          const client = new Client({ name: "area-test", version: "1.0" }); clients.push(client);
+          await client.connect(new StreamableHTTPClientTransport(new URL(path, running.origin), { requestInit: { headers } }));
+          expect(client.getServerVersion()?.name).toBe(`apple-${area.name}-mcp`);
+          expect((await client.listTools()).tools.map((tool) => tool.name)).toEqual([`${area.toolPrefix}fixture`]);
+          expect((await client.callTool({ name: `${area.toolPrefix}fixture` })).isError).toBe(false);
+          for (const foreign of names.filter((name) => !name.startsWith(area.toolPrefix))) {
+            await expect(client.callTool({ name: foreign })).rejects.toThrow("not available");
+          }
+          await expect(client.callTool({ name: `${area.toolPrefix}nonexistent` })).rejects.toThrow("not available");
+          await expect(client.callTool({ name: "unknown_fixture" })).rejects.toThrow("not available");
+        }
+        // Concurrent open connections must never overwrite another connection's scope.
+        expect(await Promise.all(clients.map(async (client) => (await client.listTools()).tools.map((tool) => tool.name)))).toEqual(names.map((name) => [name]));
+        expect(backend.calls).toEqual(names);
+        const legacy = new Client({ name: "legacy", version: "1.0" });clients.push(legacy);
+        await legacy.connect(new StreamableHTTPClientTransport(running.mcpUrl, { requestInit: { headers } }));
+        expect((await legacy.listTools()).tools.map((tool) => tool.name)).toEqual([...names, "unknown_fixture"]);
+      } finally { await Promise.all(clients.map((client) => client.close())); await running.close(); }
+    });
+  }
+
+  it("requires Cloudflare authentication and allowed origins on every area", async () => {
+    const backend = new FakeBackend(names);
+    const running = await startHttpServer(tokenConfig({
+      auth: { kind: "cloudflare", teamDomain: "team.cloudflareaccess.com", audience: "audience" }, allowedOrigins: ["https://allowed.example"],
+    }), backend, { verifier: { async verify(jwt) { if (jwt !== "valid") throw new Error("denied"); } } });
+    try {
+      for (const area of APPLE_AREAS) {
+        const url = new URL(area.path, running.origin);
+        expect((await fetch(url, { method: "POST" })).status).toBe(401);
+        expect((await fetch(url, { method: "POST", headers: { "Cf-Access-Jwt-Assertion": "invalid" } })).status).toBe(401);
+        expect((await fetch(url, { method: "POST", headers: { "Cf-Access-Jwt-Assertion": "valid", Origin: "https://evil.example" } })).status).toBe(403);
+        expect((await fetch(url, { headers: { "Cf-Access-Jwt-Assertion": "valid" } })).status).toBe(405);
+      }
+      expect(backend.calls).toEqual([]);
+    } finally { await running.close(); }
+  });
+
+  it("rejects bad tokens, unknown routes and raw path aliases before backend discovery", async () => {
+    const backend = new FakeBackend(names); const running = await startHttpServer(tokenConfig(), backend);
+    try {
+      const paths = APPLE_AREAS.flatMap((a) => [a.path, `${a.path}/wrong`, `${a.path}/${TOKEN}/`, `${a.path}/${TOKEN}/extra`]);
+      paths.push(`/apple/unknown/${TOKEN}`, `/apple/%6dail/${TOKEN}`, `/apple/notes/../mail/${TOKEN}`, `/apple/notes/%2e%2e/mail/${TOKEN}`);
+      for (const path of paths) {
+        const status = await new Promise<number | undefined>((resolve, reject) => {
+          const req = nodeRequest({ hostname: running.origin.hostname, port: running.origin.port, path, method: "POST" }, (res) => { res.resume(); resolve(res.statusCode); });
+          req.on("error", reject); req.end();
+        });
+        expect(status).toBe(404);
+      }
+      expect(backend.listSignals).toEqual([]); expect(backend.calls).toEqual([]);
+    } finally { await running.close(); }
+  });
+
+  it("reserves /apple for scoped routes instead of allowing an unrestricted alias", async () => {
+    for (const path of ["/apple", "/apple/mail", "/apple/custom"]) {
+      await expect(startHttpServer(tokenConfig({ endpointPath: path }), new FakeBackend())).rejects.toThrow("reserved /apple");
     }
   });
 });

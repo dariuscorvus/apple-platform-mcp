@@ -1,5 +1,12 @@
 # Work Log
 
+## 2026-10-23 — TASK-017: Scoped Apple gateway connections
+
+Implemented six `/apple/<area>` connections with discovery and invocation
+boundaries, shared authentication and legacy compatibility. Typecheck/build and
+23 tests/231 assertions passed. Best practice documented in Service-Connections.
+Source verified; no host or Cloudflare configuration deployment performed.
+
 ## 2026-10-23 — TASK-016: Full deployed source integration
 
 PR #2 integrates all six domains and 51 tools into main through required checks.
