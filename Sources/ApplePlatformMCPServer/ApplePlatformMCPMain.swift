@@ -25,6 +25,28 @@ struct ApplePlatformMCPMain {
         }
         exit(Int32(report.exitCode))
 
+      case .doctorContacts:
+        let permission = try await CNContactsRepository().requestAccess()
+        FileHandle.standardOutput.write(
+          try JSONEncoder().encode(["contacts_permission": permission.rawValue]))
+        FileHandle.standardOutput.write(Data("\n".utf8))
+        exit(permission.readable ? 0 : 1)
+
+      case .doctorCalendar:
+        let repository = EventKitCalendarRepository()
+        let permission = try await repository.requestFullAccess()
+        let data = try JSONEncoder().encode(["calendar_permission": permission.rawValue])
+        FileHandle.standardOutput.write(data)
+        FileHandle.standardOutput.write(Data("\n".utf8))
+        exit(permission == .fullAccess ? 0 : 1)
+
+      case .doctorNotes:
+        let permission = NotesAutomation.permission(request: true)
+        let data = try JSONEncoder().encode(["notes_permission": permission])
+        FileHandle.standardOutput.write(data)
+        FileHandle.standardOutput.write(Data("\n".utf8))
+        exit(permission == "allowed" ? 0 : 1)
+
       case .doctorReminders:
         let report = await ApplePlatformMCPDoctor.requestReminders()
         let encoder = JSONEncoder()
@@ -35,7 +57,7 @@ struct ApplePlatformMCPMain {
         }
         exit(Int32(report.exitCode))
 
-      case .serve(transport: .stdio, configurationURL: let configurationURL):
+      case .serve(transport: .stdio, let configurationURL):
         let configuration = try MailServerConfiguration.load(
           from: configurationURL ?? MailServerConfiguration.defaultURL
         )
@@ -50,12 +72,22 @@ struct ApplePlatformMCPMain {
         try await ApplePlatformMCPServer(
           service: service,
           reminderService: reminderService,
+          notesService: NotesToolService(
+            repository: ScriptingBridgeNotesRepository(),
+            mutationMode: configuration.notesMutationMode,
+            maxResults: configuration.maxResults,
+            maxBodyBytes: configuration.maxBodyBytes),
+          contactsService: ContactsToolService(
+            repository: CNContactsRepository(), maxResults: configuration.maxResults),
+          calendarService: CalendarToolService(
+            repository: EventKitCalendarRepository(), policy: configuration.calendarPolicy,
+            journal: CalendarCreationJournal(url: configuration.calendarJournalURL),
+            maxResults: configuration.maxResults, maxBodyBytes: configuration.maxBodyBytes),
           configuration: configuration
         ).run()
 
       case .serve(
-        transport: .streamableHTTP(let host, let port),
-        configurationURL: let configurationURL
+        transport: .streamableHTTP(let host, let port), let configurationURL
       ):
         let configuration = try MailServerConfiguration.load(
           from: configurationURL ?? MailServerConfiguration.defaultURL
@@ -71,6 +103,17 @@ struct ApplePlatformMCPMain {
         let server = await ApplePlatformMCPServer(
           service: service,
           reminderService: reminderService,
+          notesService: NotesToolService(
+            repository: ScriptingBridgeNotesRepository(),
+            mutationMode: configuration.notesMutationMode,
+            maxResults: configuration.maxResults,
+            maxBodyBytes: configuration.maxBodyBytes),
+          contactsService: ContactsToolService(
+            repository: CNContactsRepository(), maxResults: configuration.maxResults),
+          calendarService: CalendarToolService(
+            repository: EventKitCalendarRepository(), policy: configuration.calendarPolicy,
+            journal: CalendarCreationJournal(url: configuration.calendarJournalURL),
+            maxResults: configuration.maxResults, maxBodyBytes: configuration.maxBodyBytes),
           configuration: configuration
         ).makeServer()
         let runtime = ApplePlatformMCPStreamableHTTPRuntime(

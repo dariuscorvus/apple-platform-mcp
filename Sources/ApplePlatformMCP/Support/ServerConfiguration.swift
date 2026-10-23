@@ -19,6 +19,26 @@ public struct MailServerConfiguration: Codable, Equatable, Sendable {
   public let allowedMailboxIDs: Set<MailboxReference>?
   public let reminderMutationMode: ReminderMutationMode
   public let reminderListDeleteEnabled: Bool
+  public let notesMutationMode: ReminderMutationMode
+  public let calendarMutationMode: CalendarMutationMode
+  public let calendarAllowedWriteCalendarIDs: Set<String>
+  public let calendarJournalPath: String?
+  public var calendarPolicy: CalendarPolicy {
+    .init(mode: calendarMutationMode, allowedWriteIDs: calendarAllowedWriteCalendarIDs)
+  }
+  public var calendarJournalURL: URL {
+    calendarJournalPath.map { URL(fileURLWithPath: $0) } ?? CalendarCreationJournal.defaultURL
+  }
+
+  public let icloudRoots: [ICloudRoot]
+  public let icloudMutationMode: ICloudMutationMode
+  public let icloudTrashEnabled: Bool
+  public let icloudStagingQuotaBytes: Int64
+  public var filesPolicy: FilesPolicy {
+    FilesPolicy(
+      mutationMode: icloudMutationMode, trashEnabled: icloudTrashEnabled,
+      stagingQuota: icloudStagingQuotaBytes)
+  }
 
   public static let `default` = MailServerConfiguration()
 
@@ -39,8 +59,20 @@ public struct MailServerConfiguration: Codable, Equatable, Sendable {
     allowedAccountIDs: Set<AccountReference>? = nil,
     allowedMailboxIDs: Set<MailboxReference>? = nil,
     reminderMutationMode: ReminderMutationMode = .denied,
-    reminderListDeleteEnabled: Bool = false
+    reminderListDeleteEnabled: Bool = false,
+    notesMutationMode: ReminderMutationMode = .denied,
+    calendarMutationMode: CalendarMutationMode = .denied,
+    calendarAllowedWriteCalendarIDs: Set<String> = [],
+    calendarJournalPath: String? = nil,
+    icloudRoots: [ICloudRoot] = [],
+    icloudMutationMode: ICloudMutationMode = .denied,
+    icloudTrashEnabled: Bool = false,
+    icloudStagingQuotaBytes: Int64 = 1_073_741_824
   ) {
+    self.icloudRoots = icloudRoots
+    self.icloudMutationMode = icloudMutationMode
+    self.icloudTrashEnabled = icloudTrashEnabled
+    self.icloudStagingQuotaBytes = max(0, icloudStagingQuotaBytes)
     self.mode = mode
     self.sendMode = sendMode
     self.mutationMode = mutationMode
@@ -53,6 +85,10 @@ public struct MailServerConfiguration: Codable, Equatable, Sendable {
     self.allowedMailboxIDs = allowedMailboxIDs
     self.reminderMutationMode = reminderMutationMode
     self.reminderListDeleteEnabled = reminderListDeleteEnabled
+    self.notesMutationMode = notesMutationMode
+    self.calendarMutationMode = calendarMutationMode
+    self.calendarAllowedWriteCalendarIDs = calendarAllowedWriteCalendarIDs
+    self.calendarJournalPath = calendarJournalPath
   }
 
   public var policy: MailPolicy {
@@ -100,6 +136,10 @@ public struct MailServerConfiguration: Codable, Equatable, Sendable {
   }
 
   private enum CodingKeys: String, CodingKey {
+    case icloudRoots = "icloud_roots"
+    case icloudMutationMode = "icloud_mutation_mode"
+    case icloudTrashEnabled = "icloud_trash_enabled"
+    case icloudStagingQuotaBytes = "icloud_staging_quota_bytes"
     case mode
     case sendMode = "send_mode"
     case mutationMode = "mutation_mode"
@@ -112,6 +152,10 @@ public struct MailServerConfiguration: Codable, Equatable, Sendable {
     case allowedMailboxIDs = "allowed_mailbox_ids"
     case reminderMutationMode = "reminder_mutation_mode"
     case reminderListDeleteEnabled = "reminder_list_delete_enabled"
+    case notesMutationMode = "notes_mutation_mode"
+    case calendarMutationMode = "calendar_mutation_mode"
+    case calendarAllowedWriteCalendarIDs = "calendar_allowed_write_calendar_ids"
+    case calendarJournalPath = "calendar_journal_path"
   }
 
   public init(from decoder: Decoder) throws {
@@ -141,7 +185,24 @@ public struct MailServerConfiguration: Codable, Equatable, Sendable {
       reminderMutationMode: try container.decodeIfPresent(
         ReminderMutationMode.self, forKey: .reminderMutationMode) ?? .denied,
       reminderListDeleteEnabled: try container.decodeIfPresent(
-        Bool.self, forKey: .reminderListDeleteEnabled) ?? false
+        Bool.self, forKey: .reminderListDeleteEnabled) ?? false,
+      notesMutationMode: try container.decodeIfPresent(
+        ReminderMutationMode.self, forKey: .notesMutationMode) ?? .denied,
+      calendarMutationMode: try container.decodeIfPresent(
+        CalendarMutationMode.self, forKey: .calendarMutationMode) ?? .denied,
+      calendarAllowedWriteCalendarIDs: try container.decodeIfPresent(
+        Set<String>.self, forKey: .calendarAllowedWriteCalendarIDs) ?? [],
+      calendarJournalPath: try container.decodeIfPresent(String.self, forKey: .calendarJournalPath),
+      icloudRoots: try container.decodeIfPresent([ICloudRoot].self, forKey: .icloudRoots) ?? [],
+      icloudMutationMode: try container.decodeIfPresent(
+        ICloudMutationMode.self, forKey: .icloudMutationMode) ?? .denied,
+      icloudTrashEnabled: try container.decodeIfPresent(Bool.self, forKey: .icloudTrashEnabled)
+        ?? false,
+      icloudStagingQuotaBytes: try container.decodeIfPresent(
+        Int64.self, forKey: .icloudStagingQuotaBytes) ?? 1_073_741_824
     )
+    if let calendarJournalPath, !calendarJournalPath.hasPrefix("/") {
+      throw MailError.invalidConfiguration("calendar_journal_path must be absolute.")
+    }
   }
 }

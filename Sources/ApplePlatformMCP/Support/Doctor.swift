@@ -76,6 +76,25 @@ public enum ApplePlatformMCPDoctor {
         ))
     }
 
+    let contacts = CNContactsRepository.currentAuthorizationStatus()
+    checks.append(
+      .init(
+        name: "contacts_permission", status: contacts.readable ? .pass : .warning,
+        detail: "Contacts permission: " + contacts.rawValue
+          + ". Visibility is the authorized subset; setup: doctor --request-contacts."))
+    let usage = bundle.object(forInfoDictionaryKey: "NSContactsUsageDescription") as? String
+    checks.append(
+      .init(
+        name: "contacts_usage_description", status: usage?.isEmpty == false ? .pass : .fail,
+        detail: usage?.isEmpty == false
+          ? "NSContactsUsageDescription is present." : "NSContactsUsageDescription is missing."))
+    let calendar = EventKitCalendarRepository.currentAuthorizationStatus()
+    checks.append(
+      .init(
+        name: "calendar_permission", status: calendar == .fullAccess ? .pass : .warning,
+        detail: "Calendar permission: " + calendar.rawValue
+          + ". Explicit setup: doctor --request-calendar."))
+
     let mail = MailAutomationDiagnostics.inspect()
     switch mail.permission {
     case .allowed:
@@ -287,6 +306,13 @@ public enum ApplePlatformMCPDoctor {
     }
 
     let entitlements = dictionary[kSecCodeInfoEntitlementsDict as String] as? [String: Any]
+    let hasContactsEntitlement =
+      entitlements?["com.apple.security.personal-information.addressbook"] as? Bool == true
+    guard hasContactsEntitlement else {
+      return .init(
+        name: "code_signing", status: .fail,
+        detail: "The signed executable is missing the Contacts entitlement.")
+    }
     let hasAutomationEntitlement =
       entitlements?["com.apple.security.automation.apple-events"] as? Bool == true
     guard hasAutomationEntitlement else {

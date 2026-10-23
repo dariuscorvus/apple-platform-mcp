@@ -103,6 +103,7 @@ public actor ScriptingBridgeMailRepository: MailRepository {
       return components
     }
     let selectedLimit = max(1, query.limit)
+    let predicate = MailSearchPredicate.make(for: query)
     var sources: [SearchSource] = []
 
     for account in allAccounts() where account.enabled {
@@ -132,6 +133,11 @@ public actor ScriptingBridgeMailRepository: MailRepository {
             path: path,
             includeCounts: false
           )
+            ?? canonicalInboxSnapshot(
+              for: account,
+              accountRawID: rawAccountID,
+              includeCounts: false
+            ).flatMap { $0.path == path ? $0 : nil }
         }
       case .all:
         mailboxes = collectMailboxes(
@@ -142,7 +148,25 @@ public actor ScriptingBridgeMailRepository: MailRepository {
       }
 
       for mailbox in mailboxes {
-        sources.append(SearchSource(raw: mailbox.raw.messages(), snapshot: mailbox))
+        guard let raw = mailbox.raw.messages() else {
+          throw MailError.unknown("Mail.app could not resolve the mailbox message collection.")
+        }
+        if let predicate {
+          var error: NSError?
+          guard let messages = APSMailSearchMessages(application, raw, predicate, &error) else {
+            switch error?.code {
+            case -1743: throw MailError.permissionDenied
+            case -1712: throw MailError.operationTimedOut
+            case 1:
+              throw MailError.unsupported("Mail.app cannot evaluate this native search filter.")
+            default: throw MailError.unknown("Mail.app could not complete the native search.")
+            }
+          }
+          sources.append(
+            SearchSource(raw: nil, filtered: messages, count: messages.count, snapshot: mailbox))
+        } else {
+          sources.append(SearchSource(raw: raw, filtered: nil, count: raw.count, snapshot: mailbox))
+        }
       }
     }
 
@@ -153,9 +177,10 @@ public actor ScriptingBridgeMailRepository: MailRepository {
       date: { $0.message.dateReceived },
       matches: { matches($0.message, query: query) },
       elementAt: { source, index in
-        SearchEntry(message: source.raw[index] as! MailMessage, snapshot: source.snapshot)
+        let message = source.filtered?[index] ?? (source.raw![index] as! MailMessage)
+        return SearchEntry(message: message, snapshot: source.snapshot)
       },
-      count: { $0.raw.count }
+      count: { $0.count }
     )
     let summaries = traversal.elements.map { entry in
       makeSummary(
@@ -407,7 +432,9 @@ public actor ScriptingBridgeMailRepository: MailRepository {
   }
 
   private struct SearchSource {
-    let raw: SBElementArray
+    let raw: SBElementArray?
+    let filtered: [MailMessage]?
+    let count: Int
     let snapshot: MailboxSnapshot
   }
 
@@ -707,14 +734,16 @@ public actor ScriptingBridgeMailRepository: MailRepository {
     messageRawID: String
   ) -> [MailAttachmentMetadata] {
     guard let rawAttachments = message.mailAttachments() else { return [] }
-    return rawAttachments.enumerated().compactMap { index, raw in
-      guard let attachment = raw as? MailMailAttachment else { return nil }
+    let candidates = rawAttachments.compactMap { $0 as? MailMailAttachment }
+    let identifiers = candidates.map { $0.id() }
+    return MailAttachmentIdentity.uniqueIndices(identifiers).map { index in
+      let attachment = candidates[index]
       return MailAttachmentMetadata(
         id: ReferenceCodec.attachment(
           accountRawID: accountRawID,
           mailboxPath: mailboxPath,
           messageRawID: messageRawID,
-          attachmentRawID: attachment.id() ?? "attachment-\(index)"
+          attachmentRawID: identifiers[index]!
         ),
         filename: attachment.name,
         mimeType: attachment.mimeType,

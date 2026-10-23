@@ -51,6 +51,13 @@ separate explicit local configuration (`reminder_mutation_mode=allowed`), and
 list deletion additionally requires `reminder_list_delete_enabled=true`. See
 [Reminders.md](Reminders.md) for the isolated three-stage smoke procedure.
 
+## Apple Notes
+
+Notes requires a separate Automation grant. Open Notes, then run the signed app
+executable with `doctor --request-notes`. MCP tools inspect permission without
+prompting and require Notes to be running. Creation additionally requires
+`notes_mutation_mode=allowed`. See [Notes.md](Notes.md).
+
 ## Development
 
 Unsigned development builds can compile and run the stdio protocol, but they are not distribution-ready. TCC behavior must be verified with a signed build under a dedicated macOS test account.
@@ -74,3 +81,24 @@ Before a release:
 - notarize and staple the release artifact
 
 No personal mailbox should be used as an integration fixture.
+
+## Calendar Full Access
+
+`doctor --request-calendar` explicitly requests EventKit Full Access from the
+actual signed app host. Ordinary MCP calls and `doctor` never request it.
+Write-only access is insufficient. Calendar writes additionally require the
+independent mode plus explicit calendar allowlist; see [Calendar](Calendar.md)
+and the [rollout runbook](Calendar-Rollout.md).
+
+## Contacts V1
+
+Explicit setup: `doctor --request-contacts` in the signed Launch Services host.
+Passive checks/tools never prompt. Requires `NSContactsUsageDescription` and
+`com.apple.security.personal-information.addressbook` under Hardened Runtime.
+Limited access exposes only authorized records. See [Contacts.md](Contacts.md).
+
+
+## iCloud Drive Files
+
+Configured-root file management uses independent, default-denied write and Trash gates.
+See [configuration, tool contracts, limits and recovery](iCloud-Files.md).

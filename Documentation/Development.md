@@ -185,3 +185,8 @@ Optional send limits are `max_send_body_bytes`, `max_subject_bytes`, and
 `max_recipients`. The account and identity values are always sourced from
 Mail.app; configuration never contains provider credentials. Account and
 mailbox allowlists apply to mutation operations as well.
+
+## iCloud Drive Files
+
+Configured-root file management uses independent, default-denied write and Trash gates.
+See [configuration, tool contracts, limits and recovery](iCloud-Files.md).

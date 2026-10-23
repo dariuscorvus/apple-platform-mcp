@@ -44,8 +44,10 @@ let package = Package(
       ],
       path: "Sources/ApplePlatformMCP",
       linkerSettings: [
+        .linkedLibrary("sqlite3"),
         .linkedFramework("CoreServices"),
         .linkedFramework("EventKit"),
+        .linkedFramework("Contacts"),
         .linkedFramework("Security"),
         .linkedFramework("ScriptingBridge"),
       ]

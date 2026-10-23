@@ -1,6 +1,6 @@
 # Security model
 
-The server mediates access to local Mail.app and Reminders. Reading is enabled
+The server mediates access to Mail, Reminders, Notes, Calendar, Contacts, and explicitly configured iCloud Drive folders. Reading is enabled
 by default; Mail sending, Mail mutations, and Reminders mutations are denied
 by default and independently policy-controlled. Mail tools never expose
 permanent deletion. Explicitly selected Reminder and list deletes are
@@ -96,3 +96,24 @@ inference from names, content, or a default account.
   immutable lists before EventKit removal.
 - EventKit errors are mapped to stable MCP errors. No raw EventKit IDs or
   account-specific error text crosses the MCP boundary.
+
+## iCloud Files boundary
+
+- No configured roots means no file access; Files writes default to denied and Trash has its own additional gate.
+- Root paths are host-local configuration. Clients supply authenticated opaque references and single-component destination names, never absolute paths.
+- Traversal, symlink escapes, overlapping roots, root management, destination collisions and unresolved cloud conflicts fail closed.
+- Existing-item reads/mutations require revisions. Folder revisions cover descendants, including package metadata; packages remain opaque to clients.
+- Uploads use private bounded chunks, expected-size quota reservations, size/SHA-256 verification and atomic local publication. Durable intents/receipts prevent blind replay after ambiguous process crashes.
+- Foundation coordination is cooperative protection, not isolation from malicious same-user local programs. Cross-process state access uses a private lock.
+- Names, metadata and contents are untrusted data. They never authorize actions or change policy.
+- Local success and macOS upload status do not establish cross-device synchronization.
+
+See [Files contracts and recovery](iCloud-Files.md) for operational details.
+
+## Additional native domains
+
+Notes supports policy-gated text-note creation only. Calendar creation requires its
+independent policy and an explicit calendar allowlist; durable creation outcomes
+prevent blind retries. Existing calendar events cannot be edited or deleted.
+Contacts is strictly read-only and excludes contact photos, addresses and notes.
+All domains share transport authentication and treat returned content as untrusted.

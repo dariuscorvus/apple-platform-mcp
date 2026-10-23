@@ -335,42 +335,66 @@ The expected result is a successful `mail_server_info` response with
 explicitly enabled. Do not use the hostname root as the MCP URL when the
 gateway is configured on a path.
 
-## 9. Keep the services running with launchd
+## 9. Keep Mail.app and the services running with launchd
 
 Use user LaunchAgents in `~/Library/LaunchAgents/`, not system LaunchDaemons.
 The signed app needs the logged-in GUI user session for Mail.app and Apple
 Events.
 
-Copy the examples and replace every placeholder:
+Mail.app must be running before the signed MCP app can use its Apple Events
+backend reliably. Install the watchdog as a separate user LaunchAgent. It only
+checks for the exact `Mail` process and starts Mail.app hidden through Launch
+Services; it does not read mail, configure accounts, or grant Automation
+permission.
+
+Install the watchdog script and copy the examples, then replace every
+placeholder:
 
 ```sh
+install -d -m 755 "$HOME/.local/libexec/apple-platform-mcp"
+install -m 755 Scripts/mail-watchdog.sh \
+  "$HOME/.local/libexec/apple-platform-mcp/mail-watchdog.sh"
+
+cp Examples/remote/launchd/codes.example.apple-platform-mcp-mail-background.plist.example \
+  "$HOME/Library/LaunchAgents/codes.example.apple-platform-mcp-mail-background.plist"
 cp Examples/remote/launchd/codes.example.apple-platform-mcp-remote.plist.example \
   ~/Library/LaunchAgents/codes.example.apple-platform-mcp-remote.plist
 cp Examples/remote/launchd/codes.example.apple-platform-mcp-tunnel.plist.example \
   ~/Library/LaunchAgents/codes.example.apple-platform-mcp-tunnel.plist
 
+plutil -lint "$HOME/Library/LaunchAgents/codes.example.apple-platform-mcp-mail-background.plist"
 plutil -lint ~/Library/LaunchAgents/codes.example.apple-platform-mcp-remote.plist
 plutil -lint ~/Library/LaunchAgents/codes.example.apple-platform-mcp-tunnel.plist
 chmod 644 ~/Library/LaunchAgents/codes.example.apple-platform-mcp-*.plist
 
+launchctl bootstrap gui/$(id -u) \
+  "$HOME/Library/LaunchAgents/codes.example.apple-platform-mcp-mail-background.plist"
 launchctl bootstrap gui/$(id -u) \
   ~/Library/LaunchAgents/codes.example.apple-platform-mcp-remote.plist
 launchctl bootstrap gui/$(id -u) \
   ~/Library/LaunchAgents/codes.example.apple-platform-mcp-tunnel.plist
 ```
 
-The gateway plist uses `KeepAlive` and writes logs under
-`~/Library/Logs/`. The tunnel plist supervises `cloudflared` separately. Never
-put the tunnel credential JSON, a capability token, or a private signing key
-in a committed plist.
+The watchdog and gateway plists use `RunAtLoad` and `KeepAlive`; the watchdog
+checks Mail.app every 15 seconds and logs lifecycle events and failures under
+`~/Library/Logs/`. The default Launch Services target is the system `Mail`
+application. For a non-standard installation, add
+`APPLE_PLATFORM_MCP_MAIL_WATCHDOG_APP` with the absolute `.app` path to the
+watchdog plist. The tunnel plist supervises `cloudflared` separately. Never put
+the tunnel credential JSON, a capability token, or a private signing key in a
+committed plist.
 
 To reload after an edit:
 
 ```sh
+launchctl bootout gui/$(id -u)/codes.example.apple-platform-mcp-mail-background 2>/dev/null || true
+launchctl bootstrap gui/$(id -u) \
+  "$HOME/Library/LaunchAgents/codes.example.apple-platform-mcp-mail-background.plist"
 launchctl bootout gui/$(id -u)/codes.example.apple-platform-mcp-remote 2>/dev/null || true
 launchctl bootstrap gui/$(id -u) \
   ~/Library/LaunchAgents/codes.example.apple-platform-mcp-remote.plist
 launchctl print gui/$(id -u)/codes.example.apple-platform-mcp-remote
+launchctl print gui/$(id -u)/codes.example.apple-platform-mcp-mail-background
 ```
 
 ## 10. Private token mode for local testing
@@ -400,6 +424,8 @@ Check the local layers from the Mac running the gateway:
 ```sh
 curl -fsS http://127.0.0.1:3766/healthz
 curl -fsS http://127.0.0.1:3766/readyz
+pgrep -ax Mail
+tail -f "$HOME/Library/Logs/apple-platform-mcp-mail-background.error.log"
 tail -f "$HOME/Library/Logs/apple-platform-mcp-remote.error.log"
 tail -f "$HOME/Library/Logs/apple-platform-mcp-tunnel.error.log"
 ```
@@ -409,7 +435,8 @@ Common failures:
 - `doctor` reports missing Automation permission: approve the signed app in
   **System Settings -> Privacy & Security -> Automation**, then retry.
 - `/readyz` is unavailable: inspect the gateway executable path, the Swift
-  child stderr, Mail.app state, and the local MCP build.
+  child stderr, Mail.app state, the watchdog LaunchAgent, and the local MCP
+  build.
 - Cloudflare returns an Access page: verify the Access policy and callback
   before debugging MCP.
 - The gateway returns 401: verify the team domain, Access audience, optional

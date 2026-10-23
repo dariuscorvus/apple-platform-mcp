@@ -80,6 +80,23 @@ private func openLoopbackSocket(port: Int, request: Data) throws -> Int32 {
 
 @Suite("Loopback HTTP listener", .serialized)
 struct LoopbackHTTPListenerTests {
+  @Test("flushes complete large responses before closing the socket")
+  func flushesLargeResponse() async throws {
+    let payload = Data(repeating: 65, count: 1_048_576)
+    let router = ApplePlatformMCPHTTPRouter(
+      mcpHandler: { _ in .data(payload, headers: ["Content-Type": "application/octet-stream"]) },
+      readinessProbe: { true }
+    )
+    let listener = ApplePlatformMCPHTTPServer(host: "127.0.0.1", port: 0, router: router)
+    let port = try await listener.start()
+    var request = URLRequest(url: URL(string: "http://127.0.0.1:\(port)/mcp")!)
+    request.httpMethod = "POST"
+    let (data, response) = try await URLSession.shared.data(for: request)
+    await listener.stop()
+    #expect((response as? HTTPURLResponse)?.statusCode == 200)
+    #expect(data == payload)
+  }
+
   @Test("rejects non-loopback binding at the listener boundary")
   func rejectsNonLoopbackBinding() async {
     let router = ApplePlatformMCPHTTPRouter(

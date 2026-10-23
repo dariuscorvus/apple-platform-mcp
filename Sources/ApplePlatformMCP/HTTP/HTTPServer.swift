@@ -480,8 +480,10 @@ private final class ApplePlatformMCPNIOHTTPHandler: ChannelInboundHandler, @unch
           promise: nil
         )
       }
-      context.writeAndFlush(self.wrapOutboundOut(.end(nil)), promise: nil)
-      context.close(promise: nil)
+      let loopBoundContext = NIOLoopBound(context, eventLoop: context.eventLoop)
+      context.writeAndFlush(self.wrapOutboundOut(.end(nil))).whenComplete { _ in
+        loopBoundContext.value.close(promise: nil)
+      }
     }
   }
 }

@@ -24,7 +24,9 @@ struct ReminderLifecycleServiceTests {
 
   @Test("denies a Reminder create before repository delegation by default")
   func deniesCreateByDefault() async {
-    let repository = MutableReminderRepository(lists: [ReminderList(id: Self.listID, name: "Fixture")])
+    let repository = MutableReminderRepository(lists: [
+      ReminderList(id: Self.listID, name: "Fixture")
+    ])
     let service = ReminderToolService(repository: repository)
 
     await #expect(throws: ReminderError.self) {
@@ -39,7 +41,9 @@ struct ReminderLifecycleServiceTests {
 
   @Test("creates a Reminder once and returns the same normalized result on retry")
   func createsExactlyOnce() async throws {
-    let repository = MutableReminderRepository(lists: [ReminderList(id: Self.listID, name: "Fixture")])
+    let repository = MutableReminderRepository(lists: [
+      ReminderList(id: Self.listID, name: "Fixture")
+    ])
     let service = ReminderToolService(
       repository: repository,
       policy: .init(mutationMode: .allowed)
@@ -210,7 +214,9 @@ struct ReminderLifecycleServiceTests {
 
   @Test("rejects a reused idempotency key with a different operation")
   func rejectsCrossOperationIdempotencyReuse() async throws {
-    let repository = MutableReminderRepository(lists: [ReminderList(id: Self.listID, name: "Fixture")])
+    let repository = MutableReminderRepository(lists: [
+      ReminderList(id: Self.listID, name: "Fixture")
+    ])
     let service = ReminderToolService(
       repository: repository,
       policy: .init(mutationMode: .allowed)
@@ -230,7 +236,8 @@ struct ReminderLifecycleServiceTests {
 @Suite("Reminder list lifecycle service")
 struct ReminderListLifecycleServiceTests {
   private static let sourceListID = ReminderReferenceCodec.list(calendarIdentifier: "list-source")
-  private static let occupiedListID = ReminderReferenceCodec.list(calendarIdentifier: "list-occupied")
+  private static let occupiedListID = ReminderReferenceCodec.list(
+    calendarIdentifier: "list-occupied")
   private static let occupiedReminder = ReminderItem(
     id: ReminderReferenceCodec.reminder(
       calendarIdentifier: "list-occupied",
@@ -341,12 +348,13 @@ struct ReminderLifecycleMCPContractTests {
     _ = try await client.connect(transport: clientTransport)
     let listed = try await client.listTools()
     let names = Set(listed.tools.map(\.name))
-    #expect(names.isSuperset(of: [
-      "reminder_create_reminder",
-      "reminder_update_reminder",
-      "reminder_complete_reminder",
-      "reminder_delete_reminder",
-    ]))
+    #expect(
+      names.isSuperset(of: [
+        "reminder_create_reminder",
+        "reminder_update_reminder",
+        "reminder_complete_reminder",
+        "reminder_delete_reminder",
+      ]))
 
     let createTool = try #require(
       listed.tools.first(where: { $0.name == "reminder_create_reminder" }))
@@ -461,11 +469,12 @@ struct ReminderListLifecycleMCPContractTests {
     _ = try await client.connect(transport: clientTransport)
     let listed = try await client.listTools()
     let names = Set(listed.tools.map(\.name))
-    #expect(names.isSuperset(of: [
-      "reminder_create_list",
-      "reminder_update_list",
-      "reminder_delete_list",
-    ]))
+    #expect(
+      names.isSuperset(of: [
+        "reminder_create_list",
+        "reminder_update_list",
+        "reminder_delete_list",
+      ]))
 
     let createTool = try #require(listed.tools.first(where: { $0.name == "reminder_create_list" }))
     let createSchema = try #require(createTool.inputSchema.objectValue)
@@ -708,7 +717,9 @@ private actor MutableReminderRepository: ReminderRepository {
 
 private actor LifecycleEmptyMailRepository: MailRepository {
   func listAccounts(includeDisabled: Bool) async throws -> [MailAccountModel] { [] }
-  func listMailboxes(accountID: AccountReference, includeCounts: Bool) async throws -> [Mailbox] { [] }
+  func listMailboxes(accountID: AccountReference, includeCounts: Bool) async throws -> [Mailbox] {
+    []
+  }
   func searchMessages(_ query: MailSearchQuery) async throws -> MailSearchPage {
     MailSearchPage(messages: [])
   }
@@ -736,7 +747,8 @@ private actor LifecycleEmptyMailRepository: MailRepository {
   func trashMessage(_ id: MessageReference) async throws -> MailMessageMutationResult {
     throw MailError.unsupportedByAccount
   }
-  func updateMessage(_ request: MailMessageUpdateRequest) async throws -> MailMessageMutationResult {
+  func updateMessage(_ request: MailMessageUpdateRequest) async throws -> MailMessageMutationResult
+  {
     throw MailError.unsupportedByAccount
   }
 }

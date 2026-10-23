@@ -43,6 +43,8 @@ targets:
       - path: Sources/ApplePlatformMCP
       - path: Sources/ApplePlatformMCPServer
       - path: Sources/MailScriptingBridge/Mail.m
+      - path: Sources/MailScriptingBridge/MailSearch.m
+      - path: Sources/MailScriptingBridge/Notes.m
       - path: Sources/MailScriptingBridge/ApplePlatformMCP-Bridging-Header.h
         buildPhase: none
     dependencies:
@@ -71,10 +73,13 @@ targets:
           - $(SRCROOT)/Sources/MailScriptingBridge/include
         OTHER_LDFLAGS:
           - $(inherited)
+          - -lsqlite3
           - -framework
           - CoreServices
           - -framework
           - EventKit
+          - -framework
+          - Contacts
           - -framework
           - Security
           - -framework
@@ -90,6 +95,8 @@ targets:
       - path: Sources/ApplePlatformMCP
       - path: Tests/ApplePlatformMCPTests
       - path: Sources/MailScriptingBridge/Mail.m
+      - path: Sources/MailScriptingBridge/MailSearch.m
+      - path: Sources/MailScriptingBridge/Notes.m
       - path: Sources/MailScriptingBridge/ApplePlatformMCP-Bridging-Header.h
         buildPhase: none
     dependencies:
@@ -117,10 +124,13 @@ targets:
           - $(SRCROOT)/Sources/MailScriptingBridge/include
         OTHER_LDFLAGS:
           - $(inherited)
+          - -lsqlite3
           - -framework
           - CoreServices
           - -framework
           - EventKit
+          - -framework
+          - Contacts
           - -framework
           - Security
           - -framework

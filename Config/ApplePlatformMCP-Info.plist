@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleDisplayName</key>
 	<string>Apple Platform MCP</string>
 	<key>CFBundleIdentifier</key>
@@ -23,10 +25,16 @@
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.utilities</string>
 	<key>NSAppleEventsUsageDescription</key>
-	<string>Apple Platform MCP uses Apple Events to list and read messages in Mail when requested by the configured MCP client.</string>
+	<string>Apple Platform MCP uses Apple Events to access Mail and Apple Notes when requested by the configured MCP client.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Apple Platform MCP reads calendars and creates explicitly requested single events only in policy-approved calendars.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Apple Platform MCP reads calendars and creates explicitly requested single events only in policy-approved calendars.</string>
 	<key>NSRemindersFullAccessUsageDescription</key>
 	<string>Apple Platform MCP uses Reminders Full Access to list and manage explicitly selected reminder lists and reminders when requested by the configured MCP client.</string>
 	<key>NSRemindersUsageDescription</key>
 	<string>Apple Platform MCP uses Reminders access to list and manage explicitly selected reminder lists and reminders when requested by the configured MCP client.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Apple Platform MCP reads selected contact names, companies, email addresses and phone numbers to resolve people without modifying contacts.</string>
 </dict>
 </plist>

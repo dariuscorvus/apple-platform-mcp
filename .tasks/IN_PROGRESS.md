@@ -1,5 +1,16 @@
 # In Progress
 
+## TASK-016: Merge the complete deployed capabilities into main
+**Priority:** P1 | **Tags:** git, integration, release
+
+### Plan
+
+- Preserve both working snapshots and integrate the full deployed source in an isolated branch without publishing private checkpoint history.
+- Bring documentation and the active TaskPlanner board up to date, remove private host details, and verify all six domains and 51 tools.
+- Run local and required GitHub checks, create a pull request and merge it into main; record the final commit and PR.
+
+---
+
 ## TASK-001: Sign and notarize the release-candidate artifact
 **Priority:** P0 | **Tags:** release, signing, notarization
 
