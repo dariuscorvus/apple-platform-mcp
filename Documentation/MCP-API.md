@@ -334,3 +334,10 @@ Search requires a bounded query; individual container references preserve duplic
 
 Configured-root file management uses independent, default-denied write and Trash gates.
 See [configuration, tool contracts, limits and recovery](iCloud-Files.md).
+
+## Remote service connections
+
+The remote gateway provides six scoped `/apple/<area>` MCP connections.
+Discovery and tool invocation are both restricted by area; the configured
+legacy endpoint and native transports retain the full catalog. See
+[best practice and URL mapping](Service-Connections.md).

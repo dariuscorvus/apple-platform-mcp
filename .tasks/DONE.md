@@ -1,5 +1,28 @@
 # Done
 
+## TASK-017: Add scoped /apple service connections
+**Priority:** P1 | **Tags:** remote, architecture, documentation
+
+### Verified result
+
+Added six fixed `/apple/<area>` connections to the shared gateway. Each exposes
+its own identity/instructions, filters discovery by native tool prefix and
+rejects foreign/unknown calls before forwarding. Cloudflare, capability-token
+and origin checks apply to every route. Raw path aliases and overlapping legacy
+configuration fail closed. Existing configured legacy discovery is unchanged.
+
+TypeScript typecheck, gateway build and all 23 tests (231 assertions) passed.
+Integration coverage includes all six areas with both authentication modes,
+concurrent connections, cross-area calls, missing/invalid credentials, origins,
+path aliases and legacy compatibility. Native Swift code/configuration unchanged.
+
+Documented recommended connections, client selection, skills, authentication
+limits, Cloudflare path coverage, migration and deployment acceptance in
+`Documentation/Service-Connections.md`. This records verified source changes;
+no host deployment or Cloudflare configuration change was performed in this task.
+
+---
+
 ## TASK-016: Merge the complete deployed capabilities into main
 **Priority:** P1 | **Tags:** git, integration, release
 

@@ -163,8 +163,10 @@ content and detects a failed loopback connection instead of trusting the cached
 tool list. The gateway connects to an existing loopback backend when available;
 otherwise it launches a new hidden app instance with `/usr/bin/open -gj -n` and
 waits for readiness. Request cancellation from the remote client is also
-forwarded to the local MCP request. The MCP path is exact, so
-`/apple-platform/anything` and other paths return 404.
+forwarded to the local MCP request. The configured legacy MCP path is exact: `/apple-platform/anything` returns
+404. Six additional scoped paths under `/apple/` are available on the same
+listener. See [service-connection best practices](Service-Connections.md) for
+client URLs, Cloudflare path coverage and enforced catalog boundaries.
 
 ## 4. Create the Cloudflare Tunnel
 

@@ -24,6 +24,15 @@ editing existing notes, locked notes or attachment extraction. Calendar does not
 edit/delete existing events. Contacts are read-only. Files search filenames,
 not document contents; package documents remain opaque.
 
+## Recommended client connections
+
+Use separate connections at `/apple/mail`, `/apple/reminders`, `/apple/notes`,
+`/apple/calendar`, `/apple/contacts`, and `/apple/icloud`. Each advertises and
+accepts only its area's tools through one shared authenticated gateway/backend.
+Enable only the areas needed for the task. The configured legacy endpoint keeps
+its full catalog for compatibility. See [service-connection best practices](Documentation/Service-Connections.md)
+for authentication limits, client selection and migration.
+
 ## Safety defaults
 
 Mail sending and mutations, Reminders mutations, Notes creation, Calendar

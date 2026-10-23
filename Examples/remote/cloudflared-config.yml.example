@@ -5,6 +5,9 @@ originRequest:
   connectTimeout: 10s
   noTLSVerify: false
 
+# Route the entire hostname so /apple/mail, /apple/reminders, /apple/notes,
+# /apple/calendar, /apple/contacts and /apple/icloud reach the same gateway.
+# Ensure the Access application/OAuth protected resource covers these paths.
 ingress:
   - hostname: mcp.example.com
     service: http://127.0.0.1:3766
