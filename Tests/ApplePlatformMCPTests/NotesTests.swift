@@ -116,6 +116,8 @@ struct NotesTests {
       service: MailToolService(repository: NotesEmptyMailRepository()), notesService: service
     ).makeServer()
     let (clientTransport, serverTransport) = await InMemoryTransport.createConnectedPair()
+    // Accept queued client messages before asynchronous server registration starts.
+    try await serverTransport.connect()
     let serverTask = Task { try await server.start(transport: serverTransport) }
     let client = Client(name: "notes-tests", version: "1.0")
     _ = try await client.connect(transport: clientTransport)

@@ -722,6 +722,8 @@ struct MCPContractTests {
     let service = MailToolService(repository: repository)
     let configuredServer = await ApplePlatformMCPServer(service: service).makeServer()
     let (clientTransport, serverTransport) = await InMemoryTransport.createConnectedPair()
+    // Accept queued client messages before asynchronous server registration starts.
+    try await serverTransport.connect()
     let serverTask = Task {
       try await configuredServer.start(transport: serverTransport)
       await configuredServer.waitUntilCompleted()
@@ -744,6 +746,8 @@ struct MCPContractTests {
     let repository = FakeMailRepository(accounts: [])
     let service = MailToolService(repository: repository)
     let (clientTransport, serverTransport) = await InMemoryTransport.createConnectedPair()
+    // Accept queued client messages before asynchronous server registration starts.
+    try await serverTransport.connect()
     let serverTask = Task {
       try await ApplePlatformMCPServer(service: service).run(transport: serverTransport)
     }
@@ -793,6 +797,8 @@ struct MCPContractTests {
       policy: MailPolicy(sendMode: .allowed)
     )
     let (clientTransport, serverTransport) = await InMemoryTransport.createConnectedPair()
+    // Accept queued client messages before asynchronous server registration starts.
+    try await serverTransport.connect()
     let serverTask = Task {
       try await ApplePlatformMCPServer(service: service).run(transport: serverTransport)
     }
