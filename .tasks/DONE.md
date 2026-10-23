@@ -1,5 +1,29 @@
 # Done
 
+## TASK-016: Merge the complete deployed capabilities into main
+**Priority:** P1 | **Tags:** git, integration, release
+
+### Verified result
+
+The complete deployed source is integrated through
+[PR #2](https://github.com/dariuscorvus/apple-platform-mcp/pull/2): Mail,
+Reminders, Notes, Calendar, Contacts and iCloud Files (51 tools). The public
+history excludes private deployment checkpoints and runtime configuration.
+README, policy/permission docs and deployment evidence describe the full surface.
+
+Local verification passed: 195 Swift tests in 43 suites, native Xcode tests,
+18 gateway tests/47 assertions plus typecheck/build, and 20 Python rollout tests.
+A contract-test startup race was fixed by connecting the server peer before
+client initialization. Required `xcode`, `remote` and universal-archive `release`
+checks gate the PR's merge into main; no protection bypass is used.
+
+The Mac mini configuration is unchanged: HighByteTech is the sole iCloud root,
+with writes denied and Trash disabled. TASK-013 retains the external eviction
+and cross-device synchronization acceptance gates.
+
+---
+
+
 ## TASK-015: Deploy latest combined server to Mac mini
 **Priority:** P1 | **Tags:** deployment, files, macmini
 **Completed:** 2026-10-23

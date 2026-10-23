@@ -1,5 +1,12 @@
 # Work Log
 
+## 2026-10-23 — TASK-016: Full deployed source integration
+
+PR #2 integrates all six domains and 51 tools into main through required checks.
+Local Swift 195, native Xcode, gateway 18/typecheck/build and Python 20 passed.
+Private checkpoint history and runtime configuration are excluded. Host policies
+remain unchanged; extended cloud acceptance stays in TASK-013.
+
 Completed tasks are recorded here with a short date and verification summary.
 
 ## 2026-10-23 — TASK-015
