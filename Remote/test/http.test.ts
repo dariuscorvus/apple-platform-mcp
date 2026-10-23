@@ -1,4 +1,4 @@
-import { request as nodeRequest } from "node:http";
+import { connect as netConnect } from "node:net";
 import { APPLE_AREAS } from "../src/areas.js";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
@@ -237,8 +237,13 @@ describe("scoped Apple connections", () => {
       paths.push(`/apple/unknown/${TOKEN}`, `/apple/%6dail/${TOKEN}`, `/apple/notes/../mail/${TOKEN}`, `/apple/notes/%2e%2e/mail/${TOKEN}`);
       for (const path of paths) {
         const status = await new Promise<number | undefined>((resolve, reject) => {
-          const req = nodeRequest({ hostname: running.origin.hostname, port: running.origin.port, path, method: "POST" }, (res) => { res.resume(); resolve(res.statusCode); });
-          req.on("error", reject); req.end();
+          // Send the literal request target; older Bun node:http clients normalize dots.
+          const socket = netConnect(Number(running.origin.port), running.origin.hostname);
+          let response = "";
+          socket.on("connect", () => socket.write(`POST ${path} HTTP/1.1\r\nHost: localhost\r\nContent-Length: 0\r\nConnection: close\r\n\r\n`));
+          socket.on("data", (chunk) => { response += chunk.toString(); });
+          socket.on("end", () => resolve(Number(response.split(" ")[1])));
+          socket.on("error", reject);
         });
         expect(status).toBe(404);
       }
