@@ -95,6 +95,6 @@ jobs:
             APPLE_PLATFORM_MCP_BUILD_COMMIT="$GITHUB_SHA" archive
           app="$RUNNER_TEMP/ApplePlatformMCP.xcarchive/Products/Applications/apple-platform-mcp.app"
           test -x "$app/Contents/MacOS/apple-platform-mcp"
-          lipo -verify_arch arm64 x86_64 "$app/Contents/MacOS/apple-platform-mcp"
+          lipo "$app/Contents/MacOS/apple-platform-mcp" -verify_arch arm64 x86_64
           test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$app/Contents/Info.plist")" = "com.dariuscorvus.apple-platform-mcp"
           test "$(/usr/libexec/PlistBuddy -c 'Print :ApplePlatformMCPBuildCommit' "$app/Contents/Info.plist")" = "$GITHUB_SHA"
